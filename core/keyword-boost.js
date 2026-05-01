@@ -383,14 +383,16 @@ export function extractLorebookKeywords(entry, settings = null) {
  */
 function extractBracketTerms(text) {
     const results = [];
-    // Matches content inside 【】, 「」, 『』 — max 20 chars to avoid huge spans
-    const bracketRe = /[\u3010\u300C\u300E]([^\u3011\u300D\u300F\n]{2,20})[\u3011\u300D\u300F]/g;
+    // 【...】 — CJK concept/system marker (game skills, item names, system panels)
+    // [...] with CJK content — ASCII square bracket concept markers (e.g. [勇者之劍])
+    // 「」 and 『』 are dialogue SPEECH QUOTES — intentionally excluded.
+    const bracketRe = /(?:\u3010([^\u3011\n]{2,20})\u3011|\[([^\]\n]{2,20})\])/g;
     let m;
+    const cjkRe = /[\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF\u3400-\u4DBF\uF900-\uFAFF]/;
     while ((m = bracketRe.exec(text)) !== null) {
-        const inner = m[1].trim();
+        const inner = (m[1] ?? m[2]).trim();
         // Only include if the term contains at least one CJK character
-        // (catches Chinese, Japanese Kanji, and prepared-for kana ranges)
-        if (/[\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF\u3400-\u4DBF\uF900-\uFAFF]/.test(inner)) {
+        if (cjkRe.test(inner)) {
             results.push(inner);
         }
     }
@@ -400,9 +402,13 @@ function extractBracketTerms(text) {
 export function extractTextKeywords(text, options = {}) {
     if (!text || typeof text !== 'string') return [];
 
-    // Strip appended [KEYWORDS: ...] tag to prevent bleed-through when the stored
-    // Qdrant text (which has the tag appended for embedding) is re-processed.
-    text = text.replace(/\s*\[KEYWORDS:[^\]]*\]/gi, '').trimEnd();
+    // Strip appended [KEYWORDS: ...] / [KEYWORD ...] tags (any case, colon optional)
+    // to prevent bleed-through when the stored Qdrant text is re-processed.
+    text = text.replace(/\s*\[keywords?[:\s][^\]]*\]/gi, '').trimEnd();
+    // Strip structural markup tags: [User], [Character], [OOC], [location], [tag: content], etc.
+    // Only strips brackets whose content is purely non-CJK (ASCII labels/formatting markers).
+    // Brackets containing CJK characters (e.g. [勇者之劍]) are preserved for extractBracketTerms.
+    text = text.replace(/\[[^\]\u4E00-\u9FFF\u3040-\u30FF\u3400-\u4DBF\uF900-\uFAFF]{1,30}\]/g, ' ').replace(/\s+/g, ' ').trim();
 
     const level = options.level || DEFAULT_EXTRACTION_LEVEL;
     const baseWeight = options.baseWeight || DEFAULT_BASE_WEIGHT;
@@ -600,9 +606,13 @@ export function extractChatKeywords(text, options = {}) {
 export function extractBM25Keywords(text, options = {}) {
     if (!text || typeof text !== 'string' || text.trim().length === 0) return [];
 
-    // Strip appended [KEYWORDS: ...] tag to prevent bleed-through when the stored
-    // Qdrant text (which has the tag appended for embedding) is re-processed.
-    text = text.replace(/\s*\[KEYWORDS:[^\]]*\]/gi, '').trimEnd();
+    // Strip appended [KEYWORDS: ...] / [KEYWORD ...] tags (any case, colon optional)
+    // to prevent bleed-through when the stored Qdrant text is re-processed.
+    text = text.replace(/\s*\[keywords?[:\s][^\]]*\]/gi, '').trimEnd();
+    // Strip structural markup tags: [User], [Character], [OOC], [location], [tag: content], etc.
+    // Only strips brackets whose content is purely non-CJK (ASCII labels/formatting markers).
+    // Brackets containing CJK characters (e.g. [勇者之劍]) are preserved for extractBracketTerms.
+    text = text.replace(/\[[^\]\u4E00-\u9FFF\u3040-\u30FF\u3400-\u4DBF\uF900-\uFAFF]{1,30}\]/g, ' ').replace(/\s+/g, ' ').trim();
 
     // Get extraction level config
     const level = options.level || DEFAULT_EXTRACTION_LEVEL;
