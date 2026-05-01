@@ -132,8 +132,8 @@ export async function vectorizeContent({ contentType, source, settings, abortSig
         // (summarize → embed → insert immediately) to start filling Qdrant right away.
         // For everything else, do the original batch approach.
         if (contentType === 'chat' && (vecthareSettings?.summarize_provider || 'off') !== 'off') {
-            progressTracker.updateProgress(3, `Summarizing and inserting ${hashedChunks.length} chunks...`);
-            console.log(`[VectHare Summarizer] Pipelining ${hashedChunks.length} chat chunks via ${vecthareSettings.summarize_provider}...`);
+            progressTracker.updateProgress(3, `Summarizing and inserting ${finalChunks.length} chunks...`);
+            console.log(`[VectHare Summarizer] Pipelining ${finalChunks.length} chat chunks via ${vecthareSettings.summarize_provider}...`);
 
             // Pre-init backend once before pipeline starts
             try {
@@ -143,7 +143,7 @@ export async function vectorizeContent({ contentType, source, settings, abortSig
             }
 
             let pipelined = 0;
-            for (const chunk of hashedChunks) {
+            for (const chunk of finalChunks) {
                 throwIfAborted();
 
                 let summaryText;
@@ -178,8 +178,8 @@ export async function vectorizeContent({ contentType, source, settings, abortSig
                 }
 
                 pipelined++;
-                progressTracker.updateProgress(3, `Summarizing + inserting... ${pipelined}/${hashedChunks.length}`);
-                progressTracker.updateEmbeddingProgress(pipelined, hashedChunks.length);
+                progressTracker.updateProgress(3, `Summarizing + inserting... ${pipelined}/${finalChunks.length}`);
+                progressTracker.updateEmbeddingProgress(pipelined, finalChunks.length);
             }
 
             console.log(`[VectHare Summarizer] Pipeline complete: ${pipelined} chunks processed`);
