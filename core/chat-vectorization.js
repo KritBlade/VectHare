@@ -144,6 +144,8 @@ function prepareItemsForInsertion(items) {
 async function groupMessagesByStrategy(messages, strategy, batchSize = 4, keywordLevel = 'balanced', settings = {}) {
     if (!messages.length) return [];
 
+    console.log(`[VectHare] groupMessagesByStrategy: ${messages.length} messages, strategy=${strategy}, summarize_provider=${settings?.summarize_provider || 'off'}`);
+
     const summarize = (text) => summarizeText(text, settings);
 
     // Helper to extract keywords based on level
@@ -406,6 +408,7 @@ export async function synchronizeChat(settings, batchSize = 5) {
     // Check per-collection autoSync setting instead of global enabled_chats
     const { isCollectionAutoSyncEnabled } = await import('./collection-metadata.js');
     if (!isCollectionAutoSyncEnabled(collectionId)) {
+        console.log(`[VectHare] synchronizeChat: collection "${collectionId}" has auto-sync disabled — skipping`);
         return { remaining: -1, messagesProcessed: 0, chunksCreated: 0 };
     }
 

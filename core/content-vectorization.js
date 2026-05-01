@@ -26,6 +26,7 @@ import {
 } from './collection-ids.js';
 import { extractLorebookKeywords, extractTextKeywords, extractChatKeywords, extractBM25Keywords, EXTRACTION_LEVELS, DEFAULT_EXTRACTION_LEVEL, DEFAULT_BASE_WEIGHT } from './keyword-boost.js';
 import { cleanText, cleanMessages } from './text-cleaning.js';
+import { summarizeText } from './summarizer.js';
 import { progressTracker } from '../ui/progress-tracker.js';
 import { extension_settings, getContext } from '../../../../extensions.js';
 import { getStringHash } from '../../../../utils.js';
@@ -87,6 +88,25 @@ export async function vectorizeContent({ contentType, source, settings }) {
             hash: getStringHash(chunk.text),
         }));
 
+        // Step 3.5: Summarize chat chunks if configured
+        // Hash is already computed from original text above — deduplication is unaffected.
+        let finalChunks = hashedChunks;
+        if (contentType === 'chat' && (vecthareSettings?.summarize_provider || 'off') !== 'off') {
+            progressTracker.updateProgress(3, `Summarizing ${hashedChunks.length} chunks...`);
+            console.log(`[VectHare Summarizer] Summarizing ${hashedChunks.length} chat chunks via ${vecthareSettings.summarize_provider}...`);
+            let summarized = 0;
+            finalChunks = [];
+            for (const chunk of hashedChunks) {
+                const summaryText = await summarizeText(chunk.text, vecthareSettings);
+                finalChunks.push({ ...chunk, text: summaryText });
+                summarized++;
+                if (summarized % 10 === 0 || summarized === hashedChunks.length) {
+                    progressTracker.updateProgress(3, `Summarizing chunks... ${summarized}/${hashedChunks.length}`);
+                }
+            }
+            console.log(`[VectHare Summarizer] Summarization complete: ${hashedChunks.length} chunks processed`);
+        }
+
         // Step 4: Insert into vector store (streaming: embed + write together)
         progressTracker.updateProgress(4, 'Processing chunks...');
 
@@ -106,7 +126,7 @@ export async function vectorizeContent({ contentType, source, settings }) {
         }
 
         try {
-            await insertVectorItems(collectionId, hashedChunks, vecthareSettings, (embedded, total) => {
+            await insertVectorItems(collectionId, finalChunks, vecthareSettings, (embedded, total) => {
             // Update progress with streaming count
             console.log(`[Content Vectorization] Processing progress callback: ${embedded}/${total}`);
             progressTracker.updateEmbeddingProgress(embedded, total);
@@ -132,7 +152,7 @@ export async function vectorizeContent({ contentType, source, settings }) {
             contentType,
             sourceName,
             scope: settings.scope || 'global',
-            chunkCount: hashedChunks.length,
+            chunkCount: finalChunks.length,
             createdAt: new Date().toISOString(),
             settings: {
                 strategy: settings.strategy,
@@ -147,11 +167,11 @@ export async function vectorizeContent({ contentType, source, settings }) {
         registerCollection(collectionId);
         console.log(`VectHare: Registered collection ${collectionId}`);
 
-        progressTracker.complete(true, `Vectorized ${hashedChunks.length} chunks`);
+        progressTracker.complete(true, `Vectorized ${finalChunks.length} chunks`);
 
         return {
             success: true,
-            chunkCount: hashedChunks.length,
+            chunkCount: finalChunks.length,
             collectionId,
         };
     } catch (error) {
