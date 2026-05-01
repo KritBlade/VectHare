@@ -41,6 +41,7 @@ export async function summarizeText(text, settings) {
     if (!text || typeof text !== 'string') return text;
 
     const provider = settings?.summarize_provider || 'off';
+    console.log(`[VectHare Summarizer] summarizeText called — provider=${provider}, textLen=${text.length}`);
     if (provider === 'off') return text;
 
     const model = settings?.summarize_model || '';
@@ -90,8 +91,9 @@ function _extractReply(data) {
 
 async function _callOpenRouter(prompt, model, settings, originalLength) {
     const apiKey = secret_state[SECRET_KEYS.OPENROUTER];
+    console.log(`[VectHare Summarizer] OpenRouter key present: ${!!apiKey}`);
     if (!apiKey) {
-        console.warn('[VectHare Summarizer] OpenRouter API key not found in ST secrets.');
+        console.warn('[VectHare Summarizer] OpenRouter API key not found in ST secrets — configure it in ST\'s API settings.');
         return null; // Will fall through to original text return in caller
     }
 
@@ -114,7 +116,7 @@ async function _callOpenRouter(prompt, model, settings, originalLength) {
     const summary = _extractReply(data);
     if (!summary) throw new Error('OpenRouter returned empty summary');
 
-    console.debug(`[VectHare Summarizer] OpenRouter: ${originalLength} chars → ${summary.length} chars`);
+    console.log(`[VectHare Summarizer] OpenRouter: ${originalLength} chars → ${summary.length} chars`);
     return summary;
 }
 
@@ -141,6 +143,6 @@ async function _callVLLM(prompt, model, settings) {
     const summary = _extractReply(data);
     if (!summary) throw new Error('vLLM returned empty summary');
 
-    console.debug(`[VectHare Summarizer] vLLM: ${prompt.length} chars prompt → ${summary.length} chars summary`);
+    console.log(`[VectHare Summarizer] vLLM: ${prompt.length} chars prompt → ${summary.length} chars summary`);
     return summary;
 }
