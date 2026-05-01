@@ -626,53 +626,147 @@ export function applyBM25Scoring(results, query, options = {}) {
 
 // ---------------------------------------------------------------------------
 // CJK word segmentation via Intl.Segmenter (browser-native, zero dependencies)
-// Falls back to character-level tokenization if the API is unavailable.
+// Falls back to bigram tokenization if the API is unavailable.
+//
+// LANGUAGE SUPPORT:
+//   Currently active:  Chinese (zh) — CJK Unified Ideographs
+//   Prepared for:      Japanese (ja) — add Hiragana/Katakana to _CJK_SPAN_RE and
+//                        call _getSegmenter(span) which already auto-detects kana
+//   Future:            Korean (ko) — add Hangul to _CJK_SPAN_RE, detected via _KANA_RE
 // ---------------------------------------------------------------------------
-let _cjkSegmenter;
-function _getCJKSegmenter() {
-    if (_cjkSegmenter === undefined) {
-        try {
-            _cjkSegmenter = new Intl.Segmenter('zh', { granularity: 'word' });
-        } catch (e) {
-            _cjkSegmenter = null;
+
+/** Matches CJK Unified Ideograph spans (Chinese).
+ *  To add Japanese: append \u3040-\u309F\u30A0-\u30FF inside the character class. */
+const _CJK_SPAN_RE = /[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF]+/g;
+
+/** Kana presence → Japanese locale. Extend when adding Korean (\uAC00-\uD7AF). */
+const _KANA_RE = /[\u3040-\u309F\u30A0-\u30FF]/;
+
+let _zhSegmenter;
+function _getZhSegmenter() {
+    if (_zhSegmenter === undefined) {
+        try { _zhSegmenter = new Intl.Segmenter('zh', { granularity: 'word' }); }
+        catch (e) { _zhSegmenter = null; }
+    }
+    return _zhSegmenter;
+}
+
+// Placeholder for future Japanese support — wired into _getSegmenter() already.
+let _jaSegmenter;
+function _getJaSegmenter() {
+    if (_jaSegmenter === undefined) {
+        try { _jaSegmenter = new Intl.Segmenter('ja', { granularity: 'word' }); }
+        catch (e) { _jaSegmenter = null; }
+    }
+    return _jaSegmenter;
+}
+
+/**
+ * Return the best available Intl.Segmenter for the given span.
+ * Kana characters signal Japanese; otherwise assume Chinese.
+ * Add new locale branches here as languages are enabled.
+ * @param {string} span
+ * @returns {Intl.Segmenter|null}
+ */
+function _getSegmenter(span) {
+    // Japanese detection: span contains Hiragana or Katakana
+    // (Currently _CJK_SPAN_RE never produces kana spans, so this branch is
+    //  a no-op until _CJK_SPAN_RE is extended to include kana ranges.)
+    if (_KANA_RE.test(span)) return _getJaSegmenter();
+    return _getZhSegmenter();
+}
+
+/**
+ * Tokenize a single segmented span using the run-merging strategy.
+ *
+ * The segmenter often returns ALL single-char segments for unknown proper names
+ * (e.g. character names like 偲雅伶绪). But when a name appears adjacent to a
+ * known word in the same span (e.g. 向偲雅伶绪问候), the "all single" check
+ * used previously failed and fragmented the name.
+ *
+ * Run-merging fix: accumulate consecutive single-char word-like segments into a
+ * "run". Flush the run as one compound token when a multi-char word interrupts it
+ * or the span ends. This preserves known words (聚餐, 问候) as individual tokens
+ * while keeping unknown proper names intact.
+ *
+ * @param {Intl.Segmenter} segmenter
+ * @param {string} span
+ * @returns {string[]}
+ */
+function _segmentSpan(segmenter, span) {
+    const wordSegs = [...segmenter.segment(span)].filter(s => s.isWordLike);
+    if (wordSegs.length === 0) return span.length >= 2 ? [span] : [];
+
+    const tokens = [];
+    let singleRun = '';
+
+    for (const seg of wordSegs) {
+        if (seg.segment.length === 1) {
+            // Accumulate single-char segments into a run (potential proper name)
+            singleRun += seg.segment;
+        } else {
+            // Multi-char known word encountered — flush accumulated run first
+            if (singleRun.length >= 2) tokens.push(singleRun);
+            else if (singleRun.length === 1) tokens.push(singleRun); // keep solo chars
+            singleRun = '';
+            tokens.push(seg.segment);
         }
     }
-    return _cjkSegmenter;
+    // Flush any remaining run
+    if (singleRun.length > 0) tokens.push(singleRun);
+
+    // Safety: if nothing produced (e.g. all filtered), emit whole span
+    return tokens.length > 0 ? tokens : (span.length >= 2 ? [span] : []);
+}
+
+/**
+ * Fallback tokenizer used when Intl.Segmenter is unavailable.
+ * Produces overlapping bigrams from each CJK span — a standard degraded-mode
+ * approach for CJK BM25 that performs far better than single characters and
+ * works equally well for Chinese and Japanese.
+ *
+ * Example: "聚餐问候" → ["聚餐", "餐问", "问候"]
+ * @param {string} span
+ * @returns {string[]}
+ */
+function _bigramFallback(span) {
+    if (span.length < 2) return span.length === 1 ? [span] : [];
+    const bigrams = [];
+    for (let i = 0; i < span.length - 1; i++) {
+        bigrams.push(span[i] + span[i + 1]);
+    }
+    return bigrams;
 }
 
 /**
  * Extract CJK word tokens from text.
- * Uses Intl.Segmenter('zh', {granularity:'word'}) for proper word boundaries;
- * falls back to single-character tokens when the API is unavailable.
+ *
+ * Uses Intl.Segmenter with run-merging to preserve proper names while still
+ * splitting known compound words. Falls back to overlapping bigrams when the
+ * Segmenter API is unavailable (older environments / SillyTavern).
+ *
+ * Currently handles Chinese. To add Japanese support:
+ *   1. Extend _CJK_SPAN_RE to include \u3040-\u309F (Hiragana) and \u30A0-\u30FF (Katakana)
+ *   2. _getSegmenter() already routes kana-containing spans to _getJaSegmenter()
+ *   That's it — no other changes needed.
+ *
  * @param {string} text
  * @returns {string[]}
  */
 function extractCJKTokens(text) {
-    const cjkSpanRe = /[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF]+/g;
-    const spans = text.match(cjkSpanRe);
+    const spans = text.match(_CJK_SPAN_RE);
     if (!spans) return [];
 
-    const segmenter = _getCJKSegmenter();
-    if (segmenter) {
-        const tokens = [];
-        for (const span of spans) {
-            const wordSegs = [...segmenter.segment(span)].filter(s => s.isWordLike);
-            // If every word-like segment is a single character, the segmenter found
-            // no compound words in this span — it is likely an unknown proper name or
-            // transliterated word (e.g. 英妮, 維賽塔). Treat the whole span as one
-            // token so names are not fragmented into meaningless individual chars.
-            if (wordSegs.length > 1 && wordSegs.every(s => s.segment.length === 1)) {
-                tokens.push(span);
-            } else {
-                for (const seg of wordSegs) {
-                    tokens.push(seg.segment);
-                }
-            }
+    const tokens = [];
+    for (const span of spans) {
+        const segmenter = _getSegmenter(span);
+        if (segmenter) {
+            for (const tok of _segmentSpan(segmenter, span)) tokens.push(tok);
+        } else {
+            for (const tok of _bigramFallback(span)) tokens.push(tok);
         }
-        return tokens;
     }
-    // Fallback: one token per character
-    return text.match(/[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF]/g) || [];
+    return tokens;
 }
 
 /**
