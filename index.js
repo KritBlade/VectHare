@@ -109,6 +109,12 @@ const defaultSettings = {
     // Keyword extraction level for chat messages
     keyword_extraction_level: 'balanced', // 'off', 'minimal', 'balanced', 'aggressive'
 
+    // Summarization before vectorization
+    summarize_provider: 'off',        // 'off', 'openrouter', 'vllm'
+    summarize_model: '',              // Model ID for summarization (e.g. 'google/gemini-flash-1.5-8b')
+    summarize_vllm_url: '',           // vLLM base URL for summarization (e.g. 'http://localhost:8000')
+    summarize_prompt: '',             // Custom prompt template (empty = use built-in default)
+
     // Hybrid Search settings (combines vector + full-text search)
     hybrid_search_enabled: false,       // Enable hybrid search mode
     hybrid_fusion_method: 'rrf',        // 'rrf' (Reciprocal Rank Fusion) or 'weighted'

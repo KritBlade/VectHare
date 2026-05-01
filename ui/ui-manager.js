@@ -709,6 +709,64 @@ export function renderSettings(containerId, settings, callbacks) {
                         </div>
                     </div>
 
+                    <!-- Summarization Card -->
+                    <div class="vecthare-card">
+                        <div class="vecthare-card-header">
+                            <h3 class="vecthare-card-title">
+                                <span class="vecthare-icon">
+                                    <i class="fa-solid fa-file-lines"></i>
+                                </span>
+                                Summarize Before Store
+                            </h3>
+                            <p class="vecthare-card-subtitle">Condense each message to a 3-5 sentence summary before embedding</p>
+                        </div>
+                        <div class="vecthare-card-body">
+
+                            <label for="vecthare_summarize_provider">
+                                <small>Summarization Provider</small>
+                            </label>
+                            <select id="vecthare_summarize_provider" class="vecthare-select">
+                                <option value="off">Off</option>
+                                <option value="openrouter">OpenRouter</option>
+                                <option value="vllm">vLLM</option>
+                            </select>
+                            <small class="vecthare_hint">Provider used for summarization LLM calls</small>
+
+                            <div id="vecthare_summarize_settings" style="display:none; margin-top:12px;">
+
+                                <div id="vecthare_summarize_vllm_url_row" style="display:none; margin-bottom:10px;">
+                                    <label for="vecthare_summarize_vllm_url">
+                                        <small>vLLM Base URL</small>
+                                    </label>
+                                    <input type="text" id="vecthare_summarize_vllm_url" class="vecthare-input"
+                                        placeholder="http://localhost:8000" />
+                                    <small class="vecthare_hint">Base URL of your vLLM server (OpenAI-compatible)</small>
+                                </div>
+
+                                <label for="vecthare_summarize_model">
+                                    <small>Summarization Model</small>
+                                </label>
+                                <input type="text" id="vecthare_summarize_model" class="vecthare-input"
+                                    placeholder="e.g. google/gemini-flash-1.5-8b" />
+                                <small class="vecthare_hint">Model ID for summarization (separate from embedding model)</small>
+
+                                <label for="vecthare_summarize_prompt" style="margin-top:12px;">
+                                    <small>Summarization Prompt</small>
+                                </label>
+                                <textarea id="vecthare_summarize_prompt" class="vecthare-textarea" rows="8"
+                                    placeholder="Leave empty to use built-in default prompt"
+                                    style="margin-top:4px; font-size:11px;"></textarea>
+                                <small class="vecthare_hint">Use <code>{{text}}</code> as placeholder for the story text. Leave empty for built-in default.</small>
+
+                                <div style="margin-top:10px; padding:8px; background:rgba(255,200,0,0.08); border-left:3px solid rgba(255,200,0,0.4); border-radius:4px;">
+                                    <small>⚠ Each new message stored will make one additional LLM call. Use a fast, cheap model.</small>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+
                     <!-- Actions Card -->
                     <div class="vecthare-card">
                         <div class="vecthare-card-header">
@@ -1706,6 +1764,53 @@ function bindSettingsEvents(settings, callbacks) {
             saveSettingsDebounced();
         });
     $('#vecthare_batch_size_value').text(settings.batch_size || 4);
+
+    // Summarization provider
+    const updateSummarizeUI = (provider) => {
+        if (provider === 'off') {
+            $('#vecthare_summarize_settings').hide();
+        } else {
+            $('#vecthare_summarize_settings').show();
+            if (provider === 'vllm') {
+                $('#vecthare_summarize_vllm_url_row').show();
+            } else {
+                $('#vecthare_summarize_vllm_url_row').hide();
+            }
+        }
+    };
+    $('#vecthare_summarize_provider')
+        .val(settings.summarize_provider || 'off')
+        .on('change', function() {
+            settings.summarize_provider = String($(this).val());
+            Object.assign(extension_settings.vecthare, settings);
+            saveSettingsDebounced();
+            updateSummarizeUI(settings.summarize_provider);
+        });
+    updateSummarizeUI(settings.summarize_provider || 'off');
+
+    $('#vecthare_summarize_model')
+        .val(settings.summarize_model || '')
+        .on('change', function() {
+            settings.summarize_model = String($(this).val()).trim();
+            Object.assign(extension_settings.vecthare, settings);
+            saveSettingsDebounced();
+        });
+
+    $('#vecthare_summarize_vllm_url')
+        .val(settings.summarize_vllm_url || '')
+        .on('change', function() {
+            settings.summarize_vllm_url = String($(this).val()).trim();
+            Object.assign(extension_settings.vecthare, settings);
+            saveSettingsDebounced();
+        });
+
+    $('#vecthare_summarize_prompt')
+        .val(settings.summarize_prompt || '')
+        .on('change', function() {
+            settings.summarize_prompt = String($(this).val());
+            Object.assign(extension_settings.vecthare, settings);
+            saveSettingsDebounced();
+        });
 
     // Chunk size (for adaptive strategy)
     $('#vecthare_chunk_size')

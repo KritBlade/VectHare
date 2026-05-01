@@ -73,8 +73,9 @@ const STOP_WORDS = new Set([
     '的', '地', '得', '着', '了', '过', '嘛', '呢', '吧', '啊', '哦', '哈', '嗯',
     '我', '你', '他', '她', '它', '谁', '这', '那', '哪',
     '我们', '你们', '他们', '她们', '它们',
-    '是', '有', '在', '被', '让', '把', '使', '叫', '会', '要', '能', '说', '做', '来', '去', '到', '看', '用',
+    '是', '有', '在', '被', '让', '把', '使', '叫', '会', '要', '能', '说', '做', '来', '去', '到', '看', '用', '将',
     '和', '与', '及', '或', '但', '而', '因', '所', '如', '既', '虽', '若', '则', '就', '才', '也', '还', '都', '又', '再', '不', '没', '很', '最', '更', '只',
+    '其', '此', '已', '正', '便', '即', '仍', '曾', '各', '该',
     '于', '以', '从', '由', '向', '往', '对', '为', '给', '按', '比', '跟', '同',
     '什么', '怎么', '为什么', '哪里',
     '一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '百', '千', '万', '亿', '个', '些', '点', '多', '少', '几',
@@ -83,8 +84,9 @@ const STOP_WORDS = new Set([
 
     // Chinese stopwords (Traditional - additional glyphs not covered by Simplified set above)
     '著', '過', '這', '誰', '什麼', '我們', '你們', '他們', '她們', '它們',
-    '讓', '會', '沒', '說',
+    '讓', '會', '沒', '說', '將',
     '與', '卻', '還', '雖',
+    '其', '此', '已', '正', '便', '即', '仍', '曾', '各', '該',
     '從', '對', '為', '給', '於',
     '哪裡', '怎麼', '為什麼',
     '萬', '億', '個', '點', '幾',
@@ -654,8 +656,17 @@ function extractCJKTokens(text) {
     if (segmenter) {
         const tokens = [];
         for (const span of spans) {
-            for (const seg of segmenter.segment(span)) {
-                if (seg.isWordLike) tokens.push(seg.segment);
+            const wordSegs = [...segmenter.segment(span)].filter(s => s.isWordLike);
+            // If every word-like segment is a single character, the segmenter found
+            // no compound words in this span — it is likely an unknown proper name or
+            // transliterated word (e.g. 英妮, 維賽塔). Treat the whole span as one
+            // token so names are not fragmented into meaningless individual chars.
+            if (wordSegs.length > 1 && wordSegs.every(s => s.segment.length === 1)) {
+                tokens.push(span);
+            } else {
+                for (const seg of wordSegs) {
+                    tokens.push(seg.segment);
+                }
             }
         }
         return tokens;

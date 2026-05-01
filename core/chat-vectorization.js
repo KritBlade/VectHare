@@ -24,6 +24,7 @@ import {
     purgeVectorIndex,
 } from './core-vector-api.js';
 import { isBackendAvailable } from '../backends/backend-manager.js';
+import { summarizeText } from './summarizer.js';
 import { applyDecayToResults, applySceneAwareDecay } from './temporal-decay.js';
 import { isChunkDisabledByScene } from './scenes.js';
 import { registerCollection, getCollectionRegistry } from './collection-loader.js';
@@ -140,8 +141,10 @@ function prepareItemsForInsertion(items) {
  * @param {string} keywordLevel Keyword extraction level: 'off', 'minimal', 'balanced', 'aggressive'
  * @returns {object[]} Grouped message items ready for chunking
  */
-function groupMessagesByStrategy(messages, strategy, batchSize = 4, keywordLevel = 'balanced') {
+async function groupMessagesByStrategy(messages, strategy, batchSize = 4, keywordLevel = 'balanced', settings = {}) {
     if (!messages.length) return [];
+
+    const summarize = (text) => summarizeText(text, settings);
 
     // Helper to extract keywords based on level
     const getKeywords = (text) => {
@@ -163,12 +166,13 @@ function groupMessagesByStrategy(messages, strategy, batchSize = 4, keywordLevel
                     const role = m.is_user ? 'User' : 'Character';
                     return `[${role}]: ${m.text}`;
                 }).join('\n\n');
+                const storedText = await summarize(combinedText);
 
                 grouped.push({
-                    text: combinedText,
+                    text: storedText,
                     hash: getStringHash(combinedText),
                     index: messages[i].index,
-                    keywords: getKeywords(combinedText),
+                    keywords: getKeywords(storedText),
                     metadata: {
                         strategy: 'conversation_turns',
                         messageIds: pair.map(m => m.index),
@@ -191,12 +195,13 @@ function groupMessagesByStrategy(messages, strategy, batchSize = 4, keywordLevel
                     const role = m.is_user ? 'User' : 'Character';
                     return `[${role}]: ${m.text}`;
                 }).join('\n\n');
+                const storedText = await summarize(combinedText);
 
                 grouped.push({
-                    text: combinedText,
+                    text: storedText,
                     hash: getStringHash(combinedText),
                     index: batch[0].index,
-                    keywords: getKeywords(combinedText),
+                    keywords: getKeywords(storedText),
                     metadata: {
                         strategy: 'message_batch',
                         batchSize: batch.length,
@@ -211,20 +216,26 @@ function groupMessagesByStrategy(messages, strategy, batchSize = 4, keywordLevel
         }
 
         case 'per_message':
-        default:
-            // Current behavior - each message is its own item
-            return messages.map(m => ({
-                text: m.text,
-                hash: m.hash,
-                index: m.index,
-                is_user: m.is_user,
-                keywords: getKeywords(m.text),
-                metadata: {
-                    strategy: 'per_message',
-                    messageId: m.index,
-                    messageHashes: [m.hash] // Consistent with grouped strategies
-                }
-            }));
+        default: {
+            // Each message is its own item
+            const grouped = [];
+            for (const m of messages) {
+                const storedText = await summarize(m.text);
+                grouped.push({
+                    text: storedText,
+                    hash: m.hash,
+                    index: m.index,
+                    is_user: m.is_user,
+                    keywords: getKeywords(storedText),
+                    metadata: {
+                        strategy: 'per_message',
+                        messageId: m.index,
+                        messageHashes: [m.hash] // Consistent with grouped strategies
+                    }
+                });
+            }
+            return grouped;
+        }
     }
 }
 
@@ -448,7 +459,7 @@ export async function synchronizeChat(settings, batchSize = 5) {
 
         // Group messages according to strategy
         const keywordLevel = settings.keyword_extraction_level || 'balanced';
-        const groupedItems = groupMessagesByStrategy(allMessages, strategy, strategyBatchSize, keywordLevel);
+        const groupedItems = await groupMessagesByStrategy(allMessages, strategy, strategyBatchSize, keywordLevel, settings);
 
         // Filter out already vectorized items (by their grouped hash)
         const queue = new Queue();
