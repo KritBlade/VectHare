@@ -117,7 +117,15 @@ export async function vectorizeContent({ contentType, source, settings }) {
                     }
                     throw err;
                 }
-                const summarizedChunk = { ...chunk, text: summaryText };
+                const keywordLevel = vecthareSettings?.keywordLevel || 'balanced';
+                const summaryKeywords = keywordLevel !== 'off'
+                    ? extractBM25Keywords(summaryText, {
+                        level: keywordLevel,
+                        baseWeight: vecthareSettings?.keywordBaseWeight || 1.5,
+                        settings: vecthareSettings,
+                    })
+                    : [];
+                const summarizedChunk = { ...chunk, text: summaryText, keywords: summaryKeywords };
 
                 try {
                     await insertVectorItems(collectionId, [summarizedChunk], vecthareSettings);
