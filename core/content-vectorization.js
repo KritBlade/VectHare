@@ -12,7 +12,7 @@
 
 import { getContentType, getContentTypeDefaults, hasFeature } from './content-types.js';
 import { chunkText } from './chunking.js';
-import { insertVectorItems, purgeVectorIndex } from './core-vector-api.js';
+import { insertVectorItems, purgeVectorIndex, getSavedHashes } from './core-vector-api.js';
 import { setCollectionMeta, getDefaultDecayForType } from './collection-metadata.js';
 import { registerCollection } from './collection-loader.js';
 import { getBackend } from '../backends/backend-manager.js';
@@ -40,7 +40,7 @@ import { getStringHash } from '../../../../utils.js';
  * @param {AbortSignal} [params.abortSignal] - Optional abort signal to stop vectorization
  * @returns {Promise<{success: boolean, chunkCount: number, collectionId: string}>}
  */
-export async function vectorizeContent({ contentType, source, settings, abortSignal = null }) {
+export async function vectorizeContent({ contentType, source, settings, abortSignal = null, continueMode = false }) {
     const throwIfAborted = () => {
         if (abortSignal?.aborted) {
             const err = new Error('Vectorization stopped by user');
@@ -102,7 +102,31 @@ export async function vectorizeContent({ contentType, source, settings, abortSig
             ...chunk,
             hash: getStringHash(chunk.text),
         }));
-        const finalChunks = hashedChunks;
+
+        // Continue mode: skip chunks already present in the collection
+        let finalChunks;
+        if (continueMode) {
+            try {
+                progressTracker.updateProgress(3, 'Checking existing chunks...');
+                const savedHashes = await getSavedHashes(collectionId, vecthareSettings);
+                const savedSet = new Set(savedHashes);
+                const before = hashedChunks.length;
+                finalChunks = hashedChunks.filter(c => !savedSet.has(c.hash));
+                const skipped = before - finalChunks.length;
+                console.log(`VectHare: Continue mode — ${skipped} chunks already in DB, ${finalChunks.length} remaining`);
+                progressTracker.updateChunks(finalChunks.length);
+                if (finalChunks.length === 0) {
+                    progressTracker.complete(true, 'Already up to date — no new chunks to insert');
+                    return { success: true, chunkCount: 0, collectionId };
+                }
+                toastr.info(`Continuing: ${skipped} chunks skipped, ${finalChunks.length} to insert`, 'VectHare');
+            } catch (e) {
+                console.warn('VectHare: Could not fetch saved hashes for dedup, inserting all:', e.message);
+                finalChunks = hashedChunks;
+            }
+        } else {
+            finalChunks = hashedChunks;
+        }
 
         // Step 3.5 + 4 combined: For chat with summarization, pipeline each chunk
         // (summarize → embed → insert immediately) to start filling Qdrant right away.
@@ -148,6 +172,7 @@ export async function vectorizeContent({ contentType, source, settings, abortSig
                     throwIfAborted();
                     await insertVectorItems(collectionId, [summarizedChunk], vecthareSettings);
                 } catch (insertErr) {
+                    if (insertErr?.name === 'AbortError') throw insertErr;
                     console.error('VectHare: Pipeline insert failed for chunk, skipping:', insertErr.message);
                     progressTracker.addError(`Chunk ${pipelined + 1}: ${insertErr.message}`);
                 }

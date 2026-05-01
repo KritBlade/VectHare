@@ -457,6 +457,8 @@ export class ProgressTracker {
         if (this.stats.errors.length > 0) {
             this.updateErrorsList();
             if (els.errors) els.errors.style.display = 'block';
+        } else {
+            if (els.errors) els.errors.style.display = 'none';
         }
     }
 

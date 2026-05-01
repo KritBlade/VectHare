@@ -2516,8 +2516,13 @@ async function startContinueVectorization() {
             source: source,
             settings: currentSettings,
             abortSignal: activeVectorizeAbortController.signal,
+            continueMode: true,
         });
-        toastr.success(`Vectorized ${result.chunkCount} chunks`, 'VectHare');
+        if (result.chunkCount === 0) {
+            // Already up to date — message shown by vectorizeContent
+        } else {
+            toastr.success(`Inserted ${result.chunkCount} new chunks`, 'VectHare');
+        }
         closeContentVectorizer();
     } catch (e) {
         const isStopped = e?.name === 'AbortError' || String(e?.message || '').toLowerCase().includes('stopped by user');
