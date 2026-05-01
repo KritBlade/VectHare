@@ -92,6 +92,24 @@ const STOP_WORDS = new Set([
     '萬', '億', '個', '點', '幾',
     '裡', '裏', '後', '時', '現',
     '然後', '雖然', '不過', '總之',
+    // Traditional Chinese pronouns & filler missed by Simplified set
+    '妳', '妳們', '您',                          // feminine/polite "you"
+    '她的', '他的', '它的', '妳的', '你的', '我的', '牠', '牠們',  // possessives + animal pronouns
+    // Generic verbs that leak through as false keywords
+    '發出', '進行', '出現', '開始', '表示', '感到', '看到', '聽到', '走向',
+    '回到', '走進', '走出', '拿出', '拿起', '放下', '站起', '坐下', '轉向',
+    '繼續', '停下', '離開', '來到', '回來', '出來', '進來', '上來', '下來',
+    '完成', '結束', '發現', '明白', '知道', '覺得', '認為', '希望', '想到',
+    // Filler adverbs and descriptors
+    '一下', '一起', '一直', '一樣', '一邊', '一旁', '一番', '一聲',
+    '微微', '輕輕', '慢慢', '緩緩', '漸漸', '稍微', '略微', '稍稍',
+    '臉上', '身上', '手上', '眼中', '心中', '腦中', '胸口',  // body-location phrases
+    '那是', '這是', '就是', '只是', '還是', '或是', '但是', '可是',
+    '因為', '所以', '雖然', '如果', '即使', '不管', '無論',
+    '已經', '正在', '將要', '可以', '應該', '需要', '必須',
+    '非常', '十分', '相當', '有些', '有點', '有時', '有人', '有什麼',
+    '自己', '彼此', '大家', '大概', '可能', '似乎', '好像', '確實',
+    '布料', '聲音', '氣息', '氣氛', '動作', '姿態', '表情', '眼神',  // overly generic nouns
 ]);
 
 /**
@@ -712,8 +730,16 @@ function _segmentSpan(segmenter, span) {
             tokens.push(seg.segment);
         }
     }
-    // Flush any remaining run
-    if (singleRun.length > 0) tokens.push(singleRun);
+    // Flush any remaining run.
+    // If other multi-char tokens were already produced in this span, a final
+    // solo char is a trailing suffix (e.g. '村' from '瞭望村') — drop it.
+    // If this is the only output so far, keep it (e.g. '劍' as a standalone span).
+    if (singleRun.length >= 2) {
+        tokens.push(singleRun);
+    } else if (singleRun.length === 1 && tokens.length === 0) {
+        tokens.push(singleRun); // solo char span — preserve (e.g. '劍', '龍')
+    }
+    // else: trailing single char after known words — discard (e.g. '瞭望' + '村')
 
     // Safety: if nothing produced (e.g. all filtered), emit whole span
     return tokens.length > 0 ? tokens : (span.length >= 2 ? [span] : []);

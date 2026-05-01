@@ -266,6 +266,24 @@ const KEYWORD_STOP_WORDS = new Set([
     '萬', '億', '個', '點', '幾',
     '裡', '裏', '後', '時', '現',
     '然後', '雖然', '不過', '總之',
+    // Traditional Chinese pronouns & filler missed by Simplified set
+    '妳', '妳們', '您',                          // feminine/polite "you"
+    '她的', '他的', '它的', '妳的', '你的', '我的', '牠', '牠們',  // possessives + animal pronouns
+    // Generic verbs that leak through as false keywords
+    '發出', '進行', '出現', '開始', '表示', '感到', '看到', '聽到', '走向',
+    '回到', '走進', '走出', '拿出', '拿起', '放下', '站起', '坐下', '轉向',
+    '繼續', '停下', '離開', '來到', '回來', '出來', '進來', '上來', '下來',
+    '完成', '結束', '發現', '明白', '知道', '覺得', '認為', '希望', '想到',
+    // Filler adverbs and descriptors
+    '一下', '一起', '一直', '一樣', '一邊', '一旁', '一番', '一聲',
+    '微微', '輕輕', '慢慢', '緩緩', '漸漸', '稍微', '略微', '稍稍',
+    '臉上', '身上', '手上', '眼中', '心中', '腦中', '胸口',  // body-location phrases
+    '那是', '這是', '就是', '只是', '還是', '或是', '但是', '可是',
+    '因為', '所以', '雖然', '如果', '即使', '不管', '無論',
+    '已經', '正在', '將要', '可以', '應該', '需要', '必須',
+    '非常', '十分', '相當', '有些', '有點', '有時', '有人', '有什麼',
+    '自己', '彼此', '大家', '大概', '可能', '似乎', '好像', '確實',
+    '布料', '聲音', '氣息', '氣氛', '動作', '姿態', '表情', '眼神',  // overly generic nouns
 ]);
 
 /**
@@ -351,8 +369,40 @@ export function extractLorebookKeywords(entry, settings = null) {
  * @param {number} options.baseWeight - Base weight for keywords (default 1.5)
  * @returns {Array<{text: string, weight: number}>} Array of weighted keywords
  */
+
+/**
+ * Extract terms enclosed in CJK bracket markers: 【】「」『』
+ * These are structural markers in Chinese/Japanese text that explicitly signal
+ * named concepts — game systems, skills, titles, item names, etc.
+ * Bracket-enclosed terms are treated as high-priority keywords regardless of
+ * their frequency in the surrounding text.
+ *
+ * To extend for other bracket styles, add to the bracket character class below.
+ * @param {string} text
+ * @returns {string[]} Unique bracket-enclosed terms containing at least one CJK char
+ */
+function extractBracketTerms(text) {
+    const results = [];
+    // Matches content inside 【】, 「」, 『』 — max 20 chars to avoid huge spans
+    const bracketRe = /[\u3010\u300C\u300E]([^\u3011\u300D\u300F\n]{2,20})[\u3011\u300D\u300F]/g;
+    let m;
+    while ((m = bracketRe.exec(text)) !== null) {
+        const inner = m[1].trim();
+        // Only include if the term contains at least one CJK character
+        // (catches Chinese, Japanese Kanji, and prepared-for kana ranges)
+        if (/[\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF\u3400-\u4DBF\uF900-\uFAFF]/.test(inner)) {
+            results.push(inner);
+        }
+    }
+    return [...new Set(results)];
+}
+
 export function extractTextKeywords(text, options = {}) {
     if (!text || typeof text !== 'string') return [];
+
+    // Strip appended [KEYWORDS: ...] tag to prevent bleed-through when the stored
+    // Qdrant text (which has the tag appended for embedding) is re-processed.
+    text = text.replace(/\s*\[KEYWORDS:[^\]]*\]/gi, '').trimEnd();
 
     const level = options.level || DEFAULT_EXTRACTION_LEVEL;
     const baseWeight = options.baseWeight || DEFAULT_BASE_WEIGHT;
@@ -422,6 +472,15 @@ export function extractTextKeywords(text, options = {}) {
                 weight: Math.min(MAX_KEYWORD_WEIGHT, baseWeight + 0.2),
                 frequency: 1,
             });
+        }
+    }
+
+    // Step 5.5: Inject bracket-enclosed terms (【...】「...」『...』) as max-priority keywords.
+    // These are explicit concept markers in CJK text — game systems, skills, titles, item names.
+    // They bypass minFrequency: appearing once inside brackets is an intentional author signal.
+    for (const term of extractBracketTerms(scanArea)) {
+        if (!stopwords.has(term)) {
+            weightedKeywords.push({ text: term, weight: MAX_KEYWORD_WEIGHT, frequency: 1 });
         }
     }
 
@@ -541,6 +600,10 @@ export function extractChatKeywords(text, options = {}) {
 export function extractBM25Keywords(text, options = {}) {
     if (!text || typeof text !== 'string' || text.trim().length === 0) return [];
 
+    // Strip appended [KEYWORDS: ...] tag to prevent bleed-through when the stored
+    // Qdrant text (which has the tag appended for embedding) is re-processed.
+    text = text.replace(/\s*\[KEYWORDS:[^\]]*\]/gi, '').trimEnd();
+
     // Get extraction level config
     const level = options.level || DEFAULT_EXTRACTION_LEVEL;
     const config = EXTRACTION_LEVELS[level];
@@ -653,6 +716,18 @@ export function extractBM25Keywords(text, options = {}) {
             tfidf: tfidf * capitalBoost,
             isCapitalized
         });
+    }
+
+    // Inject bracket-enclosed terms (【...】「...」『...』) that aren't already scored.
+    // Assign a synthetic TF-IDF score above the current maximum so they survive the
+    // top-N cut even when their natural frequency is 1.
+    const scoredTerms = new Set(tfidfScores.map(s => s.text));
+    const currentMax = tfidfScores.reduce((max, s) => Math.max(max, s.tfidf), 0);
+    const bracketBoost = currentMax * 1.5 + 10;
+    for (const term of extractBracketTerms(scanText)) {
+        if (!stopwords.has(term) && !scoredTerms.has(term)) {
+            tfidfScores.push({ text: term, tf: 1, idf: bracketBoost, tfidf: bracketBoost, isCapitalized: false });
+        }
     }
 
     // Sort by TF-IDF score (highest first)
