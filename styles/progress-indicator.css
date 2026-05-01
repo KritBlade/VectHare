@@ -286,6 +286,38 @@
     gap: 10px;
 }
 
+.vecthare-progress-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.vecthare-progress-stop {
+    background: color-mix(in srgb, #ef4444 20%, transparent);
+    border: 1px solid color-mix(in srgb, #ef4444 40%, var(--SmartThemeBorderColor));
+    color: #fecaca;
+    font-size: 0.85em;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.vecthare-progress-stop:hover:not(:disabled) {
+    background: color-mix(in srgb, #ef4444 30%, transparent);
+    border-color: color-mix(in srgb, #ef4444 55%, var(--SmartThemeBorderColor));
+    color: #fee2e2;
+}
+
+.vecthare-progress-stop:disabled {
+    opacity: 0.7;
+    cursor: default;
+}
+
 .vecthare-progress-close {
     background: none;
     border: none;

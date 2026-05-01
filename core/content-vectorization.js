@@ -37,9 +37,18 @@ import { getStringHash } from '../../../../utils.js';
  * @param {string} params.contentType - Content type ID
  * @param {object} params.source - Source data
  * @param {object} params.settings - Type-specific settings
+ * @param {AbortSignal} [params.abortSignal] - Optional abort signal to stop vectorization
  * @returns {Promise<{success: boolean, chunkCount: number, collectionId: string}>}
  */
-export async function vectorizeContent({ contentType, source, settings }) {
+export async function vectorizeContent({ contentType, source, settings, abortSignal = null }) {
+    const throwIfAborted = () => {
+        if (abortSignal?.aborted) {
+            const err = new Error('Vectorization stopped by user');
+            err.name = 'AbortError';
+            throw err;
+        }
+    };
+
     const type = getContentType(contentType);
     if (!type) {
         throw new Error(`Unknown content type: ${contentType}`);
@@ -50,19 +59,24 @@ export async function vectorizeContent({ contentType, source, settings }) {
     progressTracker.updateCurrentItem(sourceName);
 
     try {
+        throwIfAborted();
+
         // Step 1: Resolve source
         progressTracker.updateProgress(1, 'Loading content...');
         const rawContent = await resolveSource(contentType, source);
+        throwIfAborted();
 
         // Step 2: Prepare and chunk
         progressTracker.updateProgress(2, 'Chunking content...');
         const preparedContent = await prepareContent(contentType, rawContent, settings);
+        throwIfAborted();
         const chunks = await chunkText(preparedContent.text || preparedContent, {
             strategy: settings.strategy || type.defaultStrategy,
             chunkSize: settings.chunkSize || type.defaults.chunkSize,
             chunkOverlap: settings.chunkOverlap || type.defaults.chunkOverlap,
             batchSize: settings.batchSize || 4,
         });
+        throwIfAborted();
 
         if (chunks.length === 0) {
             throw new Error('No chunks generated from content');
@@ -88,6 +102,7 @@ export async function vectorizeContent({ contentType, source, settings }) {
             ...chunk,
             hash: getStringHash(chunk.text),
         }));
+        const finalChunks = hashedChunks;
 
         // Step 3.5 + 4 combined: For chat with summarization, pipeline each chunk
         // (summarize → embed → insert immediately) to start filling Qdrant right away.
@@ -105,6 +120,8 @@ export async function vectorizeContent({ contentType, source, settings }) {
 
             let pipelined = 0;
             for (const chunk of hashedChunks) {
+                throwIfAborted();
+
                 let summaryText;
                 try {
                     summaryText = await summarizeText(chunk.text, vecthareSettings);
@@ -128,6 +145,7 @@ export async function vectorizeContent({ contentType, source, settings }) {
                 const summarizedChunk = { ...chunk, text: summaryText, keywords: summaryKeywords };
 
                 try {
+                    throwIfAborted();
                     await insertVectorItems(collectionId, [summarizedChunk], vecthareSettings);
                 } catch (insertErr) {
                     console.error('VectHare: Pipeline insert failed for chunk, skipping:', insertErr.message);
@@ -139,7 +157,6 @@ export async function vectorizeContent({ contentType, source, settings }) {
                 progressTracker.updateEmbeddingProgress(pipelined, hashedChunks.length);
             }
 
-            finalChunks = hashedChunks; // length reference for metadata
             console.log(`[VectHare Summarizer] Pipeline complete: ${pipelined} chunks processed`);
 
         } else {
@@ -161,6 +178,7 @@ export async function vectorizeContent({ contentType, source, settings }) {
 
             try {
                 await insertVectorItems(collectionId, finalChunks, vecthareSettings, (embedded, total) => {
+                    throwIfAborted();
                     console.log(`[Content Vectorization] Processing progress callback: ${embedded}/${total}`);
                     progressTracker.updateEmbeddingProgress(embedded, total);
                     progressTracker.updateCurrentItem(`Processing: ${embedded}/${total} chunks (${total - embedded} remaining)`);
@@ -193,6 +211,7 @@ export async function vectorizeContent({ contentType, source, settings }) {
         registerCollection(collectionId);
         console.log(`VectHare: Registered collection ${collectionId}`);
 
+        throwIfAborted();
         progressTracker.complete(true, `Vectorized ${finalChunks.length} chunks`);
 
         return {
@@ -201,6 +220,11 @@ export async function vectorizeContent({ contentType, source, settings }) {
             collectionId,
         };
     } catch (error) {
+        if (error?.name === 'AbortError') {
+            progressTracker.complete(false, 'Stopped by user');
+            throw error;
+        }
+
         progressTracker.addError(error.message);
         progressTracker.complete(false, 'Vectorization failed');
         throw error;

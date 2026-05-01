@@ -29,6 +29,7 @@ import { saveSettingsDebounced } from '../../../../../script.js';
 import { getChatUUID } from '../core/chat-vectorization.js';
 import { callGenericPopup, POPUP_TYPE } from '../../../../popup.js';
 import { openTextCleaningManager } from './text-cleaning-manager.js';
+import { progressTracker } from './progress-tracker.js';
 
 // ============================================================================
 // STATE
@@ -37,6 +38,30 @@ import { openTextCleaningManager } from './text-cleaning-manager.js';
 let currentContentType = 'lorebook';
 let currentSettings = {};
 let sourceData = null;
+let activeVectorizeAbortController = null;
+let isVectorizing = false;
+
+function updateVectorizeButtonState(running) {
+    const btn = $('#vecthare_cv_vectorize');
+    const cancelBtn = $('#vecthare_cv_cancel');
+    const continueBtn = $('#vecthare_cv_continue');
+
+    if (running) {
+        btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> Vectorizing...');
+        cancelBtn.html('<i class="fa-solid fa-stop"></i> Stop');
+        continueBtn.prop('disabled', true);
+    } else {
+        btn.prop('disabled', false).html('<i class="fa-solid fa-bolt"></i> Vectorize');
+        cancelBtn.text('Cancel');
+        continueBtn.prop('disabled', false);
+    }
+}
+
+function stopActiveVectorization() {
+    if (activeVectorizeAbortController && !activeVectorizeAbortController.signal.aborted) {
+        activeVectorizeAbortController.abort('user-stop');
+    }
+}
 
 // ============================================================================
 // MODAL CREATION
@@ -224,6 +249,9 @@ function createModal() {
                     <button class="vecthare-btn-secondary" id="vecthare_cv_preview_btn">
                         <i class="fa-solid fa-eye"></i> Preview Chunks
                     </button>
+                    <button class="vecthare-btn-secondary" id="vecthare_cv_continue" style="display: none;">
+                        <i class="fa-solid fa-forward"></i> Continue
+                    </button>
                     <button class="vecthare-btn-primary" id="vecthare_cv_vectorize">
                         <i class="fa-solid fa-bolt"></i> Vectorize
                     </button>
@@ -254,6 +282,10 @@ function updateUIForContentType() {
 
     // Update options section
     updateOptionsSection(type);
+
+    // Show Continue button only for chat type (backfills missing chunks via hash dedup)
+    const isChatType = currentContentType === 'chat';
+    $('#vecthare_cv_continue').toggle(isChatType);
 }
 
 /**
@@ -1096,8 +1128,17 @@ function renderTextCleaningOptions() {
  */
 function bindEvents() {
     // Close handlers
-    $('#vecthare_cv_close, #vecthare_cv_cancel').on('click', closeContentVectorizer);
-    $('#vecthare_content_vectorizer_modal .vecthare-modal-overlay').on('click', closeContentVectorizer);
+    $('#vecthare_cv_close').on('click', closeContentVectorizer);
+    $('#vecthare_cv_cancel').on('click', function() {
+        if (isVectorizing) {
+            stopActiveVectorization();
+            return;
+        }
+        closeContentVectorizer();
+    });
+    $('#vecthare_content_vectorizer_modal .vecthare-modal-overlay').on('click', function() {
+        if (!isVectorizing) closeContentVectorizer();
+    });
 
     // Content type dropdown selection
     $('#vecthare_cv_type_select').on('change', function() {
@@ -1274,6 +1315,9 @@ function bindEvents() {
 
     // Preview button
     $('#vecthare_cv_preview_btn').on('click', previewChunks);
+
+    // Continue button (backfill - skips purge, DB dedup handles already-inserted chunks)
+    $('#vecthare_cv_continue').on('click', startContinueVectorization);
 
     // Vectorize button
     $('#vecthare_cv_vectorize').on('click', startVectorization);
@@ -2434,9 +2478,69 @@ function getSourceData() {
 }
 
 /**
+ * Runs vectorization without purging existing vectors (continue/backfill mode).
+ * The DB's hash-based deduplication automatically skips already-inserted chunks.
+ * If no vectors exist yet, delegates to the normal startVectorization flow.
+ */
+async function startContinueVectorization() {
+    if (isVectorizing) return;
+
+    const source = getSourceData();
+    if (!source) {
+        toastr.warning('Please select or enter content first');
+        return;
+    }
+
+    // If no vectors exist yet, just run the normal vectorization
+    if (currentContentType === 'chat' && source.sourceType === 'current') {
+        try {
+            const { doesChatHaveVectors } = await import('../core/collection-loader.js');
+            const existing = await doesChatHaveVectors(currentSettings);
+            if (!existing.hasVectors || existing.chunkCount === 0) {
+                return startVectorization();
+            }
+        } catch (e) {
+            // If check fails, fall through to backfill path
+        }
+    }
+
+    isVectorizing = true;
+    activeVectorizeAbortController = new AbortController();
+    updateVectorizeButtonState(true);
+    progressTracker.setCancelHandler(() => stopActiveVectorization());
+
+    try {
+        const { vectorizeContent } = await import('../core/content-vectorization.js');
+        const result = await vectorizeContent({
+            contentType: currentContentType,
+            source: source,
+            settings: currentSettings,
+            abortSignal: activeVectorizeAbortController.signal,
+        });
+        toastr.success(`Vectorized ${result.chunkCount} chunks`, 'VectHare');
+        closeContentVectorizer();
+    } catch (e) {
+        const isStopped = e?.name === 'AbortError' || String(e?.message || '').toLowerCase().includes('stopped by user');
+        if (isStopped) {
+            toastr.info('Vectorization stopped', 'VectHare');
+            return;
+        }
+        console.error('VectHare: Continue vectorization failed:', e);
+        toastr.error('Vectorization failed: ' + e.message, 'VectHare');
+    } finally {
+        progressTracker.clearCancelHandler();
+        isVectorizing = false;
+        activeVectorizeAbortController = null;
+        updateVectorizeButtonState(false);
+    }
+}
+
+/**
  * Starts the vectorization process
  */
 async function startVectorization() {
+    if (isVectorizing) return;
+
     const type = getContentType(currentContentType);
     const source = getSourceData();
 
@@ -2482,8 +2586,10 @@ async function startVectorization() {
         }
     }
 
-    const btn = $('#vecthare_cv_vectorize');
-    btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> Vectorizing...');
+    isVectorizing = true;
+    activeVectorizeAbortController = new AbortController();
+    updateVectorizeButtonState(true);
+    progressTracker.setCancelHandler(() => stopActiveVectorization());
 
     try {
         // Import the appropriate handler
@@ -2493,12 +2599,20 @@ async function startVectorization() {
             contentType: currentContentType,
             source: source,
             settings: currentSettings,
+            abortSignal: activeVectorizeAbortController.signal,
         });
 
         toastr.success(`Vectorized ${result.chunkCount} chunks`, 'VectHare');
         closeContentVectorizer();
 
     } catch (e) {
+        const isStopped = e?.name === 'AbortError' || String(e?.message || '').toLowerCase().includes('stopped by user');
+
+        if (isStopped) {
+            toastr.info('Vectorization stopped', 'VectHare');
+            return;
+        }
+
         console.error('VectHare: Vectorization failed:', e);
 
         // Check for dimension mismatch error and provide helpful guidance
@@ -2513,7 +2627,11 @@ async function startVectorization() {
             toastr.error('Vectorization failed: ' + e.message, 'VectHare');
         }
 
-        btn.prop('disabled', false).html('<i class="fa-solid fa-bolt"></i> Vectorize');
+    } finally {
+        progressTracker.clearCancelHandler();
+        isVectorizing = false;
+        activeVectorizeAbortController = null;
+        updateVectorizeButtonState(false);
     }
 }
 

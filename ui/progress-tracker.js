@@ -20,6 +20,8 @@ export class ProgressTracker {
         this.currentOperation = null;
         this.timeIntervalId = null;
         this.isComplete = false;
+        this.isCancelling = false;
+        this.cancelHandler = null;
         // PERF: Cache DOM element references to avoid repeated getElementById calls
         this.elements = null;
         this.stats = {
@@ -47,6 +49,7 @@ export class ProgressTracker {
     show(operation, totalItems = 0, itemLabel = 'Progress') {
         this.currentOperation = operation;
         this.isComplete = false;
+        this.isCancelling = false;
         this.stats = {
             totalItems: totalItems,
             processedItems: 0,
@@ -77,6 +80,9 @@ export class ProgressTracker {
         this.updateDisplay();
         this.panel.style.display = 'block';
         this.isVisible = true;
+
+        // Reflect current cancel capability whenever panel is shown.
+        this.refreshCancelButton();
     }
 
     /**
@@ -88,6 +94,58 @@ export class ProgressTracker {
         }
         this.isVisible = false;
         this.currentOperation = null;
+        this.isCancelling = false;
+        this.clearCancelHandler();
+    }
+
+    /**
+     * Set cancellation callback for the current operation.
+     * @param {Function|null} handler - Callback invoked when user clicks Stop
+     */
+    setCancelHandler(handler) {
+        this.cancelHandler = typeof handler === 'function' ? handler : null;
+        this.refreshCancelButton();
+    }
+
+    /**
+     * Clear cancellation callback.
+     */
+    clearCancelHandler() {
+        this.cancelHandler = null;
+        this.refreshCancelButton();
+    }
+
+    /**
+     * Trigger cancellation for the active operation.
+     */
+    requestCancel() {
+        if (!this.cancelHandler || this.isComplete || this.isCancelling) return;
+        this.isCancelling = true;
+        this.updateDisplay('Stopping...');
+
+        try {
+            this.cancelHandler();
+        } catch (error) {
+            this.addError(`Stop failed: ${error?.message || error}`);
+            this.isCancelling = false;
+        }
+
+        this.refreshCancelButton();
+    }
+
+    /**
+     * Show/hide and enable/disable the Stop button based on operation state.
+     */
+    refreshCancelButton() {
+        const stopBtn = this.elements?.stopBtn;
+        if (!stopBtn) return;
+
+        const canStop = !!this.cancelHandler && this.isVisible && !this.isComplete;
+        stopBtn.style.display = canStop ? 'inline-flex' : 'none';
+        stopBtn.disabled = !canStop || this.isCancelling;
+        stopBtn.innerHTML = this.isCancelling
+            ? '<i class="fa-solid fa-spinner fa-spin"></i> Stopping...'
+            : '<i class="fa-solid fa-stop"></i> Stop';
     }
 
     /**
@@ -189,6 +247,8 @@ export class ProgressTracker {
      */
     complete(success, message = '') {
         this.isComplete = true;
+        this.isCancelling = false;
+        this.clearCancelHandler();
 
         // Stop the time updater
         if (this.timeIntervalId) {
@@ -209,6 +269,17 @@ export class ProgressTracker {
     }
 
     /**
+     * Reopen the progress panel if it was previously created.
+     * @returns {boolean} true if the panel was reopened
+     */
+    reopen() {
+        if (!this.panel) return false;
+        this.panel.style.display = 'block';
+        this.isVisible = true;
+        return true;
+    }
+
+    /**
      * Create progress panel HTML
      */
     createPanel() {
@@ -216,9 +287,14 @@ export class ProgressTracker {
             <div id="vecthare_progress_panel" class="vecthare-progress-panel">
                 <div class="vecthare-progress-header">
                     <h3 id="vecthare_progress_title">VectHare Progress</h3>
-                    <button id="vecthare_progress_close" class="vecthare-progress-close">
-                        <i class="fa-solid fa-times"></i>
-                    </button>
+                    <div class="vecthare-progress-actions">
+                        <button id="vecthare_progress_stop" class="vecthare-progress-stop" style="display: none;">
+                            <i class="fa-solid fa-stop"></i> Stop
+                        </button>
+                        <button id="vecthare_progress_close" class="vecthare-progress-close">
+                            <i class="fa-solid fa-times"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="vecthare-progress-body">
                     <!-- Main Progress Bar -->
@@ -291,8 +367,13 @@ export class ProgressTracker {
             statLabel: document.getElementById('vecthare_progress_stat_label'),
             errors: document.getElementById('vecthare_progress_errors'),
             errorsList: document.getElementById('vecthare_progress_errors_list'),
+            stopBtn: document.getElementById('vecthare_progress_stop'),
             closeBtn: document.getElementById('vecthare_progress_close'),
         };
+
+        if (this.elements.stopBtn) {
+            this.elements.stopBtn.addEventListener('click', () => this.requestCancel());
+        }
 
         // Bind close button
         this.elements.closeBtn.addEventListener('click', () => {
@@ -385,9 +466,12 @@ export class ProgressTracker {
         } else if (this.stats.totalChunksToEmbed > 0 && this.stats.embeddedChunks >= 0) {
             // Streaming approach: embedding and writing happen together
             const progressPercent = (this.stats.embeddedChunks / this.stats.totalChunksToEmbed) * 100;
+            if (this.isCancelling) {
+                return 'Stopping...';
+            }
             if (progressPercent < 100) {
                 return 'Processing chunks...';
-9            } else {
+            } else {
                 return 'Finalizing...';
             }
         } else if (this.stats.processedItems >= this.stats.totalItems) {

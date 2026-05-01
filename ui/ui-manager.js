@@ -19,6 +19,7 @@ import { openDatabaseBrowser } from './database-browser.js';
 import { openContentVectorizer } from './content-vectorizer.js';
 import { openSearchDebugModal, getLastSearchDebug } from './search-debug.js';
 import { openTextCleaningManager } from './text-cleaning-manager.js';
+import { progressTracker } from './progress-tracker.js';
 import { resetBackendHealth } from '../backends/backend-manager.js';
 import { getHealthIndicatorHtml, getHealthModalHtml, initializeHealthDashboard } from './health-dashboard.js';
 import { getChatCollectionId } from '../core/chat-vectorization.js';
@@ -836,6 +837,10 @@ export function renderSettings(containerId, settings, callbacks) {
                                 <button id="vecthare_text_cleaning" class="vecthare-action-btn vecthare-btn-secondary">
                                     <i class="fa-solid fa-broom"></i>
                                     <span>Text Cleaning</span>
+                                </button>
+                                <button id="vecthare_reopen_progress" class="vecthare-action-btn vecthare-btn-secondary">
+                                    <i class="fa-solid fa-chart-line"></i>
+                                    <span>Progress</span>
                                 </button>
                                 ${getHealthIndicatorHtml()}
                             </div>
@@ -2873,6 +2878,11 @@ function bindSettingsEvents(settings, callbacks) {
     });
     $('#vecthare_text_cleaning').on('click', () => {
         openTextCleaningManager();
+    });
+    $('#vecthare_reopen_progress').on('click', () => {
+        if (!progressTracker.reopen()) {
+            toastr.info('No active progress to show', 'VectHare');
+        }
     });
 
     // Initialize provider-specific settings visibility
