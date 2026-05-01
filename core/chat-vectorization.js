@@ -24,7 +24,11 @@ import {
     purgeVectorIndex,
 } from './core-vector-api.js';
 import { isBackendAvailable } from '../backends/backend-manager.js';
-import { summarizeText } from './summarizer.js';
+import {
+    summarizeText,
+    isSummarizationFatalError,
+    getSummarizationConfigFingerprint,
+} from './summarizer.js';
 import { applyDecayToResults, applySceneAwareDecay } from './temporal-decay.js';
 import { isChunkDisabledByScene } from './scenes.js';
 import { registerCollection, getCollectionRegistry } from './collection-loader.js';
@@ -53,6 +57,7 @@ const hashCache = new LRUCache(HASH_CACHE_SIZE);
 
 // Synchronization state
 let syncBlocked = false;
+let summarizationFailureLatch = null;
 
 // ============================================================================
 // RE-EXPORTS from collection-ids.js for backwards compatibility
@@ -396,6 +401,16 @@ async function rerankWithBananaBread(query, chunks, settings) {
  * @returns {Promise<object>} Progress info
  */
 export async function synchronizeChat(settings, batchSize = 5) {
+    const summarizeFingerprint = getSummarizationConfigFingerprint(settings);
+    if (summarizationFailureLatch) {
+        if (summarizationFailureLatch.fingerprint === summarizeFingerprint) {
+            // Same broken config: keep sync halted silently to avoid popup spam.
+            return { remaining: -1, messagesProcessed: 0, chunksCreated: 0 };
+        }
+        // Config changed: clear latch and allow sync attempt again.
+        summarizationFailureLatch = null;
+    }
+
     // Build proper collection ID using chat UUID first
     const collectionId = getChatCollectionId();
     console.log(`🔍 VectHare DEBUG: getChatCollectionId() returned: "${collectionId}"`);
@@ -540,6 +555,18 @@ export async function synchronizeChat(settings, batchSize = 5) {
             itemsFailed
         };
     } catch (error) {
+        if (isSummarizationFatalError(error)) {
+            const providerLabel = (settings?.summarize_provider || 'summarizer').toUpperCase();
+            const msg = `Summarization is enabled but misconfigured: ${error.message}`;
+            summarizationFailureLatch = { fingerprint: summarizeFingerprint, reason: msg };
+            try {
+                toastr.error(msg, `${providerLabel} configuration error`);
+            } catch (_) {
+                // no-op
+            }
+            console.error('VectHare: Synchronization halted due to fatal summarization error:', error.message);
+            return { remaining: -1, messagesProcessed: 0, chunksCreated: 0 };
+        }
         console.error('VectHare: Sync failed', error);
         throw error;
     } finally {

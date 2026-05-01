@@ -26,7 +26,7 @@ import {
 } from './collection-ids.js';
 import { extractLorebookKeywords, extractTextKeywords, extractChatKeywords, extractBM25Keywords, EXTRACTION_LEVELS, DEFAULT_EXTRACTION_LEVEL, DEFAULT_BASE_WEIGHT } from './keyword-boost.js';
 import { cleanText, cleanMessages } from './text-cleaning.js';
-import { summarizeText } from './summarizer.js';
+import { summarizeText, isSummarizationFatalError } from './summarizer.js';
 import { progressTracker } from '../ui/progress-tracker.js';
 import { extension_settings, getContext } from '../../../../extensions.js';
 import { getStringHash } from '../../../../utils.js';
@@ -105,7 +105,18 @@ export async function vectorizeContent({ contentType, source, settings }) {
 
             let pipelined = 0;
             for (const chunk of hashedChunks) {
-                const summaryText = await summarizeText(chunk.text, vecthareSettings);
+                let summaryText;
+                try {
+                    summaryText = await summarizeText(chunk.text, vecthareSettings);
+                } catch (err) {
+                    if (isSummarizationFatalError(err)) {
+                        const providerLabel = (vecthareSettings?.summarize_provider || 'summarizer').toUpperCase();
+                        const msg = `Summarization is enabled but misconfigured: ${err.message}`;
+                        try { toastr.error(msg, `${providerLabel} configuration error`); } catch (_) {}
+                        throw new Error(msg);
+                    }
+                    throw err;
+                }
                 const summarizedChunk = { ...chunk, text: summaryText };
 
                 try {

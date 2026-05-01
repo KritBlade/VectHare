@@ -9,12 +9,66 @@
  *   - openrouter : Uses the OpenRouter chat completions API
  *   - vllm       : Uses a local vLLM server (OpenAI-compatible endpoint)
  *
- * When summarization fails for any reason (network error, missing key, etc.)
- * the original text is returned unchanged so vectorization is never blocked.
+ * Non-fatal summarization failures fall back to original text.
+ * Fatal configuration/auth failures (missing/invalid key, missing URL) throw
+ * SummarizationFatalError so callers can abort vectorization with clear UX.
  * ============================================================================
  */
 
 import { SECRET_KEYS, secret_state } from '../../../../secrets.js';
+
+/**
+ * Fatal summarization error that should abort vectorization instead of silently
+ * falling back to raw text.
+ */
+export class SummarizationFatalError extends Error {
+    /**
+     * @param {string} message
+     * @param {string} provider
+     * @param {string} code
+     */
+    constructor(message, provider, code) {
+        super(message);
+        this.name = 'SummarizationFatalError';
+        this.provider = provider;
+        this.code = code;
+    }
+}
+
+/**
+ * @param {unknown} err
+ * @returns {err is SummarizationFatalError}
+ */
+export function isSummarizationFatalError(err) {
+    return err instanceof SummarizationFatalError;
+}
+
+/**
+ * Build a fingerprint of active summarization configuration.
+ * Includes effective credential source so callers can detect when user fixes settings.
+ * @param {object} settings
+ * @returns {string}
+ */
+export function getSummarizationConfigFingerprint(settings = {}) {
+    const provider = settings?.summarize_provider || 'off';
+    if (provider === 'off') return 'off';
+
+    if (provider === 'openrouter') {
+        const key = _getOpenRouterApiKey(settings);
+        // Avoid logging key material: only include deterministic length + boundary chars.
+        const keySig = key ? `${key.length}:${key.slice(0, 2)}:${key.slice(-2)}` : 'missing';
+        return `openrouter|${keySig}`;
+    }
+
+    if (provider === 'vllm') {
+        const url = (settings?.summarize_vllm_url || '').trim();
+        const key = (settings?.summarize_vllm_api_key || '').trim();
+        const keySig = key ? `${key.length}:${key.slice(0, 2)}:${key.slice(-2)}` : 'missing';
+        return `vllm|${url}|${keySig}`;
+    }
+
+    return `other|${provider}`;
+}
 
 /** Default summarization prompt template */
 export const DEFAULT_SUMMARIZE_PROMPT =
@@ -35,7 +89,7 @@ Story excerpt:
  *
  * @param {string} text - Raw message/chunk text to summarize
  * @param {object} settings - VectHare settings object
- * @returns {Promise<string>} Summary text, or original text on any failure
+ * @returns {Promise<string>} Summary text, or original text on non-fatal failure
  */
 export async function summarizeText(text, settings) {
     if (!text || typeof text !== 'string') return text;
@@ -55,6 +109,9 @@ export async function summarizeText(text, settings) {
             return await _callVLLM(prompt, model, settings);
         }
     } catch (err) {
+        if (isSummarizationFatalError(err)) {
+            throw err;
+        }
         console.warn(`[VectHare Summarizer] ${provider} call failed, using original text:`, err?.message || err);
     }
 
@@ -120,8 +177,11 @@ async function _callOpenRouter(prompt, model, settings, originalLength) {
     const apiKey = _getOpenRouterApiKey(settings);
     console.log(`[VectHare Summarizer] OpenRouter key present: ${!!apiKey}`);
     if (!apiKey) {
-        console.warn('[VectHare Summarizer] OpenRouter API key not found — enter it in the Summarize Before Store card.');
-        return null;
+        throw new SummarizationFatalError(
+            'OpenRouter API key not found. Add it in Summarize Before Store settings.',
+            'openrouter',
+            'missing_api_key'
+        );
     }
 
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -136,6 +196,13 @@ async function _callOpenRouter(prompt, model, settings, originalLength) {
 
     if (!response.ok) {
         const errText = await response.text().catch(() => response.statusText);
+        if (response.status === 401 || response.status === 403) {
+            throw new SummarizationFatalError(
+                `OpenRouter authentication failed (${response.status}). Check your API key.`,
+                'openrouter',
+                'invalid_api_key'
+            );
+        }
         throw new Error(`OpenRouter HTTP ${response.status}: ${errText}`);
     }
 
@@ -150,8 +217,11 @@ async function _callOpenRouter(prompt, model, settings, originalLength) {
 async function _callVLLM(prompt, model, settings) {
     const baseUrl = (settings?.summarize_vllm_url || '').replace(/\/$/, '');
     if (!baseUrl) {
-        console.warn('[VectHare Summarizer] vLLM summarization URL not configured.');
-        return null;
+        throw new SummarizationFatalError(
+            'vLLM summarization URL not configured.',
+            'vllm',
+            'missing_url'
+        );
     }
 
     const headers = { 'Content-Type': 'application/json' };
@@ -167,6 +237,13 @@ async function _callVLLM(prompt, model, settings) {
 
     if (!response.ok) {
         const errText = await response.text().catch(() => response.statusText);
+        if (response.status === 401 || response.status === 403) {
+            throw new SummarizationFatalError(
+                `vLLM authentication failed (${response.status}). Check your API key.`,
+                'vllm',
+                'invalid_api_key'
+            );
+        }
         throw new Error(`vLLM HTTP ${response.status}: ${errText}`);
     }
 
