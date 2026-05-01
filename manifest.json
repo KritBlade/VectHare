@@ -10,5 +10,8 @@
     "version": "2.2.0-alpha",
     "homePage": "https://github.com/Coneja-Chibi/VectHare",
     "description": "Advanced RAG system with temporal decay, importance weighting, and intelligent chunking",
-    "auto_update": true
+    "auto_update": true,
+    "hooks": {
+        "update": "onUpdate"
+    }
 }

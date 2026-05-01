@@ -373,3 +373,13 @@ jQuery(async () => {
 
     console.log('VectHare: ✅ Initialized successfully');
 });
+
+/**
+ * Lifecycle hook: called by SillyTavern after a successful extension update.
+ * Forces a full page reload so the browser fetches the new JS/CSS files
+ * instead of serving stale cached versions.
+ */
+export async function onUpdate() {
+    console.log('VectHare: Update detected — reloading page to clear module cache');
+    location.reload();
+}
