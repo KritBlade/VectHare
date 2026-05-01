@@ -61,6 +61,7 @@ export async function vectorizeContent({ contentType, source, settings }) {
             strategy: settings.strategy || type.defaultStrategy,
             chunkSize: settings.chunkSize || type.defaults.chunkSize,
             chunkOverlap: settings.chunkOverlap || type.defaults.chunkOverlap,
+            batchSize: settings.batchSize || 4,
         });
 
         if (chunks.length === 0) {
@@ -88,63 +89,69 @@ export async function vectorizeContent({ contentType, source, settings }) {
             hash: getStringHash(chunk.text),
         }));
 
-        // Step 3.5: Summarize chat chunks if configured
-        // Hash is already computed from original text above — deduplication is unaffected.
-        let finalChunks = hashedChunks;
+        // Step 3.5 + 4 combined: For chat with summarization, pipeline each chunk
+        // (summarize → embed → insert immediately) to start filling Qdrant right away.
+        // For everything else, do the original batch approach.
         if (contentType === 'chat' && (vecthareSettings?.summarize_provider || 'off') !== 'off') {
-            progressTracker.updateProgress(3, `Summarizing ${hashedChunks.length} chunks...`);
-            console.log(`[VectHare Summarizer] Summarizing ${hashedChunks.length} chat chunks via ${vecthareSettings.summarize_provider}...`);
-            let summarized = 0;
-            finalChunks = [];
+            progressTracker.updateProgress(3, `Summarizing and inserting ${hashedChunks.length} chunks...`);
+            console.log(`[VectHare Summarizer] Pipelining ${hashedChunks.length} chat chunks via ${vecthareSettings.summarize_provider}...`);
+
+            // Pre-init backend once before pipeline starts
+            try {
+                await getBackend(vecthareSettings);
+            } catch (e) {
+                console.warn('VectHare: Backend init failed before pipeline insert, will still attempt:', e.message);
+            }
+
+            let pipelined = 0;
             for (const chunk of hashedChunks) {
                 const summaryText = await summarizeText(chunk.text, vecthareSettings);
-                finalChunks.push({ ...chunk, text: summaryText });
-                summarized++;
-                if (summarized % 10 === 0 || summarized === hashedChunks.length) {
-                    progressTracker.updateProgress(3, `Summarizing chunks... ${summarized}/${hashedChunks.length}`);
+                const summarizedChunk = { ...chunk, text: summaryText };
+
+                try {
+                    await insertVectorItems(collectionId, [summarizedChunk], vecthareSettings);
+                } catch (insertErr) {
+                    console.error('VectHare: Pipeline insert failed for chunk, skipping:', insertErr.message);
+                    progressTracker.addError(`Chunk ${pipelined + 1}: ${insertErr.message}`);
                 }
+
+                pipelined++;
+                progressTracker.updateProgress(3, `Summarizing + inserting... ${pipelined}/${hashedChunks.length}`);
+                progressTracker.updateEmbeddingProgress(pipelined, hashedChunks.length);
             }
-            console.log(`[VectHare Summarizer] Summarization complete: ${hashedChunks.length} chunks processed`);
-        }
 
-        // Step 4: Insert into vector store (streaming: embed + write together)
-        progressTracker.updateProgress(4, 'Processing chunks...');
+            finalChunks = hashedChunks; // length reference for metadata
+            console.log(`[VectHare Summarizer] Pipeline complete: ${pipelined} chunks processed`);
 
-        // Ensure backend is initialized and healthy before attempting inserts.
-        // Some backends (LanceDB/Qdrant) require initialization which may fail
-        // if attempted lazily during insert; pre-initializing reduces first-run failures.
-        try {
-            await getBackend(vecthareSettings);
-        } catch (e) {
-            console.warn('VectHare: Backend initialization failed before insert, will still attempt insert:', e.message);
-            try {
-                progressTracker.addError(`Backend init failed: ${e.message}`);
-            } catch (_) {}
-            try {
-                toastr.error('Backend initialization failed: ' + e.message, 'VectHare');
-            } catch (_) {}
-        }
+        } else {
+            // Non-chat or summarization off: standard batch summarize then insert
+            if (contentType === 'chat') {
+                // No summarization — finalChunks already equals hashedChunks
+            }
 
-        try {
-            await insertVectorItems(collectionId, finalChunks, vecthareSettings, (embedded, total) => {
-            // Update progress with streaming count
-            console.log(`[Content Vectorization] Processing progress callback: ${embedded}/${total}`);
-            progressTracker.updateEmbeddingProgress(embedded, total);
+            // Step 4: Insert into vector store
+            progressTracker.updateProgress(4, 'Processing chunks...');
 
-            // Streaming approach: embedding and writing happen together
-            progressTracker.updateCurrentItem(`Processing: ${embedded}/${total} chunks (${total - embedded} remaining)`);
-            });
-        } catch (error) {
-            // Surface insert errors to the UI so users see why vectorization may have failed
-            console.error('VectHare: insertVectorItems failed', error);
             try {
-                progressTracker.addError(error.message || String(error));
-            } catch (_) {}
+                await getBackend(vecthareSettings);
+            } catch (e) {
+                console.warn('VectHare: Backend initialization failed before insert, will still attempt insert:', e.message);
+                try { progressTracker.addError(`Backend init failed: ${e.message}`); } catch (_) {}
+                try { toastr.error('Backend initialization failed: ' + e.message, 'VectHare'); } catch (_) {}
+            }
+
             try {
-                toastr.error('Failed to write embeddings: ' + (error.message || String(error)), 'VectHare');
-            } catch (_) {}
-            // Re-throw so outer handler records completion state and any callers can react
-            throw error;
+                await insertVectorItems(collectionId, finalChunks, vecthareSettings, (embedded, total) => {
+                    console.log(`[Content Vectorization] Processing progress callback: ${embedded}/${total}`);
+                    progressTracker.updateEmbeddingProgress(embedded, total);
+                    progressTracker.updateCurrentItem(`Processing: ${embedded}/${total} chunks (${total - embedded} remaining)`);
+                });
+            } catch (error) {
+                console.error('VectHare: insertVectorItems failed', error);
+                try { progressTracker.addError(error.message || String(error)); } catch (_) {}
+                try { toastr.error('Failed to write embeddings: ' + (error.message || String(error)), 'VectHare'); } catch (_) {}
+                throw error;
+            }
         }
 
         // Save collection metadata

@@ -176,6 +176,19 @@ function createModal() {
                                         <span>High</span>
                                     </div>
                                 </div>
+                                <!-- Batch size - only shown for message_batch strategy -->
+                                <div class="vecthare-cv-slider-row" id="vecthare_cv_batch_size_row" style="display:none;">
+                                    <label>
+                                        Messages per Batch
+                                        <span class="vecthare-cv-value" id="vecthare_cv_batch_size_val">4</span>
+                                    </label>
+                                    <input type="range" id="vecthare_cv_batch_size"
+                                           min="1" max="20" step="1" value="4">
+                                    <div class="vecthare-cv-slider-hints">
+                                        <span>1 msg</span>
+                                        <span>20 msgs</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -720,13 +733,14 @@ function updateSizeControlsVisibility() {
     const needsSize = strategy?.needsSize ?? false;
     const needsOverlap = strategy?.needsOverlap ?? false;
 
-    // Show/hide the entire size controls section
+    // Show/hide size controls based on strategy requirements
     const hasAnyControls = needsSize || needsOverlap;
-    $('#vecthare_cv_size_controls').toggle(hasAnyControls);
+    $('#vecthare_cv_size_controls').toggle(hasAnyControls || strategyId === 'message_batch');
 
     // Show/hide individual controls
     $('#vecthare_cv_chunk_size_row').toggle(needsSize);
     $('#vecthare_cv_overlap_row').toggle(needsOverlap);
+    $('#vecthare_cv_batch_size_row').toggle(strategyId === 'message_batch');
 
     // Update description when strategy changes
     $('#vecthare_cv_strategy_desc').text(strategy?.description || '');
@@ -1143,6 +1157,12 @@ function bindEvents() {
         const val = parseInt($(this).val());
         $('#vecthare_cv_overlap_val').text(val === 0 ? 'Off' : val);
         currentSettings.chunkOverlap = val;
+    });
+
+    $('#vecthare_cv_batch_size').on('input', function() {
+        const val = parseInt($(this).val());
+        $('#vecthare_cv_batch_size_val').text(val);
+        currentSettings.batchSize = val;
     });
 
     // Scope selection
@@ -2269,6 +2289,7 @@ async function previewChunks() {
             strategy: currentSettings.strategy || type.defaultStrategy,
             chunkSize: currentSettings.chunkSize || type.defaults.chunkSize,
             chunkOverlap: currentSettings.chunkOverlap || type.defaults.chunkOverlap,
+            batchSize: currentSettings.batchSize || 4,
         });
 
         // Handle empty or undefined chunks
