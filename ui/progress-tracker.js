@@ -95,7 +95,9 @@ export class ProgressTracker {
         this.isVisible = false;
         this.currentOperation = null;
         this.isCancelling = false;
-        this.clearCancelHandler();
+        // Do NOT clear cancelHandler here — an operation may still be running.
+        // clearCancelHandler() is called by complete() when the operation finishes.
+        this.refreshCancelButton();
     }
 
     /**
@@ -276,6 +278,7 @@ export class ProgressTracker {
         if (!this.panel) return false;
         this.panel.style.display = 'block';
         this.isVisible = true;
+        this.refreshCancelButton();
         return true;
     }
 

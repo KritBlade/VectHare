@@ -33,6 +33,7 @@ import AsyncUtils from './utils/async-utils.js';
 
 // VectHare modules - UI
 import { renderSettings, openDiagnosticsModal, loadWebLlmModels, updateWebLlmStatus, refreshAutoSyncCheckbox } from './ui/ui-manager.js';
+import { progressTracker } from './ui/progress-tracker.js';
 import { initializeVisualizer } from './ui/chunk-visualizer.js';
 import { initializeDatabaseBrowser } from './ui/database-browser.js';
 import { initializeSceneMarkers, updateAllMarkerStates, setSceneSettings } from './ui/scene-markers.js';
@@ -181,7 +182,13 @@ window['vecthare_rearrangeChat'] = vecthare_rearrangeChat;
  * Action: Vectorize all messages in current chat
  */
 async function onVectorizeAllClick() {
-    await vectorizeAll(settings, getBatchSize());
+    const controller = new AbortController();
+    progressTracker.setCancelHandler(() => controller.abort('user-stop'));
+    try {
+        await vectorizeAll(settings, getBatchSize(), controller.signal);
+    } finally {
+        progressTracker.clearCancelHandler();
+    }
 }
 
 /**

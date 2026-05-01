@@ -1970,7 +1970,7 @@ export async function rearrangeChat(chat, settings, type) {
  * @param {object} settings VectHare settings
  * @param {number} batchSize Batch size
  */
-export async function vectorizeAll(settings, batchSize) {
+export async function vectorizeAll(settings, batchSize, abortSignal = null) {
     try {
         if (!settings.enabled_chats) {
             return;
@@ -2007,6 +2007,10 @@ export async function vectorizeAll(settings, batchSize) {
         let totalChunks = 0;
 
         while (!finished) {
+            if (abortSignal?.aborted) {
+                progressTracker.complete(false, 'Stopped by user');
+                return;
+            }
             if (is_send_press) {
                 toastr.info('Message generation is in progress.', 'Vectorization aborted');
                 progressTracker.complete(false, 'Aborted - message generation in progress');
