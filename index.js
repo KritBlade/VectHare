@@ -113,6 +113,7 @@ const defaultSettings = {
     summarize_provider: 'off',        // 'off', 'openrouter', 'vllm'
     summarize_model: '',              // Model ID for summarization (e.g. 'google/gemini-flash-1.5-8b')
     summarize_vllm_url: '',           // vLLM base URL for summarization (e.g. 'http://localhost:8000')
+    summarize_vllm_api_key: '',       // vLLM API key (stored in extension settings, not ST secrets)
     summarize_prompt: '',             // Custom prompt template (empty = use built-in default)
 
     // Hybrid Search settings (combines vector + full-text search)

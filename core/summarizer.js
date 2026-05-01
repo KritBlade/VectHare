@@ -89,8 +89,29 @@ function _extractReply(data) {
     return data?.choices?.[0]?.message?.content?.trim() || null;
 }
 
+function _getOpenRouterApiKey() {
+    const stored = secret_state[SECRET_KEYS.OPENROUTER];
+
+    if (typeof stored === 'string') {
+        return stored.trim();
+    }
+
+    if (Array.isArray(stored) && stored.length > 0) {
+        const activeSecret = stored.find(secret => secret?.active) || stored[0];
+        if (typeof activeSecret?.value === 'string') {
+            return activeSecret.value.trim();
+        }
+    }
+
+    if (stored && typeof stored === 'object' && typeof stored.value === 'string') {
+        return stored.value.trim();
+    }
+
+    return '';
+}
+
 async function _callOpenRouter(prompt, model, settings, originalLength) {
-    const apiKey = secret_state[SECRET_KEYS.OPENROUTER];
+    const apiKey = _getOpenRouterApiKey();
     console.log(`[VectHare Summarizer] OpenRouter key present: ${!!apiKey}`);
     if (!apiKey) {
         console.warn('[VectHare Summarizer] OpenRouter API key not found in ST secrets — configure it in ST\'s API settings.');
@@ -127,9 +148,13 @@ async function _callVLLM(prompt, model, settings) {
         return null;
     }
 
+    const headers = { 'Content-Type': 'application/json' };
+    const apiKey = settings?.summarize_vllm_api_key;
+    if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
+
     const response = await fetch(`${baseUrl}/v1/chat/completions`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(_buildBody(prompt, model)),
         signal: AbortSignal.timeout(30000),
     });

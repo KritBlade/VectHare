@@ -741,6 +741,11 @@ export function renderSettings(containerId, settings, callbacks) {
                                     <input type="text" id="vecthare_summarize_vllm_url" class="vecthare-input"
                                         placeholder="http://localhost:8000" />
                                     <small class="vecthare_hint">Base URL of your vLLM server (OpenAI-compatible)</small>
+                                    <label for="vecthare_summarize_vllm_apikey" style="margin-top:8px;">
+                                        <small>vLLM API Key <span style="opacity:0.6;">(optional — leave blank if not required)</span></small>
+                                    </label>
+                                    <input type="password" id="vecthare_summarize_vllm_apikey" class="vecthare-input"
+                                        placeholder="Paste key here to save..." autocomplete="off" />
                                 </div>
 
                                 <label for="vecthare_summarize_model">
@@ -1803,6 +1808,31 @@ function bindSettingsEvents(settings, callbacks) {
             Object.assign(extension_settings.vecthare, settings);
             saveSettingsDebounced();
         });
+
+    // vLLM summarization API key — stored directly in extension settings (same as bananabread pattern)
+    const updateSummarizeVllmKeyDisplay = () => {
+        const savedKey = settings.summarize_vllm_api_key;
+        if (savedKey) {
+            const masked = savedKey.length > 4
+                ? '*'.repeat(Math.min(savedKey.length - 4, 8)) + savedKey.slice(-4)
+                : '*'.repeat(savedKey.length);
+            $('#vecthare_summarize_vllm_apikey').attr('placeholder', `Key saved: ${masked}`);
+        } else {
+            $('#vecthare_summarize_vllm_apikey').attr('placeholder', 'Paste key here to save...');
+        }
+    };
+    updateSummarizeVllmKeyDisplay();
+    $('#vecthare_summarize_vllm_apikey').on('change', function() {
+        const value = String($(this).val()).trim();
+        if (value) {
+            settings.summarize_vllm_api_key = value;
+            Object.assign(extension_settings.vecthare, settings);
+            saveSettingsDebounced();
+            toastr.success('vLLM summarization API key saved');
+            $(this).val('');
+            updateSummarizeVllmKeyDisplay();
+        }
+    });
 
     $('#vecthare_summarize_prompt')
         .val(settings.summarize_prompt || '')
