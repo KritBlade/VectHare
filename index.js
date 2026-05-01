@@ -37,6 +37,7 @@ import { initializeVisualizer } from './ui/chunk-visualizer.js';
 import { initializeDatabaseBrowser } from './ui/database-browser.js';
 import { initializeSceneMarkers, updateAllMarkerStates, setSceneSettings } from './ui/scene-markers.js';
 import { initializeWorldInfoIntegration } from './core/world-info-integration.js';
+import { CJK_TOKENIZER_MODES, setCjkTokenizerMode, ensureJiebaTokenizerLoaded } from './core/bm25-scorer.js';
 
 // VectHare modules - Cotton-Tales Integration
 import './core/emotion-classifier.js'; // Exposes window.VectHareEmotionClassifier
@@ -151,6 +152,7 @@ const defaultSettings = {
 
     // Keyword Extraction
     custom_stopwords: '',               // Custom stopwords (comma-separated)
+    cjk_tokenizer_mode: CJK_TOKENIZER_MODES.intl, // intl | jieba | tiny_segmenter
 };
 
 // Runtime settings (merged with saved settings)
@@ -260,6 +262,18 @@ jQuery(async () => {
     const migrationResult = migrateOldEnabledKeys();
     if (migrationResult.migrated > 0) {
         console.log(`VectHare: Migrated ${migrationResult.migrated} old collection enabled keys`);
+    }
+
+    // Initialize CJK tokenizer mode before any extraction happens.
+    setCjkTokenizerMode(settings.cjk_tokenizer_mode || CJK_TOKENIZER_MODES.intl);
+    if (settings.cjk_tokenizer_mode === CJK_TOKENIZER_MODES.jieba) {
+        ensureJiebaTokenizerLoaded().then((ok) => {
+            if (ok) {
+                console.log('VectHare CJK: Jieba tokenizer initialized');
+            } else {
+                console.warn('VectHare CJK: Jieba tokenizer unavailable, using Intl.Segmenter fallback');
+            }
+        });
     }
 
     // Render UI

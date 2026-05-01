@@ -48,15 +48,15 @@ describe('EXTRACTION_LEVELS', () => {
 
     it('should have minimal level configured correctly', () => {
         expect(EXTRACTION_LEVELS.minimal.enabled).toBe(true);
-        expect(EXTRACTION_LEVELS.minimal.headerSize).toBe(500);
-        expect(EXTRACTION_LEVELS.minimal.maxKeywords).toBe(3);
+        expect(EXTRACTION_LEVELS.minimal.headerSize).toBe(1500);
+        expect(EXTRACTION_LEVELS.minimal.maxKeywords).toBe(5);
         expect(EXTRACTION_LEVELS.minimal.minFrequency).toBe(1);
     });
 
     it('should have balanced level configured correctly', () => {
         expect(EXTRACTION_LEVELS.balanced.enabled).toBe(true);
-        expect(EXTRACTION_LEVELS.balanced.headerSize).toBe(1000);
-        expect(EXTRACTION_LEVELS.balanced.maxKeywords).toBe(8);
+        expect(EXTRACTION_LEVELS.balanced.headerSize).toBe(5000);
+        expect(EXTRACTION_LEVELS.balanced.maxKeywords).toBe(12);
         expect(EXTRACTION_LEVELS.balanced.minFrequency).toBe(1);
     });
 
@@ -483,33 +483,30 @@ describe('extractBM25Keywords', () => {
     });
 
     it('should respect header size for minimal level', () => {
-        // Create text where unique words appear only in specific regions
-        // "phoenix" appears ONLY in first 500 chars (header area)
-        // "unicorn" appears ONLY after 500 chars (outside header)
-        // Header text with phoenix (about 480 chars) - fills the 500 char limit
-        const headerText = 'The phoenix rises from ashes. Phoenix is majestic. Legendary phoenix soars high. ' +
-                          'Many stories tell of the phoenix. The phoenix symbolizes rebirth. ' +
-                          'Ancient legends describe the phoenix. A golden phoenix appeared. ' +
-                          'The phoenix flew over the mountains. People worshipped the phoenix. ' +
-                          'The fiery phoenix blazed across sky. Watchers admired the phoenix bird. ';
-        // Padding to ensure we're well past 500 chars (about 200 chars more)
-        const padding = 'Generic text continues here with more padding content and filler words. '.repeat(4);
-        // Unicorn text that should NOT be scanned with minimal level
+        const minimalHeaderSize = EXTRACTION_LEVELS.minimal.headerSize;
+
+        // Keep phoenix strictly inside the minimal header window.
+        const headerText = 'The phoenix rises from ashes. Phoenix is majestic. Legendary phoenix soars high. '.repeat(10);
+
+        // Ensure unicorn starts strictly after the minimal header boundary.
+        const paddingNeeded = Math.max(0, (minimalHeaderSize - headerText.length) + 50);
+        const padding = 'x'.repeat(paddingNeeded);
+
+        // Unicorn text should be outside the minimal scan window.
         const tailText = 'Unicorn gallops through forest. Magical unicorn appears. ' +
-                        'The unicorn is beautiful. Rare unicorn sighting reported. '.repeat(3);
+            'The unicorn is beautiful. Rare unicorn sighting reported. '.repeat(3);
         const text = headerText + padding + tailText;
 
-        // Verify test setup: phoenix content should fill most of the 500 char limit
-        // headerText (~350 chars) + padding (~290 chars) = ~640 chars before unicorn
-        expect(headerText.length).toBeGreaterThan(300);
-        expect(headerText.length + padding.length).toBeGreaterThan(500);
+        // Verify test setup guarantees unicorn starts after scan boundary.
+        expect(headerText.length).toBeLessThan(minimalHeaderSize);
+        expect(headerText.length + padding.length).toBeGreaterThan(minimalHeaderSize);
 
         const keywords = extractBM25Keywords(text, { level: 'minimal' });
         const keywordTexts = keywords.map(k => k.text);
 
-        // Phoenix should be found (appears in first 500 chars with high frequency)
+        // Phoenix should be found (inside minimal scan window).
         expect(keywordTexts.some(t => t.includes('phoenix'))).toBe(true);
-        // Unicorn should NOT be found (minimal level only scans first 500 chars)
+        // Unicorn should NOT be found (outside minimal scan window).
         expect(keywordTexts.some(t => t.includes('unicorn'))).toBe(false);
     });
 

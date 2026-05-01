@@ -25,6 +25,7 @@ import { getChatCollectionId } from '../core/chat-vectorization.js';
 import { doesChatHaveVectors } from '../core/collection-loader.js';
 import { getModelField } from '../core/providers.js';
 import { getChunkingStrategies } from '../core/content-types.js';
+import { CJK_TOKENIZER_MODES, setCjkTokenizerMode, ensureJiebaTokenizerLoaded } from '../core/bm25-scorer.js';
 
 /**
  * Renders the VectHare settings UI
@@ -476,6 +477,19 @@ export function renderSettings(containerId, settings, callbacks) {
                                     </label>
                                     <small class="vecthare_hint">Use Qdrant/Milvus native hybrid if available (faster)</small>
                                 </div>
+                            </div>
+
+                            <!-- Custom Stopwords -->
+                            <div style="margin-top: 16px; padding: 12px; background: rgba(100,100,100,0.1); border-radius: 8px;">
+                                <label for="vecthare_cjk_tokenizer_mode">
+                                    <small><b>CJK Tokenizer Mode</b></small>
+                                </label>
+                                <select id="vecthare_cjk_tokenizer_mode" class="vecthare-select" style="margin-top: 4px;">
+                                    <option value="intl">Intl.Segmenter (default, Chinese + English)</option>
+                                    <option value="jieba">Better Chinese (Jieba WASM)</option>
+                                    <option value="tiny_segmenter">Japanese (TinySegmenter)</option>
+                                </select>
+                                <small class="vecthare_hint">Jieba WASM loads only when selected. TinySegmenter is used for kana-containing Japanese text.</small>
                             </div>
 
                             <!-- Custom Stopwords -->
@@ -2300,6 +2314,24 @@ function bindSettingsEvents(settings, callbacks) {
             settings.custom_stopwords = $(this).val();
             Object.assign(extension_settings.vecthare, settings);
             saveSettingsDebounced();
+        });
+
+    // CJK tokenizer mode selector
+    $('#vecthare_cjk_tokenizer_mode')
+        .val(settings.cjk_tokenizer_mode || CJK_TOKENIZER_MODES.intl)
+        .on('change', async function() {
+            const mode = String($(this).val());
+            settings.cjk_tokenizer_mode = mode;
+            setCjkTokenizerMode(mode);
+            Object.assign(extension_settings.vecthare, settings);
+            saveSettingsDebounced();
+
+            if (mode === CJK_TOKENIZER_MODES.jieba) {
+                const ok = await ensureJiebaTokenizerLoaded();
+                if (!ok) {
+                    toastr.warning('Jieba tokenizer failed to load. Falling back to Intl.Segmenter.', 'VectHare CJK');
+                }
+            }
         });
 
     // Initialize world info settings visibility based on current setting

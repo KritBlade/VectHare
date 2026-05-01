@@ -16,6 +16,8 @@
  * ============================================================================
  */
 
+import TinySegmenter from './vendor/tiny-segmenter-0.2.0.js';
+
 /**
  * Default BM25+ parameters
  * k1: Term frequency saturation parameter (1.2-2.0 typical)
@@ -26,90 +28,161 @@ const DEFAULT_K1 = 1.5;
 const DEFAULT_B = 0.75;
 const DEFAULT_DELTA = 0.5;
 
+/** CJK tokenizer modes for keyword extraction. */
+const CJK_TOKENIZER_MODES = Object.freeze({
+    intl: 'intl',
+    jieba: 'jieba',
+    tiny_segmenter: 'tiny_segmenter',
+});
+
+const DEFAULT_CJK_TOKENIZER_MODE = CJK_TOKENIZER_MODES.intl;
+const JIEBA_WASM_MODULE_URL = 'https://cdn.jsdelivr.net/gh/cxumol/jieba-wasm-html@gh-pages/jieba_rs_wasm.js';
+
+let cjkTokenizerMode = DEFAULT_CJK_TOKENIZER_MODE;
+let jiebaCutFunction = null;
+let jiebaLoadPromise = null;
+let tinySegmenterInstance = null;
+
+/**
+ * Set tokenizer mode used by extractCJKTokens.
+ * @param {string} mode
+ */
+function setCjkTokenizerMode(mode) {
+    if (!Object.values(CJK_TOKENIZER_MODES).includes(mode)) {
+        console.warn(`[VectHare CJK] Unknown tokenizer mode "${mode}", falling back to ${DEFAULT_CJK_TOKENIZER_MODE}`);
+        cjkTokenizerMode = DEFAULT_CJK_TOKENIZER_MODE;
+        return;
+    }
+    cjkTokenizerMode = mode;
+}
+
+/**
+ * Get current tokenizer mode.
+ * @returns {string}
+ */
+function getCjkTokenizerMode() {
+    return cjkTokenizerMode;
+}
+
+/**
+ * Lazily load Jieba WASM tokenizer from CDN.
+ * This is only called when mode is explicitly set to jieba.
+ * @returns {Promise<boolean>}
+ */
+async function ensureJiebaTokenizerLoaded() {
+    if (jiebaCutFunction) return true;
+    if (jiebaLoadPromise) return jiebaLoadPromise;
+    if (typeof window === 'undefined') return false;
+
+    jiebaLoadPromise = (async () => {
+        try {
+            const mod = await import(JIEBA_WASM_MODULE_URL);
+            if (typeof mod.default === 'function') {
+                await mod.default();
+            }
+            if (typeof mod.cut !== 'function') {
+                console.warn('[VectHare CJK] Jieba module loaded but cut() is unavailable');
+                return false;
+            }
+            jiebaCutFunction = mod.cut;
+            return true;
+        } catch (error) {
+            console.warn('[VectHare CJK] Failed to load Jieba WASM tokenizer:', error?.message || error);
+            return false;
+        }
+    })();
+
+    try {
+        return await jiebaLoadPromise;
+    } finally {
+        jiebaLoadPromise = null;
+    }
+}
+
+function _getTinySegmenter() {
+    if (!tinySegmenterInstance) {
+        tinySegmenterInstance = new TinySegmenter();
+    }
+    return tinySegmenterInstance;
+}
+
 /**
  * Comprehensive English stopwords list (190+ words)
  */
 const STOP_WORDS = new Set([
-    // Articles & determiners
+    // English stopwords
     'the', 'a', 'an', 'this', 'that', 'these', 'those', 'some', 'any', 'each',
-    'every', 'both', 'either', 'neither', 'such', 'what', 'which', 'whose',
-    // Pronouns
-    'i', 'me', 'my', 'mine', 'myself', 'you', 'your', 'yours', 'yourself',
-    'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself',
-    'it', 'its', 'itself', 'we', 'us', 'our', 'ours', 'ourselves',
-    'they', 'them', 'their', 'theirs', 'themselves',
-    'who', 'whom', 'whoever', 'someone', 'anyone', 'everyone', 'nobody',
-    'something', 'anything', 'everything', 'nothing',
-    // Conjunctions
-    'and', 'or', 'but', 'nor', 'so', 'yet', 'for', 'because', 'although',
-    'while', 'whereas', 'unless', 'until', 'since', 'when', 'whenever',
-    'where', 'wherever', 'whether', 'if', 'then', 'than', 'as',
-    // Prepositions
-    'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'from', 'into', 'onto',
-    'upon', 'out', 'off', 'over', 'under', 'above', 'below', 'between', 'among',
-    'through', 'during', 'before', 'after', 'behind', 'beside', 'beyond',
-    'within', 'without', 'about', 'around', 'against', 'along', 'across',
-    // Common verbs
-    'be', 'am', 'is', 'are', 'was', 'were', 'been', 'being',
-    'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'done',
-    'will', 'would', 'shall', 'should', 'may', 'might', 'must', 'can', 'could',
-    'get', 'got', 'go', 'went', 'gone', 'come', 'came', 'take', 'took', 'taken',
-    'make', 'made', 'say', 'said', 'know', 'knew', 'think', 'thought',
-    'see', 'saw', 'seen', 'want', 'use', 'find', 'found', 'give', 'gave',
-    // Adverbs
-    'very', 'really', 'quite', 'just', 'only', 'even', 'also', 'still', 'already',
-    'always', 'never', 'ever', 'often', 'sometimes', 'usually', 'now', 'then',
-    'here', 'there', 'today', 'soon', 'again', 'much', 'more', 'most', 'less',
-    'well', 'however', 'therefore', 'thus', 'too', 'enough',
-    // Common adjectives
-    'good', 'great', 'best', 'better', 'bad', 'new', 'old', 'big', 'small',
-    'large', 'little', 'long', 'short', 'high', 'low', 'same', 'different',
-    'other', 'another', 'next', 'last', 'first', 'many', 'few', 'own',
-    // Other common words
-    'thing', 'things', 'way', 'ways', 'place', 'part', 'case', 'point', 'fact',
-    'like', 'back', 'time', 'year', 'day', 'one', 'two', 'three',
+    'every', 'both', 'either', 'neither', 'such', 'what', 'which', 'whose', 'i', 'me',
+    'my', 'mine', 'myself', 'you', 'your', 'yours', 'yourself', 'he', 'him', 'his',
+    'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 'itself', 'we', 'us',
+    'our', 'ours', 'ourselves', 'they', 'them', 'their', 'theirs', 'themselves', 'who', 'whom',
+    'whoever', 'someone', 'anyone', 'everyone', 'nobody', 'something', 'anything', 'everything', 'nothing', 'and',
+    'or', 'but', 'nor', 'so', 'yet', 'for', 'because', 'although', 'while', 'whereas',
+    'unless', 'until', 'since', 'when', 'whenever', 'where', 'wherever', 'whether', 'if', 'then',
+    'than', 'as', 'in', 'on', 'at', 'to', 'of', 'with', 'by', 'from',
+    'into', 'onto', 'upon', 'out', 'off', 'over', 'under', 'above', 'below', 'between',
+    'among', 'through', 'during', 'before', 'after', 'behind', 'beside', 'beyond', 'within', 'without',
+    'about', 'around', 'against', 'along', 'across', 'be', 'am', 'is', 'are', 'was',
+    'were', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did',
+    'doing', 'done', 'will', 'would', 'shall', 'should', 'may', 'might', 'must', 'can',
+    'could', 'get', 'got', 'go', 'went', 'gone', 'come', 'came', 'take', 'took',
+    'taken', 'make', 'made', 'say', 'said', 'know', 'knew', 'think', 'thought', 'see',
+    'saw', 'seen', 'want', 'use', 'find', 'found', 'give', 'gave', 'very', 'really',
+    'quite', 'just', 'only', 'even', 'also', 'still', 'already', 'always', 'never', 'ever',
+    'often', 'sometimes', 'usually', 'now', 'here', 'there', 'today', 'soon', 'again', 'much',
+    'more', 'most', 'less', 'well', 'however', 'therefore', 'thus', 'too', 'enough', 'good',
+    'great', 'best', 'better', 'bad', 'new', 'old', 'big', 'small', 'large', 'little',
+    'long', 'short', 'high', 'low', 'same', 'different', 'other', 'another', 'next', 'last',
+    'first', 'many', 'few', 'own', 'thing', 'things', 'way', 'ways', 'place', 'part',
+    'case', 'point', 'fact', 'like', 'back', 'time', 'year', 'day', 'one', 'two',
 
-    // Chinese stopwords (Simplified) - particles, pronouns, function verbs, conjunctions, prepositions, quantifiers, locations, time, connectives
-    '的', '地', '得', '着', '了', '过', '嘛', '呢', '吧', '啊', '哦', '哈', '嗯',
-    '我', '你', '他', '她', '它', '谁', '这', '那', '哪',
-    '我们', '你们', '他们', '她们', '它们',
-    '是', '有', '在', '被', '让', '把', '使', '叫', '会', '要', '能', '说', '做', '来', '去', '到', '看', '用', '将',
-    '和', '与', '及', '或', '但', '而', '因', '所', '如', '既', '虽', '若', '则', '就', '才', '也', '还', '都', '又', '再', '不', '没', '很', '最', '更', '只',
-    '其', '此', '已', '正', '便', '即', '仍', '曾', '各', '该',
-    '于', '以', '从', '由', '向', '往', '对', '为', '给', '按', '比', '跟', '同',
-    '什么', '怎么', '为什么', '哪里',
-    '一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '百', '千', '万', '亿', '个', '些', '点', '多', '少', '几',
-    '上', '下', '中', '内', '外', '里', '前', '后', '左', '右', '今', '年', '月', '日', '时', '现在', '以前', '以后',
-    '但是', '所以', '因此', '然后', '虽然', '不过', '而且', '另外', '此外', '总之', '如果', '即使',
+    // Chinese stopwords (Simplified + Traditional)
+    'three', '的', '地', '得', '着', '了', '过', '嘛', '呢', '吧',
+    '啊', '哦', '哈', '嗯', '我', '你', '他', '她', '它', '谁',
+    '这', '那', '哪', '我们', '你们', '他们', '她们', '它们', '是', '有',
+    '在', '被', '让', '把', '使', '叫', '会', '要', '能', '说',
+    '做', '来', '去', '到', '看', '用', '将', '和', '与', '及',
+    '或', '但', '而', '因', '所', '如', '既', '虽', '若', '则',
+    '就', '才', '也', '还', '都', '又', '再', '不', '没', '很',
+    '最', '更', '只', '其', '此', '已', '正', '便', '即', '仍',
+    '曾', '各', '该', '于', '以', '从', '由', '向', '往', '对',
+    '为', '给', '按', '比', '跟', '同', '什么', '怎么', '为什么', '哪里',
+    '一', '二', '三', '四', '五', '六', '七', '八', '九', '十',
+    '百', '千', '万', '亿', '个', '些', '点', '多', '少', '几',
+    '上', '下', '中', '内', '外', '里', '前', '后', '左', '右',
+    '今', '年', '月', '日', '时', '现在', '以前', '以后', '但是', '所以',
+    '因此', '然后', '虽然', '不过', '而且', '另外', '此外', '总之', '如果', '即使',
+    '发出', '进行', '出现', '开始', '表示', '感到', '看到', '听到', '走向', '回到',
+    '走进', '走出', '拿出', '拿起', '放下', '站起', '坐下', '转向', '继续', '停下',
+    '离开', '来到', '回来', '出来', '进来', '上来', '下来', '完成', '结束', '发现',
+    '明白', '知道', '觉得', '认为', '希望', '想到', '一下', '一起', '一直', '一样',
+    '一边', '一旁', '一番', '一声', '微微', '轻轻', '慢慢', '缓缓', '渐渐', '稍微',
+    '略微', '稍稍', '脸上', '身上', '手上', '眼中', '心中', '脑中', '胸口', '那是',
+    '这是', '就是', '只是', '还是', '或是', '可是', '因为', '不管', '无论', '已经',
+    '正在', '将要', '可以', '应该', '需要', '必须', '非常', '十分', '相当', '有些',
+    '有点', '有时', '有人', '有什么', '自己', '彼此', '大家', '大概', '可能', '似乎',
+    '好像', '确实', '布料', '声音', '气息', '气氛', '动作', '姿态', '表情', '眼神',
+    '却', '现', '妳', '妳们', '您', '她的', '他的', '它的', '妳的', '你的',
+    '我的', '著', '過', '這', '誰', '什麼', '我們', '你們', '他們', '她們',
+    '它們', '讓', '會', '沒', '說', '將', '與', '卻', '還', '雖',
+    '該', '從', '對', '為', '給', '於', '哪裡', '怎麼', '為什麼', '萬',
+    '億', '個', '點', '幾', '裡', '裏', '後', '時', '現', '然後',
+    '雖然', '不過', '總之', '妳們', '牠', '牠們', '發出', '進行', '出現', '開始',
+    '聽到', '走進', '轉向', '繼續', '離開', '來到', '回來', '出來', '進來', '上來',
+    '下來', '結束', '發現', '覺得', '認為', '一樣', '一邊', '一聲', '輕輕', '緩緩',
+    '漸漸', '臉上', '腦中', '這是', '還是', '因為', '無論', '已經', '將要', '應該',
+    '必須', '相當', '有點', '有時', '有什麼', '確實', '聲音', '氣息', '氣氛', '動作',
+    '姿態',
 
-    // Chinese stopwords (Traditional - additional glyphs not covered by Simplified set above)
-    '著', '過', '這', '誰', '什麼', '我們', '你們', '他們', '她們', '它們',
-    '讓', '會', '沒', '說', '將',
-    '與', '卻', '還', '雖',
-    '其', '此', '已', '正', '便', '即', '仍', '曾', '各', '該',
-    '從', '對', '為', '給', '於',
-    '哪裡', '怎麼', '為什麼',
-    '萬', '億', '個', '點', '幾',
-    '裡', '裏', '後', '時', '現',
-    '然後', '雖然', '不過', '總之',
-    // Traditional Chinese pronouns & filler missed by Simplified set
-    '妳', '妳們', '您',                          // feminine/polite "you"
-    '她的', '他的', '它的', '妳的', '你的', '我的', '牠', '牠們',  // possessives + animal pronouns
-    // Generic verbs that leak through as false keywords
-    '發出', '進行', '出現', '開始', '表示', '感到', '看到', '聽到', '走向',
-    '回到', '走進', '走出', '拿出', '拿起', '放下', '站起', '坐下', '轉向',
-    '繼續', '停下', '離開', '來到', '回來', '出來', '進來', '上來', '下來',
-    '完成', '結束', '發現', '明白', '知道', '覺得', '認為', '希望', '想到',
-    // Filler adverbs and descriptors
-    '一下', '一起', '一直', '一樣', '一邊', '一旁', '一番', '一聲',
-    '微微', '輕輕', '慢慢', '緩緩', '漸漸', '稍微', '略微', '稍稍',
-    '臉上', '身上', '手上', '眼中', '心中', '腦中', '胸口',  // body-location phrases
-    '那是', '這是', '就是', '只是', '還是', '或是', '但是', '可是',
-    '因為', '所以', '雖然', '如果', '即使', '不管', '無論',
-    '已經', '正在', '將要', '可以', '應該', '需要', '必須',
-    '非常', '十分', '相當', '有些', '有點', '有時', '有人', '有什麼',
-    '自己', '彼此', '大家', '大概', '可能', '似乎', '好像', '確實',
-    '布料', '聲音', '氣息', '氣氛', '動作', '姿態', '表情', '眼神',  // overly generic nouns
+    // Japanese stopwords (particles, auxiliaries, function words, connectors)
+    'は', 'が', 'を', 'に', 'へ', 'で', 'と', 'も', 'の', 'や',
+    'か', 'な', 'ね', 'よ', 'ぞ', 'さ', 'わ',
+    'だ', 'です', 'ます', 'でした', 'ません', 'である', 'ある', 'いる', 'する', 'した',
+    'して', 'ない', 'なく', 'なり', 'なる', 'れる', 'られる', 'たい',
+    'これ', 'それ', 'あれ', 'この', 'その', 'あの', 'ここ', 'そこ', 'あそこ', 'どこ',
+    'そして', 'しかし', 'だから', 'また', 'ただ', 'でも', 'ので', 'など', 'ため',
+    'よう', 'もの', 'こと', 'ところ', 'ほう', 'ほか', 'まで', 'より', 'だけ', 'ばかり',
+    'くらい', 'ぐらい', 'ほとんど', 'とても', 'かなり',
 ]);
 
 /**
@@ -653,9 +726,8 @@ export function applyBM25Scoring(results, query, options = {}) {
 //   Future:            Korean (ko) — add Hangul to _CJK_SPAN_RE, detected via _KANA_RE
 // ---------------------------------------------------------------------------
 
-/** Matches CJK Unified Ideograph spans (Chinese).
- *  To add Japanese: append \u3040-\u309F\u30A0-\u30FF inside the character class. */
-const _CJK_SPAN_RE = /[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF]+/g;
+/** Matches Chinese Han + Japanese Kana spans. */
+const _CJK_SPAN_RE = /[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF\u3040-\u309F\u30A0-\u30FF]+/g;
 
 /** Kana presence → Japanese locale. Extend when adding Korean (\uAC00-\uD7AF). */
 const _KANA_RE = /[\u3040-\u309F\u30A0-\u30FF]/;
@@ -764,6 +836,35 @@ function _bigramFallback(span) {
     return bigrams;
 }
 
+function _segmentWithJieba(span) {
+    if (typeof jiebaCutFunction !== 'function') return null;
+    try {
+        const result = jiebaCutFunction(span, true);
+        if (!Array.isArray(result) || result.length === 0) return null;
+        const tokens = result
+            .map(t => String(t).trim())
+            .filter(t => t.length > 0);
+        return tokens.length > 0 ? tokens : null;
+    } catch (error) {
+        console.warn('[VectHare CJK] Jieba tokenization failed, falling back:', error?.message || error);
+        return null;
+    }
+}
+
+function _segmentWithTinySegmenter(span) {
+    try {
+        const result = _getTinySegmenter().segment(span);
+        if (!Array.isArray(result) || result.length === 0) return null;
+        const tokens = result
+            .map(t => String(t).trim())
+            .filter(t => t.length > 0);
+        return tokens.length > 0 ? tokens : null;
+    } catch (error) {
+        console.warn('[VectHare CJK] TinySegmenter failed, falling back:', error?.message || error);
+        return null;
+    }
+}
+
 /**
  * Extract CJK word tokens from text.
  *
@@ -785,6 +886,25 @@ function extractCJKTokens(text) {
 
     const tokens = [];
     for (const span of spans) {
+        // jieba mode: Chinese-only spans use Jieba if preloaded.
+        // Japanese kana spans intentionally stay on Intl/tiny paths.
+        if (cjkTokenizerMode === CJK_TOKENIZER_MODES.jieba && !_KANA_RE.test(span)) {
+            const jiebaTokens = _segmentWithJieba(span);
+            if (jiebaTokens) {
+                for (const tok of jiebaTokens) tokens.push(tok);
+                continue;
+            }
+        }
+
+        // tiny-segmenter mode: only route kana-containing spans.
+        if (cjkTokenizerMode === CJK_TOKENIZER_MODES.tiny_segmenter && _KANA_RE.test(span)) {
+            const tinyTokens = _segmentWithTinySegmenter(span);
+            if (tinyTokens) {
+                for (const tok of tinyTokens) tokens.push(tok);
+                continue;
+            }
+        }
+
         const segmenter = _getSegmenter(span);
         if (segmenter) {
             for (const tok of _segmentSpan(segmenter, span)) tokens.push(tok);
@@ -798,4 +918,14 @@ function extractCJKTokens(text) {
 /**
  * Export Porter Stemmer for use by other modules
  */
-export { porterStemmer, tokenize, tokenizeSimple, STOP_WORDS, extractCJKTokens };
+export {
+    porterStemmer,
+    tokenize,
+    tokenizeSimple,
+    STOP_WORDS,
+    extractCJKTokens,
+    CJK_TOKENIZER_MODES,
+    setCjkTokenizerMode,
+    getCjkTokenizerMode,
+    ensureJiebaTokenizerLoaded,
+};
