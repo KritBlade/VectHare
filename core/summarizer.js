@@ -89,7 +89,13 @@ function _extractReply(data) {
     return data?.choices?.[0]?.message?.content?.trim() || null;
 }
 
-function _getOpenRouterApiKey() {
+function _getOpenRouterApiKey(settings) {
+    // Prefer key stored directly in VectHare settings (most reliable)
+    if (settings?.summarize_openrouter_api_key) {
+        return settings.summarize_openrouter_api_key.trim();
+    }
+
+    // Fall back to ST secrets store
     const stored = secret_state[SECRET_KEYS.OPENROUTER];
 
     if (typeof stored === 'string') {
@@ -111,11 +117,11 @@ function _getOpenRouterApiKey() {
 }
 
 async function _callOpenRouter(prompt, model, settings, originalLength) {
-    const apiKey = _getOpenRouterApiKey();
+    const apiKey = _getOpenRouterApiKey(settings);
     console.log(`[VectHare Summarizer] OpenRouter key present: ${!!apiKey}`);
     if (!apiKey) {
-        console.warn('[VectHare Summarizer] OpenRouter API key not found in ST secrets — configure it in ST\'s API settings.');
-        return null; // Will fall through to original text return in caller
+        console.warn('[VectHare Summarizer] OpenRouter API key not found — enter it in the Summarize Before Store card.');
+        return null;
     }
 
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {

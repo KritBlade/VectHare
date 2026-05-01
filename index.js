@@ -111,6 +111,7 @@ const defaultSettings = {
 
     // Summarization before vectorization
     summarize_provider: 'off',        // 'off', 'openrouter', 'vllm'
+    summarize_openrouter_api_key: '',  // OpenRouter API key for summarization (stored here, not ST secrets)
     summarize_model: '',              // Model ID for summarization (e.g. 'google/gemini-flash-1.5-8b')
     summarize_vllm_url: '',           // vLLM base URL for summarization (e.g. 'http://localhost:8000')
     summarize_vllm_api_key: '',       // vLLM API key (stored in extension settings, not ST secrets)

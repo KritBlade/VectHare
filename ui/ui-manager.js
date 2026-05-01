@@ -734,6 +734,15 @@ export function renderSettings(containerId, settings, callbacks) {
 
                             <div id="vecthare_summarize_settings" style="display:none; margin-top:12px;">
 
+                                <div id="vecthare_summarize_openrouter_row" style="display:none; margin-bottom:10px;">
+                                    <label for="vecthare_summarize_openrouter_apikey">
+                                        <small>OpenRouter API Key</small>
+                                    </label>
+                                    <input type="password" id="vecthare_summarize_openrouter_apikey" class="vecthare-input"
+                                        placeholder="Paste key here to save..." autocomplete="off" />
+                                    <small class="vecthare_hint">Stored in VectHare settings (separate from the embedding key)</small>
+                                </div>
+
                                 <div id="vecthare_summarize_vllm_url_row" style="display:none; margin-bottom:10px;">
                                     <label for="vecthare_summarize_vllm_url">
                                         <small>vLLM Base URL</small>
@@ -1776,11 +1785,8 @@ function bindSettingsEvents(settings, callbacks) {
             $('#vecthare_summarize_settings').hide();
         } else {
             $('#vecthare_summarize_settings').show();
-            if (provider === 'vllm') {
-                $('#vecthare_summarize_vllm_url_row').show();
-            } else {
-                $('#vecthare_summarize_vllm_url_row').hide();
-            }
+            $('#vecthare_summarize_openrouter_row').toggle(provider === 'openrouter');
+            $('#vecthare_summarize_vllm_url_row').toggle(provider === 'vllm');
         }
     };
     $('#vecthare_summarize_provider')
@@ -1831,6 +1837,31 @@ function bindSettingsEvents(settings, callbacks) {
             toastr.success('vLLM summarization API key saved');
             $(this).val('');
             updateSummarizeVllmKeyDisplay();
+        }
+    });
+
+    // OpenRouter summarization API key — stored directly in extension settings
+    const updateSummarizeORKeyDisplay = () => {
+        const savedKey = settings.summarize_openrouter_api_key;
+        if (savedKey) {
+            const masked = savedKey.length > 4
+                ? '*'.repeat(Math.min(savedKey.length - 4, 8)) + savedKey.slice(-4)
+                : '*'.repeat(savedKey.length);
+            $('#vecthare_summarize_openrouter_apikey').attr('placeholder', `Key saved: ${masked}`);
+        } else {
+            $('#vecthare_summarize_openrouter_apikey').attr('placeholder', 'Paste key here to save...');
+        }
+    };
+    updateSummarizeORKeyDisplay();
+    $('#vecthare_summarize_openrouter_apikey').on('change', function() {
+        const value = String($(this).val()).trim();
+        if (value) {
+            settings.summarize_openrouter_api_key = value;
+            Object.assign(extension_settings.vecthare, settings);
+            saveSettingsDebounced();
+            toastr.success('OpenRouter summarization API key saved');
+            $(this).val('');
+            updateSummarizeORKeyDisplay();
         }
     });
 
