@@ -1,4 +1,4 @@
-import { porterStemmer } from './bm25-scorer.js';
+import { porterStemmer, extractCJKTokens } from './bm25-scorer.js';
 import { substituteParams } from '../../../../../script.js';
 
 /**
@@ -242,6 +242,28 @@ const KEYWORD_STOP_WORDS = new Set([
     // RP/chat specific
     'character', 'characters', 'user', 'assistant', 'system', 'message', 'messages',
     'response', 'responses', 'reply', 'replies', 'chat', 'chats',
+
+    // Chinese stopwords (Simplified) - particles, pronouns, function verbs, conjunctions, prepositions, quantifiers, locations, time, connectives
+    '的', '地', '得', '着', '了', '过', '嘛', '呢', '吧', '啊', '哦', '哈', '嗯',
+    '我', '你', '他', '她', '它', '谁', '这', '那', '哪',
+    '我们', '你们', '他们', '她们', '它们',
+    '是', '有', '在', '被', '让', '把', '使', '叫', '会', '要', '能', '说', '做', '来', '去', '到', '看', '用',
+    '和', '与', '及', '或', '但', '而', '因', '所', '如', '既', '虽', '若', '则', '就', '才', '也', '还', '都', '又', '再', '不', '没', '很', '最', '更', '只',
+    '于', '以', '从', '由', '向', '往', '对', '为', '给', '按', '比', '跟', '同',
+    '什么', '怎么', '为什么', '哪里',
+    '一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '百', '千', '万', '亿', '个', '些', '点', '多', '少', '几',
+    '上', '下', '中', '内', '外', '里', '前', '后', '左', '右', '今', '年', '月', '日', '时', '现在', '以前', '以后',
+    '但是', '所以', '因此', '然后', '虽然', '不过', '而且', '另外', '此外', '总之', '如果', '即使',
+
+    // Chinese stopwords (Traditional - additional glyphs not covered above)
+    '著', '過', '這', '誰', '什麼', '我們', '你們', '他們', '她們', '它們',
+    '讓', '會', '沒', '說',
+    '與', '卻', '還', '雖',
+    '從', '對', '為', '給', '於',
+    '哪裡', '怎麼', '為什麼',
+    '萬', '億', '個', '點', '幾',
+    '裡', '裏', '後', '時', '現',
+    '然後', '雖然', '不過', '總之',
 ]);
 
 /**
@@ -361,8 +383,9 @@ export function extractTextKeywords(text, options = {}) {
         properNouns.add(match[0].toLowerCase());
     }
 
-    // Step 3: Extract and count words
-    const topicWords = scanArea.toLowerCase().match(/\b[a-z]{4,}\b/g) || [];
+    // Step 3: Extract and count words (Latin + CJK words; supports Simplified + Traditional)
+    const topicWords = (scanArea.toLowerCase().match(/\b[a-z]{4,}\b/g) || [])
+        .concat(extractCJKTokens(scanArea));
     const wordCounts = new Map();
 
     for (const word of topicWords) {
@@ -472,6 +495,17 @@ export function extractChatKeywords(text, options = {}) {
         if (keywords.length >= maxKeywords) break;
     }
 
+    // Also extract CJK words (Simplified + Traditional)
+    if (keywords.length < maxKeywords) {
+        for (const word of extractCJKTokens(text)) {
+            if (stopwords.has(word)) continue;
+            if (seen.has(word)) continue;
+            seen.add(word);
+            keywords.push({ text: word, weight: baseWeight });
+            if (keywords.length >= maxKeywords) break;
+        }
+    }
+
     if (keywords.length > 0) {
         console.debug(`[VectHare Keyword Extraction] Extracted chat keywords: [${keywords.map(k => `${k.text}(${k.weight.toFixed(2)}x)`).join(', ')}] from text: "${text.substring(0, 80)}${text.length > 80 ? '...' : ''}"`);
     }
@@ -542,19 +576,23 @@ export function extractBM25Keywords(text, options = {}) {
     }
 
     // Split into sentences (mini-corpus for IDF calculation)
+    // Includes Chinese sentence-ending punctuation 。！？
     const sentences = scanText
-        .split(/[.!?\n]+/)
+        .split(/[.!?。！？\n]+/)
         .map(s => s.trim())
-        .filter(s => s.length > 10); // Skip very short fragments
+        .filter(s => s.length > 2); // Skip very short fragments (CJK sentences can be short)
 
     if (sentences.length === 0) {
         // Fallback: treat whole text as one sentence
         sentences.push(scanText);
     }
 
-    // Tokenize each sentence
+    // Tokenize each sentence (Latin words + CJK words; Simplified + Traditional)
+    const _cjkStripReBM25 = /[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF]/g;
     const tokenizeSentence = (s) => {
-        return s
+        const cjkTokens = extractCJKTokens(s).filter(t => !stopwords.has(t));
+        const latinTokens = s
+            .replace(_cjkStripReBM25, ' ')
             .toLowerCase()
             .replace(/[^\w\s'-]/g, ' ')
             .split(/\s+/)
@@ -564,6 +602,7 @@ export function extractBM25Keywords(text, options = {}) {
                 if (properNouns.has(t)) return t;
                 return t.length > 3 ? porterStemmer(t) : t;
             });
+        return [...latinTokens, ...cjkTokens];
     };
 
     const sentenceTokens = sentences.map(tokenizeSentence);
@@ -757,12 +796,18 @@ export function extractSmartKeywords(text, options = {}) {
 
     // ---------------------------
     // 2. TF-IDF Scoring
+    // Includes Chinese sentence-ending punctuation 。！？
     // ---------------------------
-    const sentences = scanText.split(/[.!?\n]+/).map(s => s.trim()).filter(s => s.length > 10);
+    const sentences = scanText.split(/[.!?。！？\n]+/).map(s => s.trim()).filter(s => s.length > 2);
     if (sentences.length === 0) sentences.push(scanText);
 
+    // Tokenize each sentence (Latin words + CJK words; Simplified + Traditional)
+    const _cjkStripReSmart = /[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF]/g;
     const tokenizeSentence = (s) => {
-        return s.toLowerCase()
+        const cjkTokens = extractCJKTokens(s).filter(t => !stopwords.has(t));
+        const latinTokens = s
+            .replace(_cjkStripReSmart, ' ')
+            .toLowerCase()
             .replace(/[^\w\s'-]/g, ' ')
             .split(/\s+/)
             .filter(t => t.length >= 3 && !stopwords.has(t))
@@ -771,6 +816,7 @@ export function extractSmartKeywords(text, options = {}) {
                 if (properNouns.has(t)) return t;
                 return t.length > 3 ? porterStemmer(t) : t;
             });
+        return [...latinTokens, ...cjkTokens];
     };
 
     const sentenceTokens = sentences.map(tokenizeSentence);

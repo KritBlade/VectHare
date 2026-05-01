@@ -11,6 +11,8 @@
  * ============================================================================
  */
 
+import { extractCJKTokens } from './bm25-scorer.js';
+
 // Stop words to ignore
 const STOP_WORDS = new Set([
    "0o", "0s", "3a", "3b", "3d", "6b", "6o", "a", "a1", "a2", "a3", "a4",
@@ -123,6 +125,26 @@ const STOP_WORDS = new Set([
             "xv", "xx", "y", "y2", "yes", "yet", "yj", "yl", "you", "youd", "you'd", "you'll", "your",
             "youre", "you're", "yours", "yourself", "yourselves", "you've", "yr", "ys", "yt", "z",
             "zero", "zi", "zz",
+            // Chinese stopwords (Simplified) - particles, pronouns, function verbs, conjunctions, prepositions, quantifiers, locations, time, connectives
+            "的", "地", "得", "着", "了", "过", "嘛", "呢", "吧", "啊", "哦", "哈", "嗯",
+            "我", "你", "他", "她", "它", "谁", "这", "那", "哪",
+            "我们", "你们", "他们", "她们", "它们",
+            "是", "有", "在", "被", "让", "把", "使", "叫", "会", "要", "能", "说", "做", "来", "去", "到", "看", "用",
+            "和", "与", "及", "或", "但", "而", "因", "所", "如", "既", "虽", "若", "则", "就", "才", "也", "还", "都", "又", "再", "不", "没", "很", "最", "更", "只",
+            "于", "以", "从", "由", "向", "往", "对", "为", "给", "按", "比", "跟", "同",
+            "什么", "怎么", "为什么", "哪里",
+            "一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "百", "千", "万", "亿", "个", "些", "点", "多", "少", "几",
+            "上", "下", "中", "内", "外", "里", "前", "后", "左", "右", "今", "年", "月", "日", "时", "现在", "以前", "以后",
+            "但是", "所以", "因此", "然后", "虽然", "不过", "而且", "另外", "此外", "总之", "如果", "即使",
+            // Chinese stopwords (Traditional - additional glyphs not covered above)
+            "著", "過", "這", "誰", "什麼", "我們", "你們", "他們", "她們", "它們",
+            "讓", "會", "沒", "說",
+            "與", "卻", "還", "雖",
+            "從", "對", "為", "給", "於",
+            "哪裡", "怎麼", "為什麼",
+            "萬", "億", "個", "點", "幾",
+            "裡", "裏", "後", "時", "現",
+            "然後", "雖然", "不過", "總之",
 ]);
 
 // Minimum word length
@@ -139,10 +161,12 @@ const DEFAULT_THRESHOLD = 3;
 function isTrackableWord(word) {
     if (!word || typeof word !== 'string') return false;
     const normalized = word.toLowerCase().trim();
-    if (normalized.length < MIN_WORD_LENGTH) return false;
+    // CJK detection: single chars are meaningful (Simplified + Traditional)
+    const isCJK = /^[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF]+$/.test(normalized);
+    if (!isCJK && normalized.length < MIN_WORD_LENGTH) return false;
     if (STOP_WORDS.has(normalized)) return false;
     if (/\d/.test(normalized)) return false;
-    if (!/^[a-z]+$/i.test(normalized)) return false;
+    if (!isCJK && !/^[a-z]+$/i.test(normalized)) return false;
     return true;
 }
 
@@ -154,7 +178,14 @@ function isTrackableWord(word) {
 function countWords(text) {
     if (!text || typeof text !== 'string') return new Map();
 
-    const words = text.split(/[^a-zA-Z]+/).filter(isTrackableWord);
+    // Extract CJK words using Intl.Segmenter (Simplified + Traditional)
+    const cjkWords = extractCJKTokens(text);
+
+    // Latin words from text with CJK stripped
+    const _cjkStripRe = /[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF]/g;
+    const latinWords = text.replace(_cjkStripRe, ' ').split(/[^a-zA-Z]+/);
+
+    const words = [...latinWords, ...cjkWords].filter(isTrackableWord);
     const counts = new Map();
 
     for (const word of words) {

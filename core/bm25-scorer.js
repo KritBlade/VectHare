@@ -68,6 +68,28 @@ const STOP_WORDS = new Set([
     // Other common words
     'thing', 'things', 'way', 'ways', 'place', 'part', 'case', 'point', 'fact',
     'like', 'back', 'time', 'year', 'day', 'one', 'two', 'three',
+
+    // Chinese stopwords (Simplified) - particles, pronouns, function verbs, conjunctions, prepositions, quantifiers, locations, time, connectives
+    '的', '地', '得', '着', '了', '过', '嘛', '呢', '吧', '啊', '哦', '哈', '嗯',
+    '我', '你', '他', '她', '它', '谁', '这', '那', '哪',
+    '我们', '你们', '他们', '她们', '它们',
+    '是', '有', '在', '被', '让', '把', '使', '叫', '会', '要', '能', '说', '做', '来', '去', '到', '看', '用',
+    '和', '与', '及', '或', '但', '而', '因', '所', '如', '既', '虽', '若', '则', '就', '才', '也', '还', '都', '又', '再', '不', '没', '很', '最', '更', '只',
+    '于', '以', '从', '由', '向', '往', '对', '为', '给', '按', '比', '跟', '同',
+    '什么', '怎么', '为什么', '哪里',
+    '一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '百', '千', '万', '亿', '个', '些', '点', '多', '少', '几',
+    '上', '下', '中', '内', '外', '里', '前', '后', '左', '右', '今', '年', '月', '日', '时', '现在', '以前', '以后',
+    '但是', '所以', '因此', '然后', '虽然', '不过', '而且', '另外', '此外', '总之', '如果', '即使',
+
+    // Chinese stopwords (Traditional - additional glyphs not covered by Simplified set above)
+    '著', '過', '這', '誰', '什麼', '我們', '你們', '他們', '她們', '它們',
+    '讓', '會', '沒', '說',
+    '與', '卻', '還', '雖',
+    '從', '對', '為', '給', '於',
+    '哪裡', '怎麼', '為什麼',
+    '萬', '億', '個', '點', '幾',
+    '裡', '裏', '後', '時', '現',
+    '然後', '雖然', '不過', '總之',
 ]);
 
 /**
@@ -86,6 +108,9 @@ const STEMMER_CACHE_MAX = 10000;
  */
 function porterStemmer(word) {
     if (!word || word.length <= 2) return word;
+
+    // CJK characters: Porter stemming doesn't apply (no English morphology)
+    if (/[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF]/.test(word)) return word;
 
     // Check cache first
     if (stemmerCache.has(word)) {
@@ -213,8 +238,15 @@ function tokenize(text, options = {}) {
         minLength = 2
     } = options;
 
-    // Normalize and split
-    let tokens = text
+    // Extract CJK word tokens using Intl.Segmenter (falls back to character-level)
+    const cjkTokens = extractCJKTokens(text);
+
+    // Strip CJK chars before Latin tokenization to avoid mixed clumps
+    const _cjkCharRe = /[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF]/g;
+    const latinText = text.replace(_cjkCharRe, ' ');
+
+    // Normalize and split Latin
+    let tokens = latinText
         .toLowerCase()
         .replace(/[^\w\s]/g, ' ')
         .replace(/\s+/g, ' ')
@@ -222,12 +254,15 @@ function tokenize(text, options = {}) {
         .split(/\s+/)
         .filter(token => token.length >= minLength);
 
+    // Combine: CJK single chars are valid tokens (skip minLength filter)
+    tokens = tokens.concat(cjkTokens);
+
     // Remove stop words
     if (removeStopWords) {
         tokens = tokens.filter(token => !STOP_WORDS.has(token));
     }
 
-    // Apply Porter stemming
+    // Apply Porter stemming (CJK tokens are returned unchanged by porterStemmer)
     if (stem) {
         tokens = tokens.map(token => {
             // Don't stem very short words or numbers
@@ -587,7 +622,49 @@ export function applyBM25Scoring(results, query, options = {}) {
     return scoredResults;
 }
 
+// ---------------------------------------------------------------------------
+// CJK word segmentation via Intl.Segmenter (browser-native, zero dependencies)
+// Falls back to character-level tokenization if the API is unavailable.
+// ---------------------------------------------------------------------------
+let _cjkSegmenter;
+function _getCJKSegmenter() {
+    if (_cjkSegmenter === undefined) {
+        try {
+            _cjkSegmenter = new Intl.Segmenter('zh', { granularity: 'word' });
+        } catch (e) {
+            _cjkSegmenter = null;
+        }
+    }
+    return _cjkSegmenter;
+}
+
+/**
+ * Extract CJK word tokens from text.
+ * Uses Intl.Segmenter('zh', {granularity:'word'}) for proper word boundaries;
+ * falls back to single-character tokens when the API is unavailable.
+ * @param {string} text
+ * @returns {string[]}
+ */
+function extractCJKTokens(text) {
+    const cjkSpanRe = /[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF]+/g;
+    const spans = text.match(cjkSpanRe);
+    if (!spans) return [];
+
+    const segmenter = _getCJKSegmenter();
+    if (segmenter) {
+        const tokens = [];
+        for (const span of spans) {
+            for (const seg of segmenter.segment(span)) {
+                if (seg.isWordLike) tokens.push(seg.segment);
+            }
+        }
+        return tokens;
+    }
+    // Fallback: one token per character
+    return text.match(/[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF]/g) || [];
+}
+
 /**
  * Export Porter Stemmer for use by other modules
  */
-export { porterStemmer, tokenize, tokenizeSimple, STOP_WORDS };
+export { porterStemmer, tokenize, tokenizeSimple, STOP_WORDS, extractCJKTokens };

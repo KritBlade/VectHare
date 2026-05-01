@@ -264,8 +264,10 @@ const STRATEGIES = {
             return [String(text)];
         }
 
+        // Split on English (.!?) and Chinese (。！？) sentence-ending punctuation
+        // Chinese punctuation often has no following whitespace, so \s* (zero or more)
         const sentences = text
-            .split(/(?<=[.!?])\s+/)
+            .split(/(?<=[.!?。！？])\s*/)
             .filter(s => s.trim())
             .map(s => s.trim());
 
@@ -433,7 +435,8 @@ function adaptiveChunk(text, options) {
  * Splits a large paragraph at sentence boundaries, then words if needed
  */
 function splitLargeParagraph(text, maxSize) {
-    const sentences = text.split(/(?<=[.!?])\s+/);
+    // Split on English (.!?) and Chinese (。！？) sentence-ending punctuation
+    const sentences = text.split(/(?<=[.!?。！？])\s*/);
     const chunks = [];
     let currentChunk = '';
 
