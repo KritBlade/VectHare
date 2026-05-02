@@ -1733,13 +1733,17 @@ function openActivationEditor(collectionId, collectionName) {
   const decaySettings = getCollectionDecaySettings(collectionId);
 
   const isChatCollection = collectionId.startsWith('vecthare_chat_');
+  // Read raw stored meta to distinguish "explicitly set false" from "never configured"
+  const rawCollectionsMeta = window.extension_settings?.vecthare?.collections || {};
+  const rawMeta = rawCollectionsMeta[collectionId];
+  const hasExplicitAlwaysActive = rawMeta && Object.prototype.hasOwnProperty.call(rawMeta, 'alwaysActive');
   const defaultAlwaysActive = isChatCollection ? true : false;
 
   activationEditorState = {
     collectionId,
     collectionName,
     collectionType,
-    alwaysActive: meta.alwaysActive !== undefined ? meta.alwaysActive : defaultAlwaysActive,
+    alwaysActive: hasExplicitAlwaysActive ? rawMeta.alwaysActive : defaultAlwaysActive,
     triggers: triggerSettings.triggers || [],
     triggerMatchMode: triggerSettings.matchMode || "any",
     triggerCaseSensitive: triggerSettings.caseSensitive || false,

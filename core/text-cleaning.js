@@ -85,6 +85,38 @@ export const BUILTIN_PATTERNS = {
         flags: 'g',
         builtin: true,
     },
+    strip_mvu_update_variable: {
+        id: 'strip_mvu_update_variable',
+        name: 'Strip <UpdateVariable> Tags (MVU)',
+        pattern: '<UpdateVariable>[\\s\\S]*?<\/UpdateVariable>',
+        replacement: '',
+        flags: 'gm',
+        builtin: true,
+    },
+    strip_mvu_combat_calculation: {
+        id: 'strip_mvu_combat_calculation',
+        name: 'Strip <combat_calculation> Tags (MVU)',
+        pattern: '<combat_calculation>[\\s\\S]*?<\/combat_calculation>',
+        replacement: '',
+        flags: 'gm',
+        builtin: true,
+    },
+    strip_mvu_story_analysis: {
+        id: 'strip_mvu_story_analysis',
+        name: 'Strip <StoryAnalysis> Tags (MVU)',
+        pattern: '<StoryAnalysis>[\\s\\S]*?<\/StoryAnalysis>',
+        replacement: '',
+        flags: 'gm',
+        builtin: true,
+    },
+    strip_mvu_combat_log: {
+        id: 'strip_mvu_combat_log',
+        name: 'Strip <combat_log> Tags (MVU)',
+        pattern: '<combat_log>[\\s\\S]*?<\/combat_log>',
+        replacement: '',
+        flags: 'gm',
+        builtin: true,
+    },
 };
 
 /**
@@ -127,6 +159,24 @@ export const CLEANING_PRESETS = {
         description: 'Removes ALL HTML tags - plain text only',
         patterns: ['strip_all_html'],
     },
+    mvu_game_maker: {
+        id: 'mvu_game_maker',
+        name: 'MVU Game Maker',
+        description: 'Strips MVU game engine tags (UpdateVariable, combat_calculation, StoryAnalysis, combat_log) plus standard HTML formatting and AI reasoning tags',
+        patterns: [
+            'strip_font_tags',
+            'strip_color_spans',
+            'strip_bold_italic',
+            'strip_hidden_divs',
+            'strip_details_blocks',
+            'strip_thinking_tags',
+            'strip_tucao_tags',
+            'strip_mvu_update_variable',
+            'strip_mvu_combat_calculation',
+            'strip_mvu_story_analysis',
+            'strip_mvu_combat_log',
+        ],
+    },
 };
 
 // ============================================================================
@@ -142,10 +192,14 @@ export function getCleaningSettings() {
         extension_settings.vecthare = {};
     }
     if (!extension_settings.vecthare.cleaning) {
+        // Default: MVU Game Maker preset (covers all standard + MVU tags)
+        // enabledBuiltins is only used when preset is 'custom', but pre-populate
+        // it to all patterns except the nuclear strip_all_html for convenience.
+        const defaultEnabled = Object.keys(BUILTIN_PATTERNS).filter(id => id !== 'strip_all_html');
         extension_settings.vecthare.cleaning = {
-            selectedPreset: 'none',
+            selectedPreset: 'mvu_game_maker',
             customPatterns: [],
-            enabledBuiltins: [],
+            enabledBuiltins: defaultEnabled,
         };
     }
     return extension_settings.vecthare.cleaning;

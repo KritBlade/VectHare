@@ -84,16 +84,16 @@ const defaultSettings = {
     bananabread_api_key: '', // Stored here since custom keys aren't returned by ST's readSecretState()
 
     // Chat vectorization
-    enabled_chats: false,
+    enabled_chats: true,
     chunking_strategy: 'per_message', // per_message, conversation_turns, message_batch, adaptive
     batch_size: 4, // Messages per batch for message_batch strategy
     depth: 2,
     position: extension_prompt_types.IN_PROMPT,
     protect: 5,
-    insert: 3,
+    insert: 5,
     min_chat_length: 0, // Minimum number of messages in chat before injection starts (0 = no minimum)
     // Number of top results to retrieve from vector DB (top-K)
-    top_k: 3,
+    top_k: 5,
     query: 2,
     chunk_size: 500, // For adaptive strategy only
     score_threshold: 0.25,
@@ -102,7 +102,7 @@ const defaultSettings = {
     deduplication_depth: 50, // Number of recent messages to check for duplicates (0 = check all)
 
     // Keyword scoring method
-    keyword_scoring_method: 'keyword', // 'keyword', 'bm25', or 'hybrid'
+    keyword_scoring_method: 'bm25', // 'keyword', 'bm25', or 'hybrid'
 
     // BM25 parameters
     bm25_k1: 1.5,  // Term frequency saturation (1.2-2.0 typical)
@@ -120,7 +120,7 @@ const defaultSettings = {
     summarize_prompt: '',             // Custom prompt template (empty = use built-in default)
 
     // Hybrid Search settings (combines vector + full-text search)
-    hybrid_search_enabled: false,       // Enable hybrid search mode
+    hybrid_search_enabled: true,        // Enable hybrid search mode
     hybrid_fusion_method: 'rrf',        // 'rrf' (Reciprocal Rank Fusion) or 'weighted'
     hybrid_vector_weight: 0.5,          // Weight for vector scores (0-1) - used in weighted mode
     hybrid_text_weight: 0.5,            // Weight for text/BM25 scores (0-1) - used in weighted mode

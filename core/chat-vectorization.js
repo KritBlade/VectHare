@@ -32,7 +32,7 @@ import {
 import { applyDecayToResults, applySceneAwareDecay } from './temporal-decay.js';
 import { isChunkDisabledByScene } from './scenes.js';
 import { registerCollection, getCollectionRegistry } from './collection-loader.js';
-import { isCollectionEnabled, filterActiveCollections } from './collection-metadata.js';
+import { isCollectionEnabled, filterActiveCollections, setCollectionMeta } from './collection-metadata.js';
 import { progressTracker } from '../ui/progress-tracker.js';
 import { buildSearchContext, filterChunksByConditions, processChunkLinks } from './conditional-activation.js';
 import { getChunkMetadata, getCollectionMeta } from './collection-metadata.js';
@@ -528,6 +528,8 @@ export async function synchronizeChat(settings, batchSize = 5) {
                         console.log(`🔍 VectHare DEBUG: Components: backend="${backend}", source="${source}", collectionId="${collectionId}"`);
                         registerCollection(registryKey);
                         isRegistered = true;
+                        // Mark chat collections as always active at birth so they inject immediately
+                        setCollectionMeta(collectionId, { alwaysActive: true });
                         console.log(`VectHare: Registered collection ${registryKey} after first successful insert`);
                     }
                 }

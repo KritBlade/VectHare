@@ -223,6 +223,9 @@ export async function vectorizeContent({ contentType, source, settings, abortSig
             scope: settings.scope || 'global',
             chunkCount: finalChunks.length,
             createdAt: new Date().toISOString(),
+            // Chat collections are always active by default — they are per-chat scoped
+            // so there's no risk of bleeding into unrelated conversations
+            ...(contentType === 'chat' ? { alwaysActive: true } : {}),
             settings: {
                 strategy: settings.strategy,
                 chunkSize: settings.chunkSize,
