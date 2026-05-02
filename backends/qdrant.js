@@ -32,6 +32,7 @@ import { getRequestHeaders } from '../../../../../script.js';
 import { VectorBackend } from './backend-interface.js';
 import { getModelField } from '../core/providers.js';
 import { VECTOR_LIST_LIMIT } from '../core/constants.js';
+import { textgen_types, textgenerationwebui_settings } from '../../../../textgen-settings.js';
 
 const BACKEND_TYPE = 'qdrant';
 const MULTITENANCY_COLLECTION = 'vecthare_multitenancy';
@@ -42,6 +43,46 @@ const MULTITENANCY_COLLECTION = 'vecthare_multitenancy';
 function getModelFromSettings(settings) {
     const modelField = getModelField(settings.source);
     return modelField ? settings[modelField] || '' : '';
+}
+
+function getPluginProviderParams(settings) {
+    const params = {};
+
+    switch (settings.source) {
+        case 'ollama':
+            params.apiUrl = settings.use_alt_endpoint
+                ? settings.alt_endpoint_url
+                : textgenerationwebui_settings.server_urls[textgen_types.OLLAMA];
+            params.keep = !!settings.ollama_keep;
+            break;
+        case 'llamacpp':
+            params.apiUrl = settings.use_alt_endpoint
+                ? settings.alt_endpoint_url
+                : textgenerationwebui_settings.server_urls[textgen_types.LLAMACPP];
+            break;
+        case 'vllm':
+            params.apiUrl = settings.use_alt_endpoint
+                ? settings.alt_endpoint_url
+                : textgenerationwebui_settings.server_urls[textgen_types.VLLM];
+            break;
+        case 'koboldcpp':
+            params.apiUrl = settings.use_alt_endpoint
+                ? settings.alt_endpoint_url
+                : textgenerationwebui_settings.server_urls[textgen_types.KOBOLDCPP];
+            break;
+        case 'bananabread':
+            params.apiUrl = settings.use_alt_endpoint
+                ? settings.alt_endpoint_url
+                : 'http://localhost:8008';
+            if (settings.bananabread_api_key) {
+                params.apiKey = settings.bananabread_api_key;
+            }
+            break;
+        default:
+            break;
+    }
+
+    return params;
 }
 
 /**
@@ -297,6 +338,7 @@ export class QdrantBackend extends VectorBackend {
                     }),
                     source: settings.source || 'transformers',
                     model: getModelFromSettings(settings),
+                    ...getPluginProviderParams(settings),
                 }),
             });
 
@@ -382,6 +424,7 @@ export class QdrantBackend extends VectorBackend {
             threshold: 0.0,
             source: settings.source || 'transformers',
             model: getModelFromSettings(settings),
+            ...getPluginProviderParams(settings),
         };
 
     //Use queryVector if provided, otherwise searchText
@@ -444,6 +487,7 @@ export class QdrantBackend extends VectorBackend {
                     threshold: threshold,
                     source: settings.source || 'transformers',
                     model: getModelFromSettings(settings),
+                    ...getPluginProviderParams(settings),
                 };
 
 

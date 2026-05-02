@@ -21,6 +21,7 @@ import { getRequestHeaders } from '../../../../../script.js';
 import { VectorBackend } from './backend-interface.js';
 import { getModelField } from '../core/providers.js';
 import { VECTOR_LIST_LIMIT } from '../core/constants.js';
+import { textgen_types, textgenerationwebui_settings } from '../../../../textgen-settings.js';
 
 const BACKEND_TYPE = 'milvus';
 
@@ -30,6 +31,46 @@ const BACKEND_TYPE = 'milvus';
 function getModelFromSettings(settings) {
     const modelField = getModelField(settings.source);
     return modelField ? settings[modelField] || '' : '';
+}
+
+function getPluginProviderParams(settings) {
+    const params = {};
+
+    switch (settings.source) {
+        case 'ollama':
+            params.apiUrl = settings.use_alt_endpoint
+                ? settings.alt_endpoint_url
+                : textgenerationwebui_settings.server_urls[textgen_types.OLLAMA];
+            params.keep = !!settings.ollama_keep;
+            break;
+        case 'llamacpp':
+            params.apiUrl = settings.use_alt_endpoint
+                ? settings.alt_endpoint_url
+                : textgenerationwebui_settings.server_urls[textgen_types.LLAMACPP];
+            break;
+        case 'vllm':
+            params.apiUrl = settings.use_alt_endpoint
+                ? settings.alt_endpoint_url
+                : textgenerationwebui_settings.server_urls[textgen_types.VLLM];
+            break;
+        case 'koboldcpp':
+            params.apiUrl = settings.use_alt_endpoint
+                ? settings.alt_endpoint_url
+                : textgenerationwebui_settings.server_urls[textgen_types.KOBOLDCPP];
+            break;
+        case 'bananabread':
+            params.apiUrl = settings.use_alt_endpoint
+                ? settings.alt_endpoint_url
+                : 'http://localhost:8008';
+            if (settings.bananabread_api_key) {
+                params.apiKey = settings.bananabread_api_key;
+            }
+            break;
+        default:
+            break;
+    }
+
+    return params;
 }
 
 export class MilvusBackend extends VectorBackend {
@@ -48,7 +89,8 @@ export class MilvusBackend extends VectorBackend {
                 body: JSON.stringify({
                     text: 'test',
                     source: settings.source || 'transformers',
-                    model: getModelFromSettings(settings)
+                    model: getModelFromSettings(settings),
+                    ...getPluginProviderParams(settings),
                 }),
             });
 
@@ -235,6 +277,7 @@ export class MilvusBackend extends VectorBackend {
                 })),
                 source: settings.source || 'transformers',
                 model: getModelFromSettings(settings),
+                ...getPluginProviderParams(settings),
                 filters: { type, sourceId }, // Pass multitenancy info
             }),
         });
@@ -283,6 +326,7 @@ export class MilvusBackend extends VectorBackend {
                 threshold: 0.0,
                 source: settings.source || 'transformers',
                 model: getModelFromSettings(settings),
+                ...getPluginProviderParams(settings),
                 filters: { type, sourceId },
             }),
         });
@@ -324,6 +368,7 @@ export class MilvusBackend extends VectorBackend {
                         threshold: threshold,
                         source: settings.source || 'transformers',
                         model: getModelFromSettings(settings),
+                        ...getPluginProviderParams(settings),
                         filters: { type, sourceId },
                     }),
                 });

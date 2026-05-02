@@ -10,6 +10,7 @@
  */
 
 import { getCurrentChatId, getRequestHeaders } from '../../../../../script.js';
+import { textgen_types, textgenerationwebui_settings } from '../../../../textgen-settings.js';
 import { getSavedHashes, purgeVectorIndex } from '../core/core-vector-api.js';
 import { getChatCollectionId } from '../core/chat-vectorization.js';
 import { getModelField, getProviderConfig } from '../core/providers.js';
@@ -80,18 +81,24 @@ function getPluginProviderParams(settings) {
 
     // Ollama needs apiUrl and keep param
     if (source === 'ollama') {
-        params.apiUrl = settings.use_alt_endpoint ? settings.alt_endpoint_url : settings.ollama_url;
+        params.apiUrl = settings.use_alt_endpoint
+            ? settings.alt_endpoint_url
+            : textgenerationwebui_settings.server_urls[textgen_types.OLLAMA];
         params.keep = !!settings.ollama_keep;
     }
 
     // llamacpp needs apiUrl
     if (source === 'llamacpp') {
-        params.apiUrl = settings.use_alt_endpoint ? settings.alt_endpoint_url : settings.llamacpp_url;
+        params.apiUrl = settings.use_alt_endpoint
+            ? settings.alt_endpoint_url
+            : textgenerationwebui_settings.server_urls[textgen_types.LLAMACPP];
     }
 
     // vllm needs apiUrl
     if (source === 'vllm') {
-        params.apiUrl = settings.use_alt_endpoint ? settings.alt_endpoint_url : settings.vllm_url;
+        params.apiUrl = settings.use_alt_endpoint
+            ? settings.alt_endpoint_url
+            : textgenerationwebui_settings.server_urls[textgen_types.VLLM];
     }
 
     return params;

@@ -261,6 +261,7 @@ export class StandardBackend extends VectorBackend {
                 }),
                 source: settings.source || 'transformers',
                 model: model,
+                ...providerParams,
             } : {
                 collectionId: collectionId,
                 items: items.map(item => ({
