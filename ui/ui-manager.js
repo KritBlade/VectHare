@@ -26,7 +26,7 @@ import { getChatCollectionId } from '../core/chat-vectorization.js';
 import { doesChatHaveVectors } from '../core/collection-loader.js';
 import { getModelField } from '../core/providers.js';
 import { getChunkingStrategies } from '../core/content-types.js';
-import { CJK_TOKENIZER_MODES, setCjkTokenizerMode, ensureJiebaTokenizerLoaded } from '../core/bm25-scorer.js';
+import { CJK_TOKENIZER_MODES, setCjkTokenizerMode, ensureJiebaTokenizerLoaded, ensureJiebaTwLoaded } from '../core/bm25-scorer.js';
 import { DEFAULT_SUMMARIZE_PROMPT } from '../core/summarizer.js';
 
 /**
@@ -488,10 +488,11 @@ export function renderSettings(containerId, settings, callbacks) {
                                 </label>
                                 <select id="vecthare_cjk_tokenizer_mode" class="vecthare-select" style="margin-top: 4px;">
                                     <option value="intl">Intl.Segmenter (default, Chinese + English)</option>
-                                    <option value="jieba">Better Chinese (Jieba WASM)</option>
+                                    <option value="jieba">Simplified Chinese (Jieba WASM)</option>
+                                    <option value="jieba_tw">Traditional Chinese (Jieba WASM)</option>
                                     <option value="tiny_segmenter">Japanese (TinySegmenter)</option>
                                 </select>
-                                <small class="vecthare_hint">Jieba WASM loads only when selected. TinySegmenter is used for kana-containing Japanese text.</small>
+                                <small class="vecthare_hint">Jieba WASM loads only when selected. Traditional Chinese also downloads a TW dictionary (~2–5 MB, one-time). TinySegmenter is used for kana-containing Japanese text.</small>
                             </div>
 
                             <!-- Custom Stopwords -->
@@ -2335,7 +2336,17 @@ function bindSettingsEvents(settings, callbacks) {
             if (mode === CJK_TOKENIZER_MODES.jieba) {
                 const ok = await ensureJiebaTokenizerLoaded();
                 if (!ok) {
-                    toastr.warning('Jieba tokenizer failed to load. Falling back to Intl.Segmenter.', 'VectHare CJK');
+                    toastr.warning('Simplified Chinese Jieba tokenizer failed to load. Falling back to Intl.Segmenter.', 'VectHare CJK');
+                }
+            }
+
+            if (mode === CJK_TOKENIZER_MODES.jieba_tw) {
+                toastr.info('Loading Traditional Chinese dictionary (~2–5 MB)...', 'VectHare CJK');
+                const ok = await ensureJiebaTwLoaded();
+                if (ok) {
+                    toastr.success('Traditional Chinese Jieba tokenizer ready.', 'VectHare CJK');
+                } else {
+                    toastr.warning('Traditional Chinese Jieba tokenizer failed to load. Falling back to Intl.Segmenter.', 'VectHare CJK');
                 }
             }
         });

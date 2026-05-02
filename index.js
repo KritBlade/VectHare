@@ -38,7 +38,7 @@ import { initializeVisualizer } from './ui/chunk-visualizer.js';
 import { initializeDatabaseBrowser } from './ui/database-browser.js';
 import { initializeSceneMarkers, updateAllMarkerStates, setSceneSettings } from './ui/scene-markers.js';
 import { initializeWorldInfoIntegration } from './core/world-info-integration.js';
-import { CJK_TOKENIZER_MODES, setCjkTokenizerMode, ensureJiebaTokenizerLoaded } from './core/bm25-scorer.js';
+import { CJK_TOKENIZER_MODES, setCjkTokenizerMode, ensureJiebaTokenizerLoaded, ensureJiebaTwLoaded } from './core/bm25-scorer.js';
 
 // VectHare modules - Cotton-Tales Integration
 import './core/emotion-classifier.js'; // Exposes window.VectHareEmotionClassifier
@@ -153,7 +153,7 @@ const defaultSettings = {
 
     // Keyword Extraction
     custom_stopwords: '',               // Custom stopwords (comma-separated)
-    cjk_tokenizer_mode: CJK_TOKENIZER_MODES.intl, // intl | jieba | tiny_segmenter
+    cjk_tokenizer_mode: CJK_TOKENIZER_MODES.intl, // intl | jieba | jieba_tw | tiny_segmenter
 };
 
 // Runtime settings (merged with saved settings)
@@ -285,6 +285,15 @@ jQuery(async () => {
                 console.log('VectHare CJK: Jieba tokenizer initialized');
             } else {
                 console.warn('VectHare CJK: Jieba tokenizer unavailable, using Intl.Segmenter fallback');
+            }
+        });
+    }
+    if (settings.cjk_tokenizer_mode === CJK_TOKENIZER_MODES.jieba_tw) {
+        ensureJiebaTwLoaded().then((ok) => {
+            if (ok) {
+                console.log('VectHare CJK: Jieba TW tokenizer initialized');
+            } else {
+                console.warn('VectHare CJK: Jieba TW tokenizer unavailable, using Intl.Segmenter fallback');
             }
         });
     }

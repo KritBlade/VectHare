@@ -32,15 +32,21 @@ const DEFAULT_DELTA = 0.5;
 const CJK_TOKENIZER_MODES = Object.freeze({
     intl: 'intl',
     jieba: 'jieba',
+    jieba_tw: 'jieba_tw',
     tiny_segmenter: 'tiny_segmenter',
 });
 
 const DEFAULT_CJK_TOKENIZER_MODE = CJK_TOKENIZER_MODES.intl;
 const JIEBA_WASM_MODULE_URL = 'https://cdn.jsdelivr.net/gh/cxumol/jieba-wasm-html@gh-pages/jieba_rs_wasm.js';
+const JIEBA_TW_WASM_MODULE_URL = 'https://cdn.jsdelivr.net/npm/jieba-wasm@2.4.0/pkg/web/jieba_rs_wasm.js';
+const JIEBA_TW_WASM_BINARY_URL = 'https://cdn.jsdelivr.net/npm/jieba-wasm@2.4.0/pkg/web/jieba_rs_wasm_bg.wasm';
+const JIEBA_TW_DICT_URL = 'https://cdn.jsdelivr.net/gh/ldkrsi/jieba-zh_TW@master/jieba/dict.txt';
 
 let cjkTokenizerMode = DEFAULT_CJK_TOKENIZER_MODE;
 let jiebaCutFunction = null;
 let jiebaLoadPromise = null;
+let jiebaTwCutFunction = null;
+let jiebaTwLoadPromise = null;
 let tinySegmenterInstance = null;
 
 /**
@@ -96,6 +102,51 @@ async function ensureJiebaTokenizerLoaded() {
         return await jiebaLoadPromise;
     } finally {
         jiebaLoadPromise = null;
+    }
+}
+
+/**
+ * Lazily load Traditional Chinese Jieba WASM tokenizer and TW dictionary from CDN.
+ * Uses fengkx/jieba-wasm which supports with_dict() for full dictionary replacement.
+ * @returns {Promise<boolean>}
+ */
+async function ensureJiebaTwLoaded() {
+    if (jiebaTwCutFunction) return true;
+    if (jiebaTwLoadPromise) return jiebaTwLoadPromise;
+    if (typeof window === 'undefined') return false;
+
+    jiebaTwLoadPromise = (async () => {
+        try {
+            const mod = await import(JIEBA_TW_WASM_MODULE_URL);
+            if (typeof mod.default !== 'function') {
+                console.warn('[VectHare CJK] Jieba TW module loaded but init() is unavailable');
+                return false;
+            }
+            await mod.default(JIEBA_TW_WASM_BINARY_URL);
+
+            if (typeof mod.with_dict !== 'function' || typeof mod.cut !== 'function') {
+                console.warn('[VectHare CJK] Jieba TW module missing with_dict() or cut()');
+                return false;
+            }
+
+            const resp = await fetch(JIEBA_TW_DICT_URL, { signal: AbortSignal.timeout(30000) });
+            if (!resp.ok) throw new Error(`Failed to fetch TW dict: HTTP ${resp.status}`);
+            const dictText = await resp.text();
+            mod.with_dict(dictText);
+
+            jiebaTwCutFunction = mod.cut;
+            console.log('[VectHare CJK] Jieba TW tokenizer initialized with Traditional Chinese dictionary');
+            return true;
+        } catch (error) {
+            console.warn('[VectHare CJK] Failed to load Jieba TW tokenizer:', error?.message || error);
+            return false;
+        }
+    })();
+
+    try {
+        return await jiebaTwLoadPromise;
+    } finally {
+        jiebaTwLoadPromise = null;
     }
 }
 
@@ -851,6 +902,21 @@ function _segmentWithJieba(span) {
     }
 }
 
+function _segmentWithJiebaTw(span) {
+    if (typeof jiebaTwCutFunction !== 'function') return null;
+    try {
+        const result = jiebaTwCutFunction(span, true);
+        if (!Array.isArray(result) || result.length === 0) return null;
+        const tokens = result
+            .map(t => String(t).trim())
+            .filter(t => t.length > 0);
+        return tokens.length > 0 ? tokens : null;
+    } catch (error) {
+        console.warn('[VectHare CJK] Jieba TW tokenization failed, falling back:', error?.message || error);
+        return null;
+    }
+}
+
 function _segmentWithTinySegmenter(span) {
     try {
         const result = _getTinySegmenter().segment(span);
@@ -896,6 +962,15 @@ function extractCJKTokens(text) {
             }
         }
 
+        // jieba_tw mode: Traditional Chinese spans use Jieba with TW dictionary if preloaded.
+        if (cjkTokenizerMode === CJK_TOKENIZER_MODES.jieba_tw && !_KANA_RE.test(span)) {
+            const twTokens = _segmentWithJiebaTw(span);
+            if (twTokens) {
+                for (const tok of twTokens) tokens.push(tok);
+                continue;
+            }
+        }
+
         // tiny-segmenter mode: only route kana-containing spans.
         if (cjkTokenizerMode === CJK_TOKENIZER_MODES.tiny_segmenter && _KANA_RE.test(span)) {
             const tinyTokens = _segmentWithTinySegmenter(span);
@@ -928,4 +1003,5 @@ export {
     setCjkTokenizerMode,
     getCjkTokenizerMode,
     ensureJiebaTokenizerLoaded,
+    ensureJiebaTwLoaded,
 };
