@@ -27,7 +27,7 @@ let isModalOpen = false;
  * @returns {string} Current backend name
  */
 function getCurrentBackend() {
-    return extension_settings.vecthare?.vector_backend || 'standard';
+    return extension_settings.vecthareplus?.vector_backend || 'standard';
 }
 
 /**

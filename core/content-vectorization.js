@@ -95,7 +95,7 @@ export async function vectorizeContent({ contentType, source, settings, abortSig
         const collectionId = generateCollectionId(contentType, source, settings);
         
         // Get full extension settings for keyword extraction (includes custom_stopwords)
-        const vecthareSettings = extension_settings.vecthare;
+        const vecthareSettings = extension_settings.vecthareplus;
         
         const enrichedChunks = enrichChunks(chunks, contentType, source, settings, preparedContent, vecthareSettings);
         const hashedChunks = enrichedChunks.map(chunk => ({
@@ -884,7 +884,7 @@ function enrichChunks(chunks, contentType, source, settings, preparedContent, ve
  * Deletes a content collection
  */
 export async function deleteContentCollection(collectionId) {
-    const vecthareSettings = extension_settings.vecthare;
+    const vecthareSettings = extension_settings.vecthareplus;
     await purgeVectorIndex(collectionId, vecthareSettings);
     console.log(`VectHare: Deleted collection: ${collectionId}`);
 }

@@ -45,10 +45,10 @@ let pluginAvailable = null;
  * @returns {string[]} Array of collection IDs
  */
 export function getCollectionRegistry() {
-    if (!extension_settings.vecthare.vecthare_collection_registry) {
-        extension_settings.vecthare.vecthare_collection_registry = [];
+    if (!extension_settings.vecthareplus.vecthare_collection_registry) {
+        extension_settings.vecthareplus.vecthare_collection_registry = [];
     }
-    return extension_settings.vecthare.vecthare_collection_registry;
+    return extension_settings.vecthareplus.vecthare_collection_registry;
 }
 
 /**
@@ -171,7 +171,7 @@ export async function deleteCollection(collectionId, settings, registryKey = nul
  * Clears the entire registry (useful for debugging/reset)
  */
 export function clearCollectionRegistry() {
-    extension_settings.vecthare.vecthare_collection_registry = [];
+    extension_settings.vecthareplus.vecthare_collection_registry = [];
     console.log('VectHare: Cleared collection registry');
     saveSettingsDebounced(); // Persist to disk!
 }
@@ -182,7 +182,7 @@ export function clearCollectionRegistry() {
 export function cleanupCollectionRegistry() {
     const registry = getCollectionRegistry();
     const cleaned = [...new Set(registry.filter(id => id != null && id !== ''))];
-    extension_settings.vecthare.vecthare_collection_registry = cleaned;
+    extension_settings.vecthareplus.vecthare_collection_registry = cleaned;
     const removed = registry.length - cleaned.length;
     if (removed > 0) {
         console.log(`VectHare: Cleaned registry - removed ${removed} invalid/duplicate entries`);
@@ -218,7 +218,7 @@ export function cleanupTestCollections() {
 
     const removed = registry.length - cleaned.length;
     if (removed > 0) {
-        extension_settings.vecthare.vecthare_collection_registry = cleaned;
+        extension_settings.vecthareplus.vecthare_collection_registry = cleaned;
         console.log(`VectHare: Cleaned ${removed} test collection entries from registry`);
         saveSettingsDebounced(); // Persist to disk!
     }

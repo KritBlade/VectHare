@@ -1,7 +1,7 @@
 /**
  * VectHare Collection Metadata Manager
  *
- * Manages collection-level metadata in extension_settings.vecthare.collections
+ * Manages collection-level metadata in extension_settings.vecthareplus.collections
  * This is the "settings layer" - user preferences for collections.
  *
  * Separation of concerns:
@@ -105,7 +105,7 @@ const defaultCollectionMeta = {
  */
 export function getDefaultDecayForType(collectionType) {
     // Get global defaults from settings
-    const globalSettings = extension_settings.vecthare || {};
+    const globalSettings = extension_settings.vecthareplus || {};
     const globalEnabled = globalSettings.default_decay_enabled ?? false;
     const globalType = globalSettings.default_decay_type || 'decay';
 
@@ -197,11 +197,11 @@ function ensureCollectionsObject() {
         console.error('VectHare: extension_settings is null/undefined - cannot access collections');
         return false;
     }
-    if (!extension_settings.vecthare) {
-        extension_settings.vecthare = {};
+    if (!extension_settings.vecthareplus) {
+        extension_settings.vecthareplus = {};
     }
-    if (!extension_settings.vecthare.collections) {
-        extension_settings.vecthare.collections = {};
+    if (!extension_settings.vecthareplus.collections) {
+        extension_settings.vecthareplus.collections = {};
     }
     return true;
 }
@@ -217,7 +217,7 @@ export function getCollectionMeta(collectionId) {
         return { ...defaultCollectionMeta };
     }
 
-    let stored = extension_settings.vecthare.collections[collectionId];
+    let stored = extension_settings.vecthareplus.collections[collectionId];
 
     // Fallback: Try alternate key formats for backward compatibility
     if (!stored && collectionId) {
@@ -226,15 +226,15 @@ export function getCollectionMeta(collectionId) {
         if (parsed.backend && parsed.source) {
             // Try source:collectionId format
             const legacyKey = `${parsed.source}:${parsed.collectionId}`;
-            stored = extension_settings.vecthare.collections[legacyKey];
+            stored = extension_settings.vecthareplus.collections[legacyKey];
 
             // Try just collectionId
             if (!stored) {
-                stored = extension_settings.vecthare.collections[parsed.collectionId];
+                stored = extension_settings.vecthareplus.collections[parsed.collectionId];
             }
         } else if (parsed.source) {
             // Already source:collectionId format, try just collectionId
-            stored = extension_settings.vecthare.collections[parsed.collectionId];
+            stored = extension_settings.vecthareplus.collections[parsed.collectionId];
         }
     }
 
@@ -262,9 +262,9 @@ export function setCollectionMeta(collectionId, data) {
 
     ensureCollectionsObject();
 
-    const existing = extension_settings.vecthare.collections[collectionId] || {};
+    const existing = extension_settings.vecthareplus.collections[collectionId] || {};
 
-    extension_settings.vecthare.collections[collectionId] = {
+    extension_settings.vecthareplus.collections[collectionId] = {
         ...defaultCollectionMeta,
         ...existing,
         ...data,
@@ -281,8 +281,8 @@ export function setCollectionMeta(collectionId, data) {
 export function deleteCollectionMeta(collectionId) {
     ensureCollectionsObject();
 
-    if (extension_settings.vecthare.collections[collectionId]) {
-        delete extension_settings.vecthare.collections[collectionId];
+    if (extension_settings.vecthareplus.collections[collectionId]) {
+        delete extension_settings.vecthareplus.collections[collectionId];
         saveSettingsDebounced();
         console.log(`VectHare: Deleted metadata for collection ${collectionId}`);
     }
@@ -294,7 +294,7 @@ export function deleteCollectionMeta(collectionId) {
  */
 export function getAllCollectionMeta() {
     ensureCollectionsObject();
-    return extension_settings.vecthare.collections;
+    return extension_settings.vecthareplus.collections;
 }
 
 // ============================================================================
@@ -366,12 +366,12 @@ export function isCollectionAutoSyncEnabled(collectionId) {
  * @returns {object|null} Chunk metadata or null if not found
  */
 export function getChunkMetadata(hash) {
-    if (!extension_settings.vecthare) {
+    if (!extension_settings.vecthareplus) {
         return null;
     }
 
     const key = `vecthare_chunk_meta_${hash}`;
-    return extension_settings.vecthare[key] || null;
+    return extension_settings.vecthareplus[key] || null;
 }
 
 /**
@@ -380,12 +380,12 @@ export function getChunkMetadata(hash) {
  * @param {object} metadata Chunk metadata
  */
 export function saveChunkMetadata(hash, metadata) {
-    if (!extension_settings.vecthare) {
-        extension_settings.vecthare = {};
+    if (!extension_settings.vecthareplus) {
+        extension_settings.vecthareplus = {};
     }
 
     const key = `vecthare_chunk_meta_${hash}`;
-    extension_settings.vecthare[key] = {
+    extension_settings.vecthareplus[key] = {
         ...metadata,
         updatedAt: Date.now(),
     };
@@ -398,13 +398,13 @@ export function saveChunkMetadata(hash, metadata) {
  * @param {string} hash Chunk hash
  */
 export function deleteChunkMetadata(hash) {
-    if (!extension_settings.vecthare) {
+    if (!extension_settings.vecthareplus) {
         return;
     }
 
     const key = `vecthare_chunk_meta_${hash}`;
-    if (extension_settings.vecthare[key]) {
-        delete extension_settings.vecthare[key];
+    if (extension_settings.vecthareplus[key]) {
+        delete extension_settings.vecthareplus[key];
         saveSettingsDebounced();
     }
 }
@@ -414,17 +414,17 @@ export function deleteChunkMetadata(hash) {
  * @returns {object} Map of hash -> metadata
  */
 export function getAllChunkMetadata() {
-    if (!extension_settings.vecthare) {
+    if (!extension_settings.vecthareplus) {
         return {};
     }
 
     const result = {};
     const prefix = 'vecthare_chunk_meta_';
 
-    for (const key in extension_settings.vecthare) {
+    for (const key in extension_settings.vecthareplus) {
         if (key.startsWith(prefix)) {
             const hash = key.replace(prefix, '');
-            result[hash] = extension_settings.vecthare[key];
+            result[hash] = extension_settings.vecthareplus[key];
         }
     }
 
@@ -441,7 +441,7 @@ export function getAllChunkMetadata() {
  * New format: collections[collectionId].enabled = true/false
  */
 export function migrateOldEnabledKeys() {
-    if (!extension_settings.vecthare) {
+    if (!extension_settings.vecthareplus) {
         return { migrated: 0 };
     }
 
@@ -450,14 +450,14 @@ export function migrateOldEnabledKeys() {
     let migrated = 0;
     const keysToDelete = [];
 
-    for (const key in extension_settings.vecthare) {
+    for (const key in extension_settings.vecthareplus) {
         if (key.startsWith('vecthare_collection_enabled_')) {
             const collectionId = key.replace('vecthare_collection_enabled_', '');
-            const enabled = extension_settings.vecthare[key];
+            const enabled = extension_settings.vecthareplus[key];
 
             // Only migrate if we don't already have metadata for this collection
-            if (!extension_settings.vecthare.collections[collectionId]) {
-                extension_settings.vecthare.collections[collectionId] = {
+            if (!extension_settings.vecthareplus.collections[collectionId]) {
+                extension_settings.vecthareplus.collections[collectionId] = {
                     ...defaultCollectionMeta,
                     enabled: enabled !== false,
                 };
@@ -471,7 +471,7 @@ export function migrateOldEnabledKeys() {
 
     // Delete old keys
     for (const key of keysToDelete) {
-        delete extension_settings.vecthare[key];
+        delete extension_settings.vecthareplus[key];
     }
 
     if (migrated > 0) {
@@ -493,14 +493,14 @@ export function cleanupOrphanedMeta(actualCollectionIds) {
     const actualSet = new Set(actualCollectionIds);
     const orphaned = [];
 
-    for (const collectionId in extension_settings.vecthare.collections) {
+    for (const collectionId in extension_settings.vecthareplus.collections) {
         if (!actualSet.has(collectionId)) {
             orphaned.push(collectionId);
         }
     }
 
     for (const collectionId of orphaned) {
-        delete extension_settings.vecthare.collections[collectionId];
+        delete extension_settings.vecthareplus.collections[collectionId];
         console.log(`VectHare: Removed orphaned metadata for ${collectionId}`);
     }
 
@@ -740,7 +740,7 @@ export function ensureCollectionMeta(collectionId, initialData = {}) {
 
     ensureCollectionsObject();
 
-    if (!extension_settings.vecthare.collections[collectionId]) {
+    if (!extension_settings.vecthareplus.collections[collectionId]) {
         // Determine collection type for temporal decay defaults
         // Check initialData.type, or infer from scope, or parse from collectionId
         let collectionType = initialData.type || initialData.scope || 'unknown';
@@ -750,7 +750,7 @@ export function ensureCollectionMeta(collectionId, initialData = {}) {
             collectionType = 'lorebook';
         }
 
-        extension_settings.vecthare.collections[collectionId] = {
+        extension_settings.vecthareplus.collections[collectionId] = {
             ...defaultCollectionMeta,
             temporalDecay: getDefaultDecayForType(collectionType),
             createdAt: Date.now(),
@@ -773,7 +773,7 @@ export function recordCollectionUsage(collectionId) {
 
     ensureCollectionsObject();
 
-    const existing = extension_settings.vecthare.collections[collectionId];
+    const existing = extension_settings.vecthareplus.collections[collectionId];
     if (existing) {
         existing.lastUsed = Date.now();
         existing.queryCount = (existing.queryCount || 0) + 1;
@@ -1235,14 +1235,14 @@ export function isChunkTemporallyBlind(hash) {
  * @returns {string[]} Array of chunk hashes that are temporally blind
  */
 export function getTemporallyBlindChunks() {
-    if (!extension_settings.vecthare) {
+    if (!extension_settings.vecthareplus) {
         return [];
     }
 
     const blindChunks = [];
-    for (const key in extension_settings.vecthare) {
+    for (const key in extension_settings.vecthareplus) {
         if (key.startsWith('vecthare_chunk_meta_')) {
-            const meta = extension_settings.vecthare[key];
+            const meta = extension_settings.vecthareplus[key];
             if (meta?.temporallyBlind === true) {
                 const hash = key.replace('vecthare_chunk_meta_', '');
                 blindChunks.push(hash);

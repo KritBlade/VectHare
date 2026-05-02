@@ -285,8 +285,8 @@ export function getClassifierSettings() {
  * @param {any} value - Setting value
  */
 export function updateClassifierSetting(key, value) {
-    if (!extension_settings.vecthare) {
-        extension_settings.vecthare = {};
+    if (!extension_settings.vecthareplus) {
+        extension_settings.vecthareplus = {};
     }
 
     const keyMap = {
@@ -297,7 +297,7 @@ export function updateClassifierSetting(key, value) {
     };
 
     const settingKey = keyMap[key] || key;
-    extension_settings.vecthare[settingKey] = value;
+    extension_settings.vecthareplus[settingKey] = value;
 
     // Clear cache if model changes
     if (key === 'model') {

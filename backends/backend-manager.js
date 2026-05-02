@@ -367,7 +367,7 @@ export async function getBackend(settings, preferredBackend = null) {
     // Priority: explicit parameter > settings.vector_backend > global setting > 'standard'
     const backendName = preferredBackend
         || settings?.vector_backend
-        || extension_settings.vecthare?.vector_backend
+        || extension_settings.vecthareplus?.vector_backend
         || 'standard';
 
     // Try to get/initialize the requested backend - throw on failure

@@ -510,10 +510,10 @@ function bindBrowserEvents() {
       // Refresh collections (will rediscover from disk)
       await refreshCollections();
 
-      toastr.success("Registry cleared and resynced from disk", "VectHare");
+      toastr.success("Registry cleared and resynced from disk", "VectHarePlus");
     } catch (error) {
       console.error("VectHare: Failed to resync", error);
-      toastr.error(`Failed to resync: ${error.message}`, "VectHare");
+      toastr.error(`Failed to resync: ${error.message}`, "VectHarePlus");
     }
   });
 
@@ -541,7 +541,7 @@ function bindBrowserEvents() {
     $(this).val("");
 
     try {
-      toastr.info("Reading import file...", "VectHare");
+      toastr.info("Reading import file...", "VectHarePlus");
 
       let data;
 
@@ -561,7 +561,7 @@ function bindBrowserEvents() {
           return;
         }
 
-        toastr.info("Found VectHare data in PNG!", "VectHare");
+        toastr.info("Found VectHare data in PNG!", "VectHarePlus");
       } else {
         // JSON file
         data = await readImportFile(file);
@@ -625,7 +625,7 @@ function bindBrowserEvents() {
       }
     } catch (error) {
       console.error("VectHare: Import failed", error);
-      toastr.error(`Import failed: ${error.message}`, "VectHare");
+      toastr.error(`Import failed: ${error.message}`, "VectHarePlus");
     }
   });
 }
@@ -966,14 +966,14 @@ function findCollectionByKey(key) {
 async function performPngExport(imageFile) {
   const pending = browserState.pendingPngExport;
   if (!pending) {
-    toastr.error("No export pending", "VectHare");
+    toastr.error("No export pending", "VectHarePlus");
     return;
   }
 
   browserState.pendingPngExport = null;
 
   try {
-    toastr.info("Preparing PNG export...", "VectHare");
+    toastr.info("Preparing PNG export...", "VectHarePlus");
 
     // Get export data
     const exportData = await exportCollection(
@@ -989,12 +989,12 @@ async function performPngExport(imageFile) {
     // Convert custom image to PNG if provided
     let pngData = null;
     if (imageFile) {
-      toastr.info("Converting image...", "VectHare");
+      toastr.info("Converting image...", "VectHarePlus");
       pngData = await convertToPNG(imageFile);
     }
 
     // Embed data in PNG
-    toastr.info("Embedding data in PNG...", "VectHare");
+    toastr.info("Embedding data in PNG...", "VectHarePlus");
     const pngWithData = await embedDataInPNG(exportData, pngData);
 
     // Download
@@ -1014,7 +1014,7 @@ async function performPngExport(imageFile) {
     );
   } catch (error) {
     console.error("VectHare: PNG export failed", error);
-    toastr.error(`PNG export failed: ${error.message}`, "VectHare");
+    toastr.error(`PNG export failed: ${error.message}`, "VectHarePlus");
   }
 }
 
@@ -1068,7 +1068,7 @@ function bindCollectionCardEvents() {
 
       toastr.success(
         `Collection ${newEnabled ? "enabled" : "paused"}`,
-        "VectHare",
+        "VectHarePlus",
       );
     });
 
@@ -1113,16 +1113,16 @@ function bindCollectionCardEvents() {
         renderCollections();
 
         if (result.success) {
-          toastr.success(`Deleted collection "${collection.name}"`, "VectHare");
+          toastr.success(`Deleted collection "${collection.name}"`, "VectHarePlus");
         } else {
           toastr.warning(
             `Partial deletion: ${result.errors.join(", ")}`,
-            "VectHare",
+            "VectHarePlus",
           );
         }
       } catch (error) {
         console.error("VectHare: Failed to delete collection", error);
-        toastr.error(`Failed to delete collection: ${error.message}`, "VectHare");
+        toastr.error(`Failed to delete collection: ${error.message}`, "VectHarePlus");
       }
     });
 
@@ -1151,10 +1151,10 @@ function bindCollectionCardEvents() {
           throw new Error(`Failed to open folder: ${response.statusText}`);
         }
 
-        toastr.success("Opened collection folder", "VectHare");
+        toastr.success("Opened collection folder", "VectHarePlus");
       } catch (error) {
         console.error("VectHare: Failed to open folder", error);
-        toastr.error(`Failed to open folder: ${error.message}`, "VectHare");
+        toastr.error(`Failed to open folder: ${error.message}`, "VectHarePlus");
       }
     });
 
@@ -1170,14 +1170,14 @@ function bindCollectionCardEvents() {
       if (!collection) return;
 
       try {
-        toastr.info("Loading chunks...", "VectHare");
+        toastr.info("Loading chunks...", "VectHarePlus");
 
         // Use the collection's actual backend, not the global setting
         // This ensures we query Standard collections with Standard backend, etc.
         if (!collection.backend) {
           toastr.error(
             "Collection has no backend defined - this is a bug",
-            "VectHare",
+            "VectHarePlus",
           );
           console.error("VectHare: Collection missing backend:", collection);
           return;
@@ -1214,7 +1214,7 @@ function bindCollectionCardEvents() {
         const results = data.items || data.chunks || data.results || [];
 
         if (!results || results.length === 0) {
-          toastr.warning("No chunks found in this collection", "VectHare");
+          toastr.warning("No chunks found in this collection", "VectHarePlus");
           return;
         }
 
@@ -1240,7 +1240,7 @@ function bindCollectionCardEvents() {
         );
       } catch (error) {
         console.error("VectHare: Failed to load chunks", error);
-        toastr.error(`Failed to load chunks: ${error.message}`, "VectHare");
+        toastr.error(`Failed to load chunks: ${error.message}`, "VectHarePlus");
       }
     });
 
@@ -1285,7 +1285,7 @@ function bindCollectionCardEvents() {
       if (!collection) return;
 
       try {
-        toastr.info("Exporting collection...", "VectHare");
+        toastr.info("Exporting collection...", "VectHarePlus");
 
         const exportData = await exportCollection(
           collectionId,
@@ -1305,7 +1305,7 @@ function bindCollectionCardEvents() {
         );
       } catch (error) {
         console.error("VectHare: Export failed", error);
-        toastr.error(`Export failed: ${error.message}`, "VectHare");
+        toastr.error(`Export failed: ${error.message}`, "VectHarePlus");
       }
     });
 
@@ -1500,9 +1500,9 @@ function openRenameDialog(collectionId, currentName) {
       refreshCollections(); // Reload to get updated names
 
       if (newName) {
-        toastr.success(`Renamed to "${newName}"`, "VectHare");
+        toastr.success(`Renamed to "${newName}"`, "VectHarePlus");
       } else {
-        toastr.success("Reset to auto-generated name", "VectHare");
+        toastr.success("Reset to auto-generated name", "VectHarePlus");
       }
     });
 
@@ -1617,7 +1617,7 @@ function openModelSwitcher(collection) {
 
       toastr.success(
         `Set primary model: ${modelPath || "(default)"}`,
-        "VectHare",
+        "VectHarePlus",
       );
       closeModelSwitcher();
       renderCollections();
@@ -2374,7 +2374,7 @@ function saveActivation() {
 
   closeActivationEditor();
   refreshCollections();
-  toastr.success("Collection settings saved", "VectHare");
+  toastr.success("Collection settings saved", "VectHarePlus");
 }
 
 /**
@@ -2759,7 +2759,7 @@ function bindConditionRuleEvents() {
 
       const worldName = worldSelect.val();
       if (!worldName) {
-        toastr.warning("Please select a lorebook first", "VectHare");
+        toastr.warning("Please select a lorebook first", "VectHarePlus");
         return;
       }
 
@@ -2782,7 +2782,7 @@ function bindConditionRuleEvents() {
             .filter((v) => v)
         : [];
       if (currentValues.includes(valueToAdd)) {
-        toastr.info("Already added", "VectHare");
+        toastr.info("Already added", "VectHarePlus");
         return;
       }
 
@@ -2965,12 +2965,12 @@ async function scanKeywords() {
     if (browserState.availableKeywords.length === 0) {
       $tags.html('<span class="vecthare-keyword-hint">No keywords found in scanned collections</span>');
     } else {
-      toastr.success(`Found ${browserState.availableKeywords.length} unique keywords`, "VectHare");
+      toastr.success(`Found ${browserState.availableKeywords.length} unique keywords`, "VectHarePlus");
     }
   } catch (error) {
     console.error("VectHare: Keyword scan failed", error);
     $tags.html('<span class="vecthare-keyword-hint vecthare-error">Scan failed</span>');
-    toastr.error("Failed to scan keywords", "VectHare");
+    toastr.error("Failed to scan keywords", "VectHarePlus");
   } finally {
     $btn.prop("disabled", false).html('<i class="fa-solid fa-sync"></i> Scan');
   }
@@ -3104,7 +3104,7 @@ function filterResultsByKeywords(results) {
 async function performSearch() {
   const query = $("#vecthare_semantic_search").val().trim();
   if (!query) {
-    toastr.warning("Please enter a search query", "VectHare");
+    toastr.warning("Please enter a search query", "VectHarePlus");
     return;
   }
 
@@ -3304,14 +3304,14 @@ function renderSearchResults(results, query, originalResults = null) {
       if (!collection) return;
 
       try {
-        toastr.info("Loading chunks...", "VectHare");
+        toastr.info("Loading chunks...", "VectHarePlus");
 
         // Use the collection's actual backend, not the global setting
         // This ensures we query Standard collections with Standard backend, etc.
         if (!collection.backend) {
           toastr.error(
             "Collection has no backend defined - this is a bug",
-            "VectHare",
+            "VectHarePlus",
           );
           console.error("VectHare: Collection missing backend:", collection);
           return;
@@ -3343,7 +3343,7 @@ function renderSearchResults(results, query, originalResults = null) {
         const results = data.items || [];
 
         if (!results || results.length === 0) {
-          toastr.warning("No chunks found in this collection", "VectHare");
+          toastr.warning("No chunks found in this collection", "VectHarePlus");
           return;
         }
 
@@ -3369,7 +3369,7 @@ function renderSearchResults(results, query, originalResults = null) {
         );
       } catch (error) {
         console.error("VectHare: Failed to load chunks", error);
-        toastr.error(`Failed to load chunks: ${error.message}`, "VectHare");
+        toastr.error(`Failed to load chunks: ${error.message}`, "VectHarePlus");
       }
     });
 }
@@ -3499,7 +3499,7 @@ function bindBulkEvents() {
 
       toastr.success(
         `Enabled ${browserState.bulkSelected.size} collection(s)`,
-        "VectHare",
+        "VectHarePlus",
       );
       renderBulkList();
       renderCollections();
@@ -3521,7 +3521,7 @@ function bindBulkEvents() {
 
       toastr.success(
         `Disabled ${browserState.bulkSelected.size} collection(s)`,
-        "VectHare",
+        "VectHarePlus",
       );
       renderBulkList();
       renderCollections();
@@ -3540,7 +3540,7 @@ function bindBulkEvents() {
 
       toastr.info(
         `Exporting ${browserState.bulkSelected.size} collection(s)...`,
-        "VectHare",
+        "VectHarePlus",
       );
 
       let successCount = 0;
@@ -3568,7 +3568,7 @@ function bindBulkEvents() {
         }
       }
 
-      toastr.success(`Exported ${successCount} collection(s)`, "VectHare");
+      toastr.success(`Exported ${successCount} collection(s)`, "VectHarePlus");
     });
 
   // Bulk delete - uses unified deleteCollection()
@@ -3588,13 +3588,13 @@ function bindBulkEvents() {
 
       const confirmText = prompt("Type DELETE to confirm:");
       if (confirmText !== "DELETE") {
-        toastr.info("Deletion cancelled", "VectHare");
+        toastr.info("Deletion cancelled", "VectHarePlus");
         return;
       }
 
       toastr.info(
         `Deleting ${browserState.bulkSelected.size} collection(s)...`,
-        "VectHare",
+        "VectHarePlus",
       );
 
       let successCount = 0;
@@ -3633,10 +3633,10 @@ function bindBulkEvents() {
       if (partialCount > 0) {
         toastr.warning(
           `Deleted ${successCount}, partial: ${partialCount}`,
-          "VectHare",
+          "VectHarePlus",
         );
       } else {
-        toastr.success(`Deleted ${successCount} collection(s)`, "VectHare");
+        toastr.success(`Deleted ${successCount} collection(s)`, "VectHarePlus");
       }
     });
 }

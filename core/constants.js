@@ -18,7 +18,7 @@
 export const EXTENSION_PROMPT_TAG = '3_vecthare';
 
 /** Extension name for logging and UI */
-export const EXTENSION_NAME = 'VectHare';
+export const EXTENSION_NAME = 'VectHarePlus';
 
 // =============================================================================
 // PERFORMANCE & RATE LIMITING

@@ -44,7 +44,7 @@ import { CJK_TOKENIZER_MODES, setCjkTokenizerMode, ensureJiebaTokenizerLoaded, e
 import './core/emotion-classifier.js'; // Exposes window.VectHareEmotionClassifier
 
 // Constants
-const MODULE_NAME = 'VectHare';
+const MODULE_NAME = 'VectHarePlus';
 
 // Default settings
 const defaultSettings = {
@@ -214,10 +214,10 @@ async function onPurgeClick() {
             headers: getRequestHeaders(),
         });
 
-        // 2. Clear extension_settings.vecthare
-        for (const key in extension_settings.vecthare) {
+        // 2. Clear extension_settings.vecthareplus
+        for (const key in extension_settings.vecthareplus) {
             if (key !== 'enabled') {
-                delete extension_settings.vecthare[key];
+                delete extension_settings.vecthareplus[key];
             }
         }
 
@@ -247,21 +247,21 @@ jQuery(async () => {
     console.log('VectHare: Initializing...');
 
     // Load saved settings
-    if (!extension_settings.vecthare) {
-        extension_settings.vecthare = defaultSettings;
+    if (!extension_settings.vecthareplus) {
+        extension_settings.vecthareplus = defaultSettings;
     }
 
     // Merge saved settings with defaults
     settings = {
         ...defaultSettings,
-        ...extension_settings.vecthare,
+        ...extension_settings.vecthareplus,
         temporal_decay: {
             ...defaultSettings.temporal_decay,
-            ...extension_settings.vecthare.temporal_decay
+            ...extension_settings.vecthareplus.temporal_decay
         },
         collections: {
             ...defaultSettings.collections,
-            ...extension_settings.vecthare.collections
+            ...extension_settings.vecthareplus.collections
         }
     };
 
@@ -274,7 +274,7 @@ jQuery(async () => {
     // Migrate empty rag_xml_tag to default value
     if (!settings.rag_xml_tag) {
         settings.rag_xml_tag = 'VectorHareMemory';
-        extension_settings.vecthare.rag_xml_tag = 'VectorHareMemory';
+        extension_settings.vecthareplus.rag_xml_tag = 'VectorHareMemory';
     }
 
     // Initialize CJK tokenizer mode before any extraction happens.
