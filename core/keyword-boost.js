@@ -1,4 +1,4 @@
-import { porterStemmer, extractCJKTokens } from './bm25-scorer.js';
+import { porterStemmer, extractCJKTokens, getCjkTokenizerMode, CJK_TOKENIZER_MODES } from './bm25-scorer.js';
 import { substituteParams } from '../../../../../script.js';
 
 /**
@@ -71,6 +71,105 @@ const FREQUENCY_WEIGHT_INCREMENT = 0.1;
 
 /** Maximum weight cap (prevent runaway weights) */
 const MAX_KEYWORD_WEIGHT = 3.0;
+
+const CJK_CHAR_RE = /[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF\u3040-\u309F\u30A0-\u30FF]/;
+
+// In Japanese mode, allow a small set of high-signal 1-char tokens (mostly RPG terms)
+// plus frequency-based survival to avoid losing recurring key concepts.
+// In Japanese mode, allow a small set of high-signal 1-char tokens 
+// (RPG, School, and Slice-of-Life terms)
+// plus frequency-based survival to avoid losing recurring key concepts.
+const JAPANESE_SINGLE_CHAR_ALLOWLIST = new Set([
+    // RPG Original
+    '剣', '刀', '弓', '槍', '盾', '魔', '王', '神', '龍', '竜', '炎', '氷', '闇', '光', '聖',
+    // RPG Magic & Combat
+    '雷', '水', '風', '土', '毒', '幻', '魂', '気', '斧', '杖', '鞭', '鎧', '血', '傷', '罠',
+    // RPG Locations & Entities
+    '城', '塔', '森', '牢', '街', '村', '扉', '橋', '鬼', '獣', '霊', '姫', '帝', '敵', '賊',
+    // RPG Items
+    '鍵', '薬', '宝', '本', '鏡',
+    
+    // School & Academics
+    '寮', '塾', '席', '部', '組', '噂', '罰',
+    // Romance & Drama
+    '恋', '愛', '涙', '嘘', '絆',
+    // SoL Locations & Events
+    '駅', '家', '店', '海', '祭',
+    // SoL Items, Weather & Animals
+    '傘', '雨', '雪', '桜', '猫', '犬', '茶', '酒',
+    // Relationships
+    '友', '親', '兄', '弟', '姉', '妹'
+]);
+
+// In Traditional Chinese mode, allow a focused set of high-signal 1-char tokens
+// (RPG + school + slice-of-life), plus frequency-based survival.
+const TRADITIONAL_CHINESE_SINGLE_CHAR_ALLOWLIST = new Set([
+    // RPG Core
+    '劍', '刀', '弓', '槍', '盾', '魔', '王', '神', '龍', '炎', '冰', '闇', '光', '聖',
+    // RPG Combat & Elements
+    '雷', '水', '風', '土', '毒', '幻', '魂', '氣', '斧', '杖', '鞭', '鎧', '血', '傷', '陣',
+    // RPG Places & Entities
+    '城', '塔', '森', '牢', '街', '村', '門', '橋', '鬼', '獸', '靈', '姬', '帝', '敵', '賊',
+    // RPG Items
+    '鑰', '藥', '寶', '書', '鏡',
+
+    // School & Academics
+    '班', '組', '課', '部', '社', '室', '寮', '罰',
+    // Romance & Drama
+    '戀', '愛', '淚', '謊', '絆',
+    // SoL Locations & Events
+    '家', '店', '海', '祭', '站',
+    // SoL Items, Weather & Animals
+    '傘', '雨', '雪', '櫻', '貓', '狗', '茶', '酒',
+    // Relationships
+    '友', '親', '兄', '弟', '姊', '妹',
+]);
+
+// In Simplified Chinese mode, allow a focused set of high-signal 1-char tokens
+// (RPG + school + slice-of-life), plus frequency-based survival.
+const SIMPLIFIED_CHINESE_SINGLE_CHAR_ALLOWLIST = new Set([
+    // RPG Core
+    '剑', '刀', '弓', '枪', '盾', '魔', '王', '神', '龙', '炎', '冰', '暗', '光', '圣',
+    // RPG Combat & Elements
+    '雷', '水', '风', '土', '毒', '幻', '魂', '气', '斧', '杖', '鞭', '铠', '血', '伤', '阵',
+    // RPG Places & Entities
+    '城', '塔', '森', '牢', '街', '村', '门', '桥', '鬼', '兽', '灵', '姬', '帝', '敌', '贼',
+    // RPG Items
+    '钥', '药', '宝', '书', '镜',
+
+    // School & Academics
+    '班', '组', '课', '部', '社', '室', '宿', '罚',
+    // Romance & Drama
+    '恋', '爱', '泪', '谎', '绊',
+    // SoL Locations & Events
+    '家', '店', '海', '祭', '站',
+    // SoL Items, Weather & Animals
+    '伞', '雨', '雪', '樱', '猫', '狗', '茶', '酒',
+    // Relationships
+    '友', '亲', '兄', '弟', '姐', '妹',
+]);
+
+function isCjkToken(token) {
+    return typeof token === 'string' && CJK_CHAR_RE.test(token);
+}
+
+function shouldKeepCjkKeyword(token, frequency, isJapaneseMode, isTraditionalChineseMode, isSimplifiedChineseMode) {
+    if (!isCjkToken(token)) return true;
+    if (token.length >= 2) return true;
+    if (isJapaneseMode) {
+        if (frequency >= 2) return true;
+        return JAPANESE_SINGLE_CHAR_ALLOWLIST.has(token);
+    }
+    if (isTraditionalChineseMode) {
+        if (frequency >= 2) return true;
+        return TRADITIONAL_CHINESE_SINGLE_CHAR_ALLOWLIST.has(token);
+    }
+    if (isSimplifiedChineseMode) {
+        if (frequency >= 2) return true;
+        return SIMPLIFIED_CHINESE_SINGLE_CHAR_ALLOWLIST.has(token);
+    }
+    return false;
+}
 
 /**
  * Common words that shouldn't be auto-extracted as keywords
@@ -275,7 +374,7 @@ const KEYWORD_STOP_WORDS = new Set([
     '繼續', '停下', '離開', '來到', '回來', '出來', '進來', '上來', '下來',
     '完成', '結束', '發現', '明白', '知道', '覺得', '認為', '希望', '想到',
     // Filler adverbs and descriptors
-    '一下', '一起', '一直', '一樣', '一邊', '一旁', '一番', '一聲',
+    '一下', '一起', '一直', '一樣', '一邊', '一旁', '一番', '一聲', '先',
     '微微', '輕輕', '慢慢', '緩緩', '漸漸', '稍微', '略微', '稍稍',
     '臉上', '身上', '手上', '眼中', '心中', '腦中', '胸口',  // body-location phrases
     '那是', '這是', '就是', '只是', '還是', '或是', '但是', '可是',
@@ -420,6 +519,10 @@ export function extractTextKeywords(text, options = {}) {
     }
 
     const stopwords = getCombinedStopwords(options.settings);
+    const cjkTokenizerMode = getCjkTokenizerMode();
+    const isJapaneseMode = cjkTokenizerMode === CJK_TOKENIZER_MODES.tiny_segmenter;
+    const isTraditionalChineseMode = cjkTokenizerMode === CJK_TOKENIZER_MODES.jieba_tw;
+    const isSimplifiedChineseMode = cjkTokenizerMode === CJK_TOKENIZER_MODES.jieba;
 
     // Step 1: Clean text - remove example citations and italics
     let cleanedText = text.replace(/\([^)]+\)/g, ' '); // Remove (parenthetical citations)
@@ -458,6 +561,7 @@ export function extractTextKeywords(text, options = {}) {
 
     for (const [word, count] of wordCounts) {
         if (count >= config.minFrequency) {
+            if (!shouldKeepCjkKeyword(word, count, isJapaneseMode, isTraditionalChineseMode, isSimplifiedChineseMode)) continue;
             // Calculate weight based on frequency
             // More occurrences = higher weight
             const frequencyBonus = (count - config.minFrequency) * FREQUENCY_WEIGHT_INCREMENT;
@@ -626,6 +730,10 @@ export function extractBM25Keywords(text, options = {}) {
     const minFrequency = config.minFrequency || 1;
     const minWordLength = options.minWordLength || 3;
     const stopwords = getCombinedStopwords(options.settings);
+    const cjkTokenizerMode = getCjkTokenizerMode();
+    const isJapaneseMode = cjkTokenizerMode === CJK_TOKENIZER_MODES.tiny_segmenter;
+    const isTraditionalChineseMode = cjkTokenizerMode === CJK_TOKENIZER_MODES.jieba_tw;
+    const isSimplifiedChineseMode = cjkTokenizerMode === CJK_TOKENIZER_MODES.jieba;
 
     // Apply header size limit (scan area)
     let scanText = text;
@@ -705,6 +813,7 @@ export function extractBM25Keywords(text, options = {}) {
     for (const [word, tf] of termFreq.entries()) {
         // Skip words below minimum frequency threshold
         if (tf < minFrequency) continue;
+        if (!shouldKeepCjkKeyword(word, tf, isJapaneseMode, isTraditionalChineseMode, isSimplifiedChineseMode)) continue;
 
         const df = docFreq.get(word) || 1;
 
