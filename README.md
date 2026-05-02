@@ -228,7 +228,7 @@ Supports 28 emotion types with Character Expressions integration!
 3. Click **"Install Extension"**
 4. Paste this URL:
    ```
-   https://github.com/Coneja-Chibi/VectHare
+   https://github.com/kritblade/VectHare
    ```
 5. Click **Install**
 
@@ -239,9 +239,7 @@ That's it! VectHarePlus will be downloaded and enabled automatically.
 2. Select your embedding provider (Transformers, OpenAI, Ollama, BananaBread, etc.)
 3. Configure API keys if using cloud providers
 
-### Step 3: (Optional) Install Similharity Plugin
-
-**Only needed for LanceDB or Qdrant backends!**
+### Step 3: (Needed for Qdrant backends) Install Similharity Plugin
 
 ```bash
 cd SillyTavern/plugins
@@ -272,8 +270,9 @@ Look for the update notification in the Extensions panel, or manually check with
 ### 🎛️ Core Settings
 | Setting | Description |
 |---------|-------------|
-| **Vector Backend** | Standard, LanceDB, or Qdrant |
+| **Vector Backend** | Standard, LanceDB, or Qdrant |   (Only Qdrant is tested on VectHarePlus)
 | **Embedding Provider** | 15+ providers supported |
+| **Summary Provider** | 2 providers supported |
 | **API URL** | Custom endpoint for local providers |
 
 ### 💬 Chat Vectorization
