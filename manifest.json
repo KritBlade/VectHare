@@ -1,5 +1,5 @@
 {
-    "display_name": "VectHare",
+    "display_name": "VectHarePlus",
     "loading_order": 100,
     "requires": [],
     "optional": ["embeddings"],
@@ -7,7 +7,7 @@
     "js": "index.js",
     "css": "vecthare.css",
     "author": "Coneja Chibi",
-    "version": "2.2.0-alpha",
+    "version": "2.3.0",
     "homePage": "https://github.com/Coneja-Chibi/VectHare",
     "description": "Advanced RAG system with temporal decay, importance weighting, and intelligent chunking",
     "auto_update": true,

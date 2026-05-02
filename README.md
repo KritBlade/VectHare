@@ -2,7 +2,7 @@
 
 > *It's like having a perfect memory for your roleplay conversations.* VectHarePlus brings intelligent context retrieval to SillyTavern with temporal decay, conditional activation, and multiple vector backends.
 
-![Version](https://img.shields.io/badge/version-2.0.0--alpha-blue) ![License](https://img.shields.io/badge/license-MIT-green) ![Status](https://img.shields.io/badge/status-Active-brightgreen)
+![Version](https://img.shields.io/badge/version-2.3.0-blue) ![License](https://img.shields.io/badge/license-MIT-green) ![Status](https://img.shields.io/badge/status-Active-brightgreen)
 
 ---
 
