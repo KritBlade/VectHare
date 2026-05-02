@@ -69,7 +69,7 @@ export { getChatUUID };
 
 /**
  * Builds chat collection ID using the chat's unique UUID
- * Format: vecthare_chat_{charName}_{uuid}
+ * Format: vecthare_chat_{handleId}_{charName}_{uuid}
  * @param {string} [chatUUID] Optional UUID override, otherwise uses current chat
  * @returns {string|null} Collection ID or null if no chat
  */

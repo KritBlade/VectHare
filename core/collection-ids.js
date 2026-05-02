@@ -86,7 +86,7 @@ export function getChatUUID() {
 
 /**
  * Builds a chat collection ID using UUID for uniqueness
- * Format: vecthare_chat_{charName}_{uuid}
+ * Format: vecthare_chat_{handleId}_{charName}_{uuid}
  * @param {string} [chatUUID] Optional UUID override
  * @returns {string|null} Collection ID or null if no chat
  */
@@ -97,16 +97,23 @@ export function buildChatCollectionId(chatUUID) {
     }
 
     const context = getContext();
+    const handleId = context?.name1 || 'user';
     const charName = context?.name2 || 'chat';
 
-    // Sanitize character name (lowercase, alphanumeric only)
+    // Sanitize handle/character names (lowercase, alphanumeric only)
+    const sanitizedHandle = handleId
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_|_$/g, '')
+        .substring(0, 30) || 'user';
+
     const sanitizedChar = charName
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '_')
         .replace(/^_|_$/g, '')
-        .substring(0, 30);
+        .substring(0, 30) || 'chat';
 
-    return `${COLLECTION_PREFIXES.VECTHARE_CHAT}${sanitizedChar}_${uuid}`;
+    return `${COLLECTION_PREFIXES.VECTHARE_CHAT}${sanitizedHandle}_${sanitizedChar}_${uuid}`;
 }
 
 /**
