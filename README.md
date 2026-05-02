@@ -1,14 +1,15 @@
-# 🐰 VectHare - Advanced RAG for SillyTavern
+# 🐰 VectHarePlus - Advanced RAG for SillyTavern
 
-> *It's like having a perfect memory for your roleplay conversations.* VectHare brings intelligent context retrieval to SillyTavern with temporal decay, conditional activation, and multiple vector backends.
+> *It's like having a perfect memory for your roleplay conversations.* VectHarePlus brings intelligent context retrieval to SillyTavern with temporal decay, conditional activation, and multiple vector backends.
 
 ![Version](https://img.shields.io/badge/version-2.0.0--alpha-blue) ![License](https://img.shields.io/badge/license-MIT-green) ![Status](https://img.shields.io/badge/status-Active-brightgreen)
 
 ---
 
-## 🎯 What is VectHare?
+## 🎯 What is VectHarePlus?
+Branched from the original VectHare project, VectHarePlus is an **advanced Retrieval-Augmented Generation (RAG) system** for SillyTavern, now featuring newly added, optimized support for Japanese, Traditional Chinese, and Simplified Chinese.
 
-VectHare is an **advanced Retrieval-Augmented Generation (RAG) system** for SillyTavern that transforms how your AI characters recall and use past events. Instead of traditional memory tokens, VectHare vectorizes your chat history and intelligently retrieves relevant context when generating responses.
+It fundamentally transforms how your AI characters recall and use past events. Rather than relying on traditional memory tokens, VectHarePlus vectorizes your chat history to intelligently retrieve the most relevant context exactly when it's needed during text generation.
 
 ### The Problem It Solves
 
@@ -17,7 +18,34 @@ VectHare is an **advanced Retrieval-Augmented Generation (RAG) system** for Sill
 - ✍️ You manually edit context to remind characters of key events
 - 🤖 Character memories aren't flexible or intelligent
 
-**VectHare's Solution:** Automatically extract relevant memories from your entire chat history using semantic search, with smart temporal decay that lets older memories fade naturally, and conditional rules to control exactly when memories activate.
+**VectHarePlus Solution:** Automatically extract relevant memories from your entire chat history using semantic search, with smart temporal decay that lets older memories fade naturally, and conditional rules to control exactly when memories activate.
+
+---
+
+## ➕ VectHarePlus Features
+
+### 🌏 Better CJK Language Support
+- **Japanese mode** with TinySegmenter-aware extraction behavior
+- **Traditional Chinese mode** with Jieba WASM + Traditional dictionary lazy loading
+- **Simplified Chinese mode** with Jieba WASM support
+- Language-aware keyword filtering with cleaner CJK token handling
+
+### 📝 Summarize Before Store
+- Optional summarization before vector storage to reduce noise and improve retrieval density
+- Supports OpenRouter and local vLLM-compatible endpoints
+- Configurable prompt template so you can tune summary style for your RP format
+
+### ⏯️ Better Vectorization Controls
+- **Stop button** in progress flow to halt long-running vectorization tasks
+- **Pause/continue style control** for vector content processing workflows
+- Improved control over long chat ingestion sessions without restarting everything
+
+### 🧹 Keyword Quality Improvements
+- Better single-character filtering defaults for CJK keywords
+- Mode-specific exceptions for high-signal 1-character RPG/SoL/school terms
+- Better signal-to-noise for multilingual retrieval
+
+### 🧹 Numerous bug fixes
 
 ---
 
@@ -135,7 +163,7 @@ Built-in diagnostic tool that checks everything and offers auto-fixes for common
 
 ## ⏳ Temporal Decay System
 
-Memories don't stick around forever. VectHare implements intelligent temporal decay that makes memories naturally fade over time.
+Memories don't stick around forever. VectHarePlus implements intelligent temporal decay that makes memories naturally fade over time.
 
 ### How It Works
 
@@ -193,10 +221,10 @@ Supports 28 emotion types with Character Expressions integration!
    ```
 5. Click **Install**
 
-That's it! VectHare will be downloaded and enabled automatically.
+That's it! VectHarePlus will be downloaded and enabled automatically.
 
 ### Step 2: Configure Embedding Provider
-1. Open **VectHare Settings** (🐰 icon in the extensions panel)
+1. Open **VectHarePlus Settings** (🐰 icon in the extensions panel)
 2. Select your embedding provider (Transformers, OpenAI, Ollama, BananaBread, etc.)
 3. Configure API keys if using cloud providers
 
@@ -222,7 +250,7 @@ Restart SillyTavern.
 
 ## 🔄 Auto-Updates
 
-VectHare has `auto_update: true` in its manifest. If you installed via `git clone`, SillyTavern will automatically check for and apply updates!
+VectHarePlus has `auto_update: true` in its manifest. If you installed via `git clone`, SillyTavern will automatically check for and apply updates!
 
 Look for the update notification in the Extensions panel, or manually check with the "Check for Updates" button.
 
@@ -284,7 +312,7 @@ Look for the update notification in the Extensions panel, or manually check with
 
 ### "No embeddings available"
 1. Enable Vectors extension in main ST settings
-2. Select embedding provider in VectHare settings
+2. Select embedding provider in VectHarePlus settings
 3. Add API key if using cloud provider
 4. Run Diagnostics to verify connectivity
 
@@ -353,15 +381,14 @@ MIT License - See LICENSE file for details.
 
 ## 🙏 Credits
 
-**VectHare** created with 💜 by **Coneja Chibi**
-
+**VectHarePlus** is branched from VectHare which is created by **Coneja Chibi** 
 Special thanks to the SillyTavern community for feedback and testing!
 
 ---
 
 ## 🌟 Support
 
-If VectHare helps your roleplay:
+If VectHarePlus helps your roleplay:
 - ⭐ Star the repo on GitHub
 - 💬 Share your experience
 - 🐛 Report bugs to help improve it
