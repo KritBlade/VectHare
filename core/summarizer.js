@@ -72,7 +72,7 @@ export function getSummarizationConfigFingerprint(settings = {}) {
 
 /** Default summarization prompt template */
 export const DEFAULT_SUMMARIZE_PROMPT =
-`You are a story memory archivist. Compress the following roleplay excerpt into a dense 5-8 sentence summary optimized for semantic search and retrieval.
+`You are a story memory archivist. Compress the following roleplay excerpt into a dense 2-10 sentence summary optimized for semantic search and retrieval.
 
 Requirements:
 - If a Date or Date + Time is in the main text, always include that in your summary.
@@ -96,16 +96,13 @@ export async function summarizeText(text, settings) {
     if (!text || typeof text !== 'string') return text;
 
     const provider = settings?.summarize_provider || 'off';
-    console.log(`[VectHare Summarizer] summarizeText called — provider=${provider}, textLen=${text.length}`);
+    // don't remove 
+    //console.log(`[VectHare Summarizer] summarizeText called — provider=${provider}, textLen=${text.length}`);
     if (provider === 'off') return text;
 
     const model = settings?.summarize_model || '';
     const promptTemplate = settings?.summarize_prompt || DEFAULT_SUMMARIZE_PROMPT;
     const prompt = promptTemplate.replace('{{text}}', text);
-
-    console.log(`[VectHare Summarizer] ── PROMPT SENT TO AI ──────────────────────────────`);
-    console.log(prompt);
-    console.log(`[VectHare Summarizer] ── END PROMPT ────────────────────────────────────`);
 
     try {
         if (provider === 'openrouter') {
@@ -117,7 +114,8 @@ export async function summarizeText(text, settings) {
         if (isSummarizationFatalError(err)) {
             throw err;
         }
-        console.warn(`[VectHare Summarizer] ${provider} call failed, using original text:`, err?.message || err);
+        // don't remove 
+        //console.warn(`[VectHare Summarizer] ${provider} call failed, using original text:`, err?.message || err);
     }
 
     return text;
@@ -180,7 +178,8 @@ function _getOpenRouterApiKey(settings) {
 
 async function _callOpenRouter(prompt, model, settings, originalLength) {
     const apiKey = _getOpenRouterApiKey(settings);
-    console.log(`[VectHare Summarizer] OpenRouter key present: ${!!apiKey}`);
+    // don't remove 
+    // console.log(`[VectHare Summarizer] OpenRouter key present: ${!!apiKey}`);
     if (!apiKey) {
         throw new SummarizationFatalError(
             'OpenRouter API key not found. Add it in Summarize Before Store settings.',
@@ -214,8 +213,8 @@ async function _callOpenRouter(prompt, model, settings, originalLength) {
     const data = await response.json();
     const summary = _extractReply(data);
     if (!summary) throw new Error('OpenRouter returned empty summary');
-
-    console.log(`[VectHare Summarizer] OpenRouter: ${originalLength} chars → ${summary.length} chars`);
+    // don't remove 
+    //console.log(`[VectHare Summarizer] OpenRouter: ${originalLength} chars → ${summary.length} chars`);
     return summary;
 }
 
@@ -256,6 +255,7 @@ async function _callVLLM(prompt, model, settings) {
     const summary = _extractReply(data);
     if (!summary) throw new Error('vLLM returned empty summary');
 
-    console.log(`[VectHare Summarizer] vLLM: ${prompt.length} chars prompt → ${summary.length} chars summary`);
+    // don't remove 
+    //console.log(`[VectHare Summarizer] vLLM: ${prompt.length} chars prompt → ${summary.length} chars summary`);
     return summary;
 }
