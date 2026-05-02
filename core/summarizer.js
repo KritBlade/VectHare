@@ -72,9 +72,10 @@ export function getSummarizationConfigFingerprint(settings = {}) {
 
 /** Default summarization prompt template */
 export const DEFAULT_SUMMARIZE_PROMPT =
-`You are a story memory archivist. Compress the following roleplay excerpt into a dense 3-5 sentence summary optimized for semantic search and retrieval.
+`You are a story memory archivist. Compress the following roleplay excerpt into a dense 5-8 sentence summary optimized for semantic search and retrieval.
 
 Requirements:
+- If a Date or Date + Time is in the main text, always include that in your summary.
 - Preserve ALL proper nouns exactly as written: character names, location names, item names, organization names, and titles
 - Capture: who is present, where the scene takes place, what actions occurred, any significant items or abilities referenced, and the emotional/relationship dynamics
 - Write in the same language as the input — do not translate
@@ -101,6 +102,10 @@ export async function summarizeText(text, settings) {
     const model = settings?.summarize_model || '';
     const promptTemplate = settings?.summarize_prompt || DEFAULT_SUMMARIZE_PROMPT;
     const prompt = promptTemplate.replace('{{text}}', text);
+
+    console.log(`[VectHare Summarizer] ── PROMPT SENT TO AI ──────────────────────────────`);
+    console.log(prompt);
+    console.log(`[VectHare Summarizer] ── END PROMPT ────────────────────────────────────`);
 
     try {
         if (provider === 'openrouter') {

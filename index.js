@@ -271,6 +271,12 @@ jQuery(async () => {
         console.log(`VectHare: Migrated ${migrationResult.migrated} old collection enabled keys`);
     }
 
+    // Migrate empty rag_xml_tag to default value
+    if (!settings.rag_xml_tag) {
+        settings.rag_xml_tag = 'VectorHareMemory';
+        extension_settings.vecthare.rag_xml_tag = 'VectorHareMemory';
+    }
+
     // Initialize CJK tokenizer mode before any extraction happens.
     setCjkTokenizerMode(settings.cjk_tokenizer_mode || CJK_TOKENIZER_MODES.intl);
     if (settings.cjk_tokenizer_mode === CJK_TOKENIZER_MODES.jieba) {

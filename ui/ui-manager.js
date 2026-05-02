@@ -27,6 +27,7 @@ import { doesChatHaveVectors } from '../core/collection-loader.js';
 import { getModelField } from '../core/providers.js';
 import { getChunkingStrategies } from '../core/content-types.js';
 import { CJK_TOKENIZER_MODES, setCjkTokenizerMode, ensureJiebaTokenizerLoaded } from '../core/bm25-scorer.js';
+import { DEFAULT_SUMMARIZE_PROMPT } from '../core/summarizer.js';
 
 /**
  * Renders the VectHare settings UI
@@ -1885,7 +1886,7 @@ function bindSettingsEvents(settings, callbacks) {
     });
 
     $('#vecthare_summarize_prompt')
-        .val(settings.summarize_prompt || '')
+        .val(settings.summarize_prompt || DEFAULT_SUMMARIZE_PROMPT)
         .on('change', function() {
             settings.summarize_prompt = String($(this).val());
             Object.assign(extension_settings.vecthare, settings);
