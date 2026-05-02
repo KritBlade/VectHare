@@ -9,16 +9,21 @@
 ## 🎯 What is VectHarePlus?
 Branched from the original VectHare project, VectHarePlus is an **advanced Retrieval-Augmented Generation (RAG) system** for SillyTavern, now featuring newly added, optimized support for Japanese, Traditional Chinese, and Simplified Chinese.
 
-It fundamentally transforms how your AI characters recall and use past events. Rather than relying on traditional memory tokens, VectHarePlus vectorizes your chat history to intelligently retrieve the most relevant context exactly when it's needed during text generation.
+I branched the original VectHare to handle the massive scale of my personal MVU Game Maker projects, which feature:
+- Non-English language support (Japanese, Traditional/Simplified Chinese).  It supports English by default.
+- Extreme scale: 2,000+ replies per story, with 1,000+ words per reply.
+- Strip out all functional tag from MVU Game Maker.
 
-I am branching the VectorHare is only because I need a vector memory system to use for my own MVU Game Maker games in language other than English, and the story have 2000+ replies and each reply have 1000+ words.  Ordinary SillyTavern memory extension all choke on these requirements.  However, it should work out of the box for English story as well with all the plus features.
+Ordinary SillyTavern memory extensions completely buckle under this load, especially when there are a lot of functional tags reside inside the story used by MVU Game Maker, which is useless for memory lookup.  So, I need something that is able to clean up all these functional tags while maintain high speed vectorization on extreme scale.
+
+Technical Requirement: Because of the high data throughput required, this system relies on a separate Qdrant vector database running via Docker.
 
 ### The Problem It Solves
 
-- 😩 Your character forgets important story details from 50 messages ago
+- 😩 Strip out all functional tags used by MVU Game Maker before memory storage.
+- 🧠 Adding story based memory on top of character based memory in MVU Game Maker.
 - 💸 Long conversations choke your token budget with irrelevant history
 - ✍️ You manually edit context to remind characters of key events
-- 🤖 Character memories aren't flexible or intelligent
 
 **VectHarePlus Solution:** Automatically extract relevant memories from your entire chat history using semantic search, with smart temporal decay that lets older memories fade naturally, and conditional rules to control exactly when memories activate.
 
