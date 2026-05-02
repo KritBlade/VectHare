@@ -206,7 +206,7 @@ That's it! VectHare will be downloaded and enabled automatically.
 
 ```bash
 cd SillyTavern/plugins
-git clone -b Similharity-Plugin https://github.com/Coneja-Chibi/VectHare.git similharity
+git clone -b Similharity-Plugin https://github.com/kritblade/VectHare.git similharity
 cd similharity
 npm install
 ```
