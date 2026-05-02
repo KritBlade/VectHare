@@ -192,12 +192,11 @@ export function getCleaningSettings() {
         extension_settings.vecthare = {};
     }
     if (!extension_settings.vecthare.cleaning) {
-        // Default: MVU Game Maker preset (covers all standard + MVU tags)
-        // enabledBuiltins is only used when preset is 'custom', but pre-populate
-        // it to all patterns except the nuclear strip_all_html for convenience.
+        // Default: Custom preset with all MVU + standard patterns pre-checked
+        // (equivalent to MVU Game Maker preset, but lets users toggle individual patterns)
         const defaultEnabled = Object.keys(BUILTIN_PATTERNS).filter(id => id !== 'strip_all_html');
         extension_settings.vecthare.cleaning = {
-            selectedPreset: 'mvu_game_maker',
+            selectedPreset: 'custom',
             customPatterns: [],
             enabledBuiltins: defaultEnabled,
         };

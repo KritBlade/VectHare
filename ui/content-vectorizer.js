@@ -29,6 +29,7 @@ import { saveSettingsDebounced } from '../../../../../script.js';
 import { getChatUUID } from '../core/chat-vectorization.js';
 import { callGenericPopup, POPUP_TYPE } from '../../../../popup.js';
 import { openTextCleaningManager } from './text-cleaning-manager.js';
+import { getCleaningSettings } from '../core/text-cleaning.js';
 import { progressTracker } from './progress-tracker.js';
 
 // ============================================================================
@@ -1087,10 +1088,11 @@ function renderTextCleaningOptions() {
         { id: 'ai_reasoning', name: 'Strip AI Reasoning Tags', desc: 'Removes thinking, tucao tags' },
         { id: 'comprehensive', name: 'Comprehensive Clean', desc: 'All formatting + metadata + reasoning' },
         { id: 'nuclear', name: 'Strip All HTML', desc: 'Plain text only' },
+        { id: 'mvu_game_maker', name: 'MVU Game Maker', desc: 'Strips MVU engine tags + standard formatting' },
         { id: 'custom', name: 'Custom', desc: 'Your own pattern selection' },
     ];
 
-    const currentPreset = currentSettings.cleaningPreset || 'none';
+    const currentPreset = currentSettings.cleaningPreset || getCleaningSettings().selectedPreset || 'custom';
 
     return `
         <div class="vecthare-cv-option-row vecthare-cv-cleaning-settings">
@@ -1298,6 +1300,7 @@ function bindEvents() {
             ai_reasoning: 'Removes thinking, tucao tags',
             comprehensive: 'All formatting + metadata + reasoning',
             nuclear: 'Plain text only',
+            mvu_game_maker: 'Strips MVU engine tags (UpdateVariable, combat_calculation, StoryAnalysis, combat_log) + standard formatting',
             custom: 'Your own pattern selection',
         };
         $('#vecthare_cv_cleaning_hint').text(hints[presetId] || '');
