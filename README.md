@@ -79,7 +79,10 @@ It fundamentally transforms how your AI characters recall and use past events. R
 ### 📦 Multiple Vector Backends
 - **Standard (Vectra)**: ST's built-in file-based storage (great for getting started)
 - **LanceDB**: Disk-based, handles millions of vectors, production-ready
+- **Milvus**: Legacy backend option kept for compatibility workflows
 - **Qdrant**: Enterprise-grade with HNSW indexing, cloud support, advanced filtering
+
+> ⚠️ **VectHarePlus backend status:** Only **Qdrant** is actively tested in VectHarePlus. **Vectra, LanceDB, and Milvus** are kept for backward compatibility with VectorHare and are not guaranteed to work in every setup.
 
 ### 📄 Multi-Content Vectorization
 - Chat conversations (with automatic chunking strategies)
@@ -153,11 +156,12 @@ Built-in diagnostic tool that checks everything and offers auto-fixes for common
 
 | Backend | Best For | Pros | Cons |
 |---------|----------|------|------|
-| **Standard (Vectra)** | Getting started, small datasets | No dependencies, works out of box | Slower with large datasets |
-| **LanceDB** | Medium to large datasets | Handles millions of vectors, very fast | Requires Similharity plugin |
+| **Standard (Vectra)** | Legacy compatibility / small datasets | No dependencies, works out of box | Legacy compatibility path in VectHarePlus; behavior not guaranteed |
+| **LanceDB** | Legacy compatibility / medium datasets | Fast local vector DB | Legacy compatibility path in VectHarePlus; behavior not guaranteed |
+| **Milvus** | Legacy compatibility / existing deployments | Familiar ecosystem for older setups | Legacy compatibility path in VectHarePlus; behavior not guaranteed |
 | **Qdrant** | Production, cloud deployments | Enterprise-grade, advanced filtering | Requires running Qdrant server |
 
-> 💡 **Need help choosing?** Start with Standard. Upgrade to LanceDB when you have 10k+ vectors.
+> 💡 **Need help choosing?** Use **Qdrant** for VectHarePlus if you want the tested path.
 
 ---
 
