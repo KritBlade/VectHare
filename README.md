@@ -11,6 +11,8 @@ Branched from the original VectHare project, VectHarePlus is an **advanced Retri
 
 It fundamentally transforms how your AI characters recall and use past events. Rather than relying on traditional memory tokens, VectHarePlus vectorizes your chat history to intelligently retrieve the most relevant context exactly when it's needed during text generation.
 
+I am branching the VectorHare is only because I need a vector memory system to use for my own MVU Game Maker games in language other than English, and the story have 2000+ replies and each reply have 1000+ words.  Ordinary SillyTavern memory extension all choke on these requirements.  However, it should work out of the box for English story as well with all the plus features.
+
 ### The Problem It Solves
 
 - 😩 Your character forgets important story details from 50 messages ago
