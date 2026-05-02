@@ -1732,11 +1732,14 @@ function openActivationEditor(collectionId, collectionName) {
     meta.scope === "chat" ? "chat" : meta.type || "unknown";
   const decaySettings = getCollectionDecaySettings(collectionId);
 
+  const isChatCollection = collectionId.startsWith('vecthare_chat_');
+  const defaultAlwaysActive = isChatCollection ? true : false;
+
   activationEditorState = {
     collectionId,
     collectionName,
     collectionType,
-    alwaysActive: meta.alwaysActive || false,
+    alwaysActive: meta.alwaysActive !== undefined ? meta.alwaysActive : defaultAlwaysActive,
     triggers: triggerSettings.triggers || [],
     triggerMatchMode: triggerSettings.matchMode || "any",
     triggerCaseSensitive: triggerSettings.caseSensitive || false,

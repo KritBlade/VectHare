@@ -11,7 +11,7 @@
 
 import { extension_settings } from '../../../../extensions.js';
 import { saveSettingsDebounced } from '../../../../../script.js';
-import { parseRegistryKey } from './collection-ids.js';
+import { parseRegistryKey, COLLECTION_PREFIXES } from './collection-ids.js';
 
 // ============================================================================
 // COLLECTION METADATA CRUD
@@ -967,12 +967,19 @@ export async function shouldCollectionActivate(collectionId, context) {
         return conditionsPass;
     }
 
-    // Priority 5: No triggers AND no conditions = auto-activate (backwards compatible)
-    //console.log(`[VectHare Activation Filter] Collection ${collectionId}: ✓ AUTO_ACTIVATED (no triggers/conditions configured - BACKWARDS COMPAT MODE)`);
-    //return true;
+    // Priority 5: Chat collections auto-activate when no triggers/conditions are configured.
+    // Non-chat collections (documents, lorebooks, characters) require explicit triggers/conditions
+    // because they are shared across chats and should not pollute every conversation by default.
+    const parsed = parseRegistryKey(collectionId);
+    const isChatCollection = parsed.collectionId?.startsWith(COLLECTION_PREFIXES.VECTHARE_CHAT)
+        || collectionId.startsWith(COLLECTION_PREFIXES.VECTHARE_CHAT);
 
-    //Priority 5: No triggers AND no conditions = do not activate
-    console.log(`[VectHare Activation Filter] Collection ${collectionId}: ✗ NO_TRIGGERS_OR_CONDITIONS (not activating)`);
+    if (isChatCollection) {
+        console.log(`[VectHare Activation Filter] Collection ${collectionId}: ✓ AUTO_ACTIVATED (chat collection, no triggers needed)`);
+        return true;
+    }
+
+    console.log(`[VectHare Activation Filter] Collection ${collectionId}: ✗ NO_TRIGGERS_OR_CONDITIONS (non-chat collection requires explicit triggers)`);
     return false;
 }
 
