@@ -248,6 +248,20 @@ function onRunDiagnosticsClick() {
 jQuery(async () => {
     console.log('VectHare: Initializing...');
 
+    // Prevent ST from persisting a stale "vecthare" key derived from the folder name.
+    // ST auto-creates extension_settings[folderName] on every load, which would write a
+    // duplicate "vecthare" entry to settings.json alongside our canonical "vecthareplus" key.
+    // Making the property non-enumerable hides it from JSON.stringify so it never saves.
+    if (extension_settings.vecthare !== undefined) {
+        delete extension_settings.vecthare;
+    }
+    Object.defineProperty(extension_settings, 'vecthare', {
+        get: () => undefined,
+        set: () => {},
+        enumerable: false,
+        configurable: true,
+    });
+
     // Load saved settings
     if (!extension_settings.vecthareplus) {
         extension_settings.vecthareplus = defaultSettings;
