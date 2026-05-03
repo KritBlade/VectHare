@@ -13,7 +13,7 @@
 import { getContentType, getContentTypeDefaults, hasFeature } from './content-types.js';
 import { chunkText } from './chunking.js';
 import { insertVectorItems, purgeVectorIndex, getSavedHashes } from './core-vector-api.js';
-import { setCollectionMeta, getDefaultDecayForType } from './collection-metadata.js';
+import { setCollectionMeta, getDefaultDecayForType, setCollectionCharacterLock } from './collection-metadata.js';
 import { registerCollection } from './collection-loader.js';
 import { getBackend } from '../backends/backend-manager.js';
 // Import from collection-ids.js - single source of truth for collection ID operations
@@ -223,9 +223,8 @@ export async function vectorizeContent({ contentType, source, settings, abortSig
             scope: settings.scope || 'global',
             chunkCount: finalChunks.length,
             createdAt: new Date().toISOString(),
-            // Chat collections are always active by default — they are per-chat scoped
-            // so there's no risk of bleeding into unrelated conversations
-            ...(contentType === 'chat' ? { alwaysActive: true } : {}),
+            // Do NOT set alwaysActive here — we use a character lock instead
+            // so this collection only activates when the same character is active.
             settings: {
                 strategy: settings.strategy,
                 chunkSize: settings.chunkSize,
@@ -238,6 +237,18 @@ export async function vectorizeContent({ contentType, source, settings, abortSig
         // Register collection in the registry so it's discoverable
         registerCollection(collectionId);
         console.log(`VectHare: Registered collection ${collectionId}`);
+
+        // Lock collection to the current character so it only activates when
+        // this character card is active — prevents bleeding into other games.
+        // Chat collections skip this (they're already scoped by chat ID).
+        if (contentType !== 'chat') {
+            const ctx = getContext();
+            const charId = ctx?.characterId;
+            if (charId != null) {
+                setCollectionCharacterLock(collectionId, charId);
+                console.log(`VectHare: Locked collection ${collectionId} to character ${charId} (${ctx?.name2 || charId})`);
+            }
+        }
 
         throwIfAborted();
         progressTracker.complete(true, `Vectorized ${finalChunks.length} chunks`);

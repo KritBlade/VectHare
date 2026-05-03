@@ -23,7 +23,7 @@ import { progressTracker } from './progress-tracker.js';
 import { resetBackendHealth } from '../backends/backend-manager.js';
 import { getHealthIndicatorHtml, getHealthModalHtml, initializeHealthDashboard } from './health-dashboard.js';
 import { getChatCollectionId } from '../core/chat-vectorization.js';
-import { doesChatHaveVectors } from '../core/collection-loader.js';
+import { doesChatHaveVectors, getCollectionRegistry } from '../core/collection-loader.js';
 import { getModelField } from '../core/providers.js';
 import { getChunkingStrategies } from '../core/content-types.js';
 import { CJK_TOKENIZER_MODES, setCjkTokenizerMode, ensureJiebaTokenizerLoaded, ensureJiebaTwLoaded } from '../core/bm25-scorer.js';
@@ -642,10 +642,12 @@ export function renderSettings(containerId, settings, callbacks) {
                                 <p class="vecthare-card-subtitle">Semantic activation of World Info entries from vectorized lorebooks</p>
                             </div>
                             <div class="vecthare-card-body">
-                                <label class="checkbox_label" for="vecthare_enabled_world_info" title="Enable semantic activation of World Info entries from vectorized lorebooks based on chat context similarity.">
+                                <label class="checkbox_label" for="vecthare_enabled_world_info">
                                     <input id="vecthare_enabled_world_info" type="checkbox" class="checkbox">
                                     <span>Enable Semantic WI Activation</span>
                                 </label>
+                                <small class="vecthare_hint">Activates lorebook entries based on meaning, not just keywords — so relevant lore shows up even when the exact words aren't mentioned.</small>
+                                <div id="vecthare_wi_status" style="margin-top: 6px; font-size: 0.82em;"></div>
 
                                 <div id="vecthare_world_info_settings" style="margin-top:10px; display:none;">
                                     <small style="display:block; margin-bottom:8px; opacity:0.85;">
@@ -1426,6 +1428,32 @@ export async function loadWebLlmModels(settings) {
  * Call this when chat changes to keep UI in sync
  * @param {object} settings - VectHare settings object (unused, kept for API compatibility)
  */
+export function refreshWIStatus() {
+    const $status = $('#vecthare_wi_status');
+    if (!$status.length) return;
+    const registry = getCollectionRegistry();
+    const lorebookIds = Array.isArray(registry)
+        ? registry.filter(id => id.startsWith('vecthare_lorebook_'))
+        : [];
+    if (lorebookIds.length === 0) {
+        $status.html('<i class="fa-solid fa-circle-exclamation" style="color: var(--warning-color, #f39c12);"></i> No lorebooks vectorized — vectorize one first');
+        return;
+    }
+    // Show the actual lorebook names so users can verify the right one is vectorized
+    import('../core/collection-metadata.js').then(({ getCollectionMeta }) => {
+        const names = lorebookIds.map(id => {
+            const meta = getCollectionMeta(id);
+            return meta?.sourceName || id;
+        });
+        const nameList = names.map(n => `<span style="font-style:italic;">${n}</span>`).join(', ');
+        $status.html(
+            `<i class="fa-solid fa-circle-check" style="color: var(--success-color, #27ae60);"></i> ` +
+            `Vectorized: ${nameList} ` +
+            `<span style="opacity:0.6;">(must be set to Always Active or have triggers in Database Browser)</span>`
+        );
+    });
+}
+
 export function refreshAutoSyncCheckbox(settings) {
     const collectionId = getChatCollectionId();
     const $status = $('#vecthare_autosync_status');
@@ -2318,8 +2346,23 @@ function bindSettingsEvents(settings, callbacks) {
     // World Info Integration settings
     $('#vecthare_enabled_world_info')
         .prop('checked', settings.enabled_world_info || false)
-        .on('change', function() {
+        .on('change', async function() {
             const enabled = $(this).prop('checked');
+            const $checkbox = $(this);
+
+            if (enabled) {
+                // Check if any lorebook collections have been vectorized
+                const registry = getCollectionRegistry();
+                const hasLorebookVectors = Array.isArray(registry) && registry.some(id => id.startsWith('vecthare_lorebook_'));
+
+                if (!hasLorebookVectors) {
+                    $checkbox.prop('checked', false);
+                    toastr.info('Vectorize a lorebook first to use Semantic WI Activation');
+                    openContentVectorizer('lorebook');
+                    return;
+                }
+            }
+
             settings.enabled_world_info = enabled;
             Object.assign(extension_settings.vecthareplus, settings);
             saveSettingsDebounced();
@@ -2396,6 +2439,7 @@ function bindSettingsEvents(settings, callbacks) {
 
     // Initialize world info settings visibility based on current setting
     $('#vecthare_world_info_settings').toggle(settings.enabled_world_info || false);
+    refreshWIStatus();
 
     // Debug buttons: Test semantic WI and dump registry
     $('#vecthare_wi_test_btn').on('click', async function() {
