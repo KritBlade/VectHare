@@ -1212,6 +1212,13 @@ function bindCollectionCardEvents() {
           const data = await response.json();
           // Support all plugin response shapes: items (new), chunks/results (older/backends)
           const results = data.items || data.chunks || data.results || [];
+          const dbChunkCount = Number(
+            data.total ??
+            data.totalCount ??
+            data.count ??
+            collection.chunkCount ??
+            results.length,
+          );
 
           if (!results || results.length === 0) {
             toastr.warning("No chunks found in this collection", "VectHarePlus");
@@ -1231,7 +1238,7 @@ function bindCollectionCardEvents() {
           }));
 
           openVisualizer(
-            { chunks, collectionType: collection.type },
+            { chunks, collectionType: collection.type, dbChunkCount },
             collection.id,
             collectionSettings,
             doLoad,
@@ -3356,6 +3363,13 @@ function renderSearchResults(results, query, originalResults = null) {
 
           const data = await response.json();
           const results = data.items || [];
+          const dbChunkCount = Number(
+            data.total ??
+            data.totalCount ??
+            data.count ??
+            collection.chunkCount ??
+            results.length,
+          );
 
           if (!results || results.length === 0) {
             toastr.warning("No chunks found in this collection", "VectHarePlus");
@@ -3375,7 +3389,7 @@ function renderSearchResults(results, query, originalResults = null) {
           }));
 
           openVisualizer(
-            { chunks, collectionType: collection.type },
+            { chunks, collectionType: collection.type, dbChunkCount },
             collection.id,
             collectionSettings,
             doLoad,

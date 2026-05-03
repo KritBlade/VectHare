@@ -377,6 +377,10 @@ function createModal() {
     const collectionName = currentCollectionId || 'Collection';
     const isChat = isChatCollection();
     const icon = getCollectionIcon();
+    const dbChunkCount = Number(currentResults?.dbChunkCount);
+    const dbChunkText = Number.isFinite(dbChunkCount) && dbChunkCount >= 0
+        ? dbChunkCount.toLocaleString()
+        : 'Unknown';
 
     const html = `
         <div id="vecthare_visualizer_modal" class="vecthare-visualizer-modal">
@@ -440,6 +444,7 @@ function createModal() {
                                     <input type="number" id="vecthare_fetch_limit" min="100" max="99999" step="100" value="${chunkFetchLimit}" title="Max chunks loaded from server">
                                     <button id="vecthare_reload_chunks" title="Reload chunks from server with new limit">↺ Reload</button>
                                 </div>
+                                <div class="vecthare-db-total" id="vecthare_db_chunk_total">DB max chunks: ${dbChunkText}</div>
                         </div>
                         <div class="vecthare-chunk-list" id="vecthare_chunk_list"></div>
                         <div class="vecthare-bulk-actions">
