@@ -76,7 +76,7 @@ const MAX_KEYWORD_WEIGHT = 3.0;
  * Balanced scan cap when summarization is enabled.
  * Derived from a typical English summarized chunk (~1328 chars) + 20% buffer.
  */
-const SUMMARY_BALANCED_HEADER_SIZE = 5000;
+const SUMMARY_BALANCED_HEADER_SIZE = 1600;
 
 const CJK_CHAR_RE = /[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF\u3040-\u309F\u30A0-\u30FF]/;
 
