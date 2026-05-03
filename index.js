@@ -835,7 +835,16 @@ async function getVectorsForSource(source, texts, model, directories, req) {
         }
     }
 
-    // Default fallback: sequential processing for other sources
+    // API-based sources: run in parallel — each call is a network request and parallelism
+    // reduces total wall-clock time from N×T to ~T (limited by remote server, not local GPU).
+    // Local GPU sources (transformers, ollama, llamacpp, koboldcpp) serialize internally, so
+    // parallel JS calls would queue on the model anyway — keep them sequential to avoid OOM.
+    const parallelSources = new Set(['openai', 'togetherai', 'mistral', 'electronhub', 'openrouter', 'nomicai', 'cohere']);
+    if (parallelSources.has(source)) {
+        return await Promise.all(texts.map(text => _getLegacySingleEmbedding(source, text, model, directories, req)));
+    }
+
+    // Default fallback: sequential processing for local/GPU sources
     const results = [];
     for (const text of texts) {
         results.push(await _getLegacySingleEmbedding(source, text, model, directories, req));
