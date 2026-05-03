@@ -26,7 +26,7 @@ import {
 } from './collection-ids.js';
 import { extractLorebookKeywords, extractTextKeywords, extractChatKeywords, extractBM25Keywords, EXTRACTION_LEVELS, DEFAULT_EXTRACTION_LEVEL, DEFAULT_BASE_WEIGHT } from './keyword-boost.js';
 import { cleanText, cleanMessages } from './text-cleaning.js';
-import { summarizeText, isSummarizationFatalError } from './summarizer.js';
+import { summarizeText, summarizeTextGroup, isSummarizationFatalError } from './summarizer.js';
 import { progressTracker } from '../ui/progress-tracker.js';
 import { extension_settings, getContext } from '../../../../extensions.js';
 import { getCurrentChatId } from '../../../../../script.js';
@@ -145,43 +145,115 @@ export async function vectorizeContent({ contentType, source, settings, abortSig
             }
 
             let pipelined = 0;
-            for (const chunk of finalChunks) {
-                throwIfAborted();
+            const keywordLevel = vecthareSettings?.keywordLevel || 'balanced';
 
-                let summaryText;
-                try {
-                    summaryText = await summarizeText(chunk.text, vecthareSettings);
-                } catch (err) {
-                    if (isSummarizationFatalError(err)) {
-                        const providerLabel = (vecthareSettings?.summarize_provider || 'summarizer').toUpperCase();
-                        const msg = `Summarization is enabled but misconfigured: ${err.message}`;
-                        try { toastr.error(msg, `${providerLabel} configuration error`); } catch (_) {}
-                        throw new Error(msg);
+            if (settings.strategy === 'message_group_batch') {
+                const requestMessageBudget = Math.min(30, Math.max(6, Number(settings.groupBatchSize || settings.group_batch_size || 10)));
+
+                const requestGroups = [];
+                let currentGroup = [];
+                let currentMessageCount = 0;
+
+                for (const chunk of finalChunks) {
+                    const chunkMessageCount = Number(chunk?.metadata?.batchSize) || 1;
+
+                    if (currentGroup.length > 0 && (currentMessageCount + chunkMessageCount > requestMessageBudget)) {
+                        requestGroups.push(currentGroup);
+                        currentGroup = [];
+                        currentMessageCount = 0;
                     }
-                    throw err;
-                }
-                const keywordLevel = vecthareSettings?.keywordLevel || 'balanced';
-                const summaryKeywords = keywordLevel !== 'off'
-                    ? extractBM25Keywords(summaryText, {
-                        level: keywordLevel,
-                        baseWeight: vecthareSettings?.keywordBaseWeight || 1.5,
-                        settings: vecthareSettings,
-                    })
-                    : [];
-                const summarizedChunk = { ...chunk, text: summaryText, keywords: summaryKeywords };
 
-                try {
+                    currentGroup.push(chunk);
+                    currentMessageCount += chunkMessageCount;
+                }
+
+                if (currentGroup.length > 0) {
+                    requestGroups.push(currentGroup);
+                }
+
+                console.log(`[VectHare Summarizer] message_group_batch pipeline: chunks=${finalChunks.length}, requestGroups=${requestGroups.length}, requestMessageBudget=${requestMessageBudget}`);
+
+                for (const group of requestGroups) {
                     throwIfAborted();
-                    await insertVectorItems(collectionId, [summarizedChunk], vecthareSettings);
-                } catch (insertErr) {
-                    if (insertErr?.name === 'AbortError') throw insertErr;
-                    console.error('VectHare: Pipeline insert failed for chunk, skipping:', insertErr.message);
-                    progressTracker.addError(`Chunk ${pipelined + 1}: ${insertErr.message}`);
-                }
 
-                pipelined++;
-                progressTracker.updateProgress(3, `Summarizing + inserting... ${pipelined}/${finalChunks.length}`);
-                progressTracker.updateEmbeddingProgress(pipelined, finalChunks.length);
+                    const groupTexts = group.map(c => c.text);
+                    let summaries;
+                    try {
+                        summaries = await summarizeTextGroup(groupTexts, vecthareSettings);
+                    } catch (err) {
+                        if (isSummarizationFatalError(err)) {
+                            const providerLabel = (vecthareSettings?.summarize_provider || 'summarizer').toUpperCase();
+                            const msg = `Summarization is enabled but misconfigured: ${err.message}`;
+                            try { toastr.error(msg, `${providerLabel} configuration error`); } catch (_) {}
+                            throw new Error(msg);
+                        }
+                        throw err;
+                    }
+
+                    for (let i = 0; i < group.length; i++) {
+                        const chunk = group[i];
+                        const summaryText = summaries[i] || chunk.text;
+                        const summaryKeywords = keywordLevel !== 'off'
+                            ? extractBM25Keywords(summaryText, {
+                                level: keywordLevel,
+                                baseWeight: vecthareSettings?.keywordBaseWeight || 1.5,
+                                settings: vecthareSettings,
+                            })
+                            : [];
+                        const summarizedChunk = { ...chunk, text: summaryText, keywords: summaryKeywords };
+
+                        try {
+                            throwIfAborted();
+                            await insertVectorItems(collectionId, [summarizedChunk], vecthareSettings);
+                        } catch (insertErr) {
+                            if (insertErr?.name === 'AbortError') throw insertErr;
+                            console.error('VectHare: Pipeline insert failed for chunk, skipping:', insertErr.message);
+                            progressTracker.addError(`Chunk ${pipelined + 1}: ${insertErr.message}`);
+                        }
+
+                        pipelined++;
+                        progressTracker.updateProgress(3, `Summarizing + inserting... ${pipelined}/${finalChunks.length}`);
+                        progressTracker.updateEmbeddingProgress(pipelined, finalChunks.length);
+                    }
+                }
+            } else {
+                for (const chunk of finalChunks) {
+                    throwIfAborted();
+
+                    let summaryText;
+                    try {
+                        summaryText = await summarizeText(chunk.text, vecthareSettings);
+                    } catch (err) {
+                        if (isSummarizationFatalError(err)) {
+                            const providerLabel = (vecthareSettings?.summarize_provider || 'summarizer').toUpperCase();
+                            const msg = `Summarization is enabled but misconfigured: ${err.message}`;
+                            try { toastr.error(msg, `${providerLabel} configuration error`); } catch (_) {}
+                            throw new Error(msg);
+                        }
+                        throw err;
+                    }
+                    const summaryKeywords = keywordLevel !== 'off'
+                        ? extractBM25Keywords(summaryText, {
+                            level: keywordLevel,
+                            baseWeight: vecthareSettings?.keywordBaseWeight || 1.5,
+                            settings: vecthareSettings,
+                        })
+                        : [];
+                    const summarizedChunk = { ...chunk, text: summaryText, keywords: summaryKeywords };
+
+                    try {
+                        throwIfAborted();
+                        await insertVectorItems(collectionId, [summarizedChunk], vecthareSettings);
+                    } catch (insertErr) {
+                        if (insertErr?.name === 'AbortError') throw insertErr;
+                        console.error('VectHare: Pipeline insert failed for chunk, skipping:', insertErr.message);
+                        progressTracker.addError(`Chunk ${pipelined + 1}: ${insertErr.message}`);
+                    }
+
+                    pipelined++;
+                    progressTracker.updateProgress(3, `Summarizing + inserting... ${pipelined}/${finalChunks.length}`);
+                    progressTracker.updateEmbeddingProgress(pipelined, finalChunks.length);
+                }
             }
 
             console.log(`[VectHare Summarizer] Pipeline complete: ${pipelined} chunks processed`);
@@ -594,8 +666,8 @@ function prepareChatContent(rawContent, settings) {
         };
     }
 
-    // For message_batch strategy - return array for chunking.js to batch
-    if (settings.strategy === 'message_batch') {
+    // For message_batch/message_group_batch strategy - return array for chunking.js to batch
+    if (settings.strategy === 'message_batch' || settings.strategy === 'message_group_batch') {
         return {
             text: normalizedMessages,
             type: 'messages',
