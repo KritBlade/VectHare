@@ -752,6 +752,15 @@ export function renderSettings(containerId, settings, callbacks) {
                                 <small class="vecthare_hint">How many messages to group together</small>
                             </div>
 
+                            <!-- Message Group Batch settings (only shown for message_group_batch strategy) -->
+                            <div id="vecthare_group_batch_settings" style="display: none; margin-top: 10px;">
+                                <label for="vecthare_group_batch_size">
+                                    <small>Messages per Request: <span id="vecthare_group_batch_size_value">10</span></small>
+                                </label>
+                                <input type="range" id="vecthare_group_batch_size" class="vecthare-slider" min="6" max="30" step="1" />
+                                <small class="vecthare_hint">How many chat messages are summarized in one grouped LLM request</small>
+                            </div>
+
                         </div>
                     </div>
 
@@ -1864,8 +1873,9 @@ function bindSettingsEvents(settings, callbacks) {
         // Update description from content-types.js
         const strategy = chatStrategies.find(s => s.id === strategyId);
         $('#vecthare_strategy_description').text(strategy?.description || '');
-        // Show/hide batch settings
+        // Show/hide strategy-specific settings
         $('#vecthare_batch_settings').toggle(strategyId === 'message_batch');
+        $('#vecthare_group_batch_settings').toggle(strategyId === 'message_group_batch');
     }
 
     strategySelect.on('change', function() {
@@ -1887,6 +1897,22 @@ function bindSettingsEvents(settings, callbacks) {
             saveSettingsDebounced();
         });
     $('#vecthare_batch_size_value').text(settings.batch_size || 4);
+
+    // Group request size (for message_group_batch strategy)
+    const clampedGroupBatchSize = Math.min(30, Math.max(6, Number(settings.group_batch_size || 10)));
+    settings.group_batch_size = clampedGroupBatchSize;
+    $('#vecthare_group_batch_size')
+        .val(clampedGroupBatchSize)
+        .on('input', function() {
+            const raw = Number($(this).val());
+            const value = Math.min(30, Math.max(6, raw));
+            $(this).val(value);
+            $('#vecthare_group_batch_size_value').text(value);
+            settings.group_batch_size = value;
+            Object.assign(extension_settings.vecthareplus, settings);
+            saveSettingsDebounced();
+        });
+    $('#vecthare_group_batch_size_value').text(clampedGroupBatchSize);
 
     // Summarization provider
     const updateSummarizeUI = (provider) => {

@@ -51,6 +51,15 @@ export const CHUNKING_STRATEGIES = {
         needsBatchSize: true,
         bestFor: ['chat'],
     },
+    message_group_batch: {
+        id: 'message_group_batch',
+        name: 'Message Group Batch',
+        description: 'Summarizes multiple message units in one LLM call and returns one summary per unit.',
+        needsSize: false,
+        needsOverlap: false,
+        needsBatchSize: true,
+        bestFor: ['chat'],
+    },
     per_scene: {
         id: 'per_scene',
         name: 'Per Scene',
@@ -191,8 +200,8 @@ export const CONTENT_TYPES = {
             scenes: true,
         },
 
-        // Chat strategies: per_message, conversation_turns, message_batch, per_scene, adaptive
-        chunkingStrategies: ['per_message', 'conversation_turns', 'message_batch', 'per_scene', 'adaptive'],
+        // Chat strategies: per_message, conversation_turns, message_batch, message_group_batch, per_scene, adaptive
+        chunkingStrategies: ['per_message', 'conversation_turns', 'message_batch', 'message_group_batch', 'per_scene', 'adaptive'],
         defaultStrategy: 'per_message',
 
         defaults: {

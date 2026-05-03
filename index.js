@@ -85,8 +85,9 @@ const defaultSettings = {
 
     // Chat vectorization
     enabled_chats: true,
-    chunking_strategy: 'per_message', // per_message, conversation_turns, message_batch, adaptive
+    chunking_strategy: 'per_message', // per_message, conversation_turns, message_batch, message_group_batch, adaptive
     batch_size: 4, // Messages per batch for message_batch strategy
+    group_batch_size: 10, // Messages per summarize request for message_group_batch (6-30)
     depth: 2,
     position: extension_prompt_types.IN_PROMPT,
     protect: 5,

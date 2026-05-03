@@ -85,6 +85,14 @@ Requirements:
 Story excerpt:
 {{text}}`;
 
+const GROUP_OUTPUT_CONSTRAINTS =
+`INTERNAL FORMAT REQUIREMENTS (do not ignore):
+- You must return valid JSON only.
+- Return a JSON array with exactly {{count}} items.
+- Each item must be an object: {"index": <1-based integer>, "summary": "<text>"}.
+- The array order must be index ascending from 1 to {{count}}.
+- Preserve language of each input item and include no extra keys or prose outside JSON.`;
+
 /**
  * Summarize a chunk of text using the configured provider.
  *
@@ -121,6 +129,55 @@ export async function summarizeText(text, settings) {
     return text;
 }
 
+/**
+ * Summarize multiple units in one request and return one summary per input item.
+ * If grouped output is malformed, retries once with a correction prompt.
+ * If still malformed, falls back to per-item summarizeText calls.
+ *
+ * @param {string[]} texts - Input units to summarize
+ * @param {object} settings - VectHare settings object
+ * @returns {Promise<string[]>} Summaries aligned to input order
+ */
+export async function summarizeTextGroup(texts, settings) {
+    if (!Array.isArray(texts) || texts.length === 0) return [];
+
+    const inputTexts = texts.map(t => typeof t === 'string' ? t : String(t ?? ''));
+    const provider = settings?.summarize_provider || 'off';
+    if (provider === 'off') return inputTexts;
+
+    const model = settings?.summarize_model || '';
+    const expectedCount = inputTexts.length;
+
+    const prompt = _buildGroupPrompt(inputTexts, settings);
+
+    try {
+        const firstResponse = await _callSummaryProvider(provider, prompt, model, settings, prompt.length);
+        console.log('[VectHare Summarizer] grouped summary raw response (retry=0):', firstResponse);
+        const parsedFirst = _parseGroupedResponse(firstResponse, expectedCount);
+        console.log(`[VectHare Summarizer] grouped summary success: expected=${expectedCount}, parsed=${parsedFirst.length}, retry=0`);
+        return parsedFirst;
+    } catch (err) {
+        if (isSummarizationFatalError(err)) throw err;
+
+        const firstMessage = err?.message || String(err);
+        console.warn(`[VectHare Summarizer] grouped summary parse failed, retrying once: ${firstMessage}`);
+
+        try {
+            const correctionPrompt = _buildGroupCorrectionPrompt(inputTexts, settings, firstMessage);
+            const retryResponse = await _callSummaryProvider(provider, correctionPrompt, model, settings, correctionPrompt.length);
+            console.log('[VectHare Summarizer] grouped summary raw response (retry=1):', retryResponse);
+            const parsedRetry = _parseGroupedResponse(retryResponse, expectedCount);
+            console.log(`[VectHare Summarizer] grouped summary success: expected=${expectedCount}, parsed=${parsedRetry.length}, retry=1`);
+            return parsedRetry;
+        } catch (retryErr) {
+            if (isSummarizationFatalError(retryErr)) throw retryErr;
+            const retryMessage = retryErr?.message || String(retryErr);
+            console.warn(`[VectHare Summarizer] grouped summary fallback to per-item: expected=${expectedCount}, reason=${retryMessage}`);
+            return _fallbackSummarizePerItem(inputTexts, settings);
+        }
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
@@ -138,6 +195,94 @@ function _buildBody(prompt, model) {
         max_tokens: 512,
         temperature: 0.3,
     };
+}
+
+function _buildGroupPrompt(texts, settings) {
+    const promptTemplate = settings?.summarize_prompt || DEFAULT_SUMMARIZE_PROMPT;
+    const merged = texts.map((text, idx) => `[ITEM ${idx + 1}]\n${text}`).join('\n\n');
+    const basePrompt = promptTemplate.includes('{{text}}')
+        ? promptTemplate.replace('{{text}}', merged)
+        : `${promptTemplate}\n\nStory excerpt:\n${merged}`;
+    const constraints = GROUP_OUTPUT_CONSTRAINTS.replaceAll('{{count}}', String(texts.length));
+    return `${basePrompt}\n\n${constraints}`;
+}
+
+function _buildGroupCorrectionPrompt(texts, settings, parseError) {
+    const base = _buildGroupPrompt(texts, settings);
+    return `${base}\n\nYour previous response failed validation: ${parseError}\nReturn corrected JSON now.`;
+}
+
+function _stripCodeFences(text) {
+    const trimmed = String(text || '').trim();
+    if (!trimmed.startsWith('```')) return trimmed;
+    return trimmed
+        .replace(/^```(?:json)?\s*/i, '')
+        .replace(/\s*```$/, '')
+        .trim();
+}
+
+function _parseGroupedResponse(raw, expectedCount) {
+    const cleaned = _stripCodeFences(raw);
+    let parsed;
+    try {
+        parsed = JSON.parse(cleaned);
+    } catch {
+        throw new Error('Response is not valid JSON');
+    }
+
+    const arrayData = Array.isArray(parsed)
+        ? parsed
+        : (Array.isArray(parsed?.items) ? parsed.items : null);
+
+    if (!arrayData) {
+        throw new Error('JSON must be an array (or object with items array)');
+    }
+
+    if (arrayData.length !== expectedCount) {
+        throw new Error(`Expected ${expectedCount} items, got ${arrayData.length}`);
+    }
+
+    const summaries = [];
+    for (let i = 0; i < arrayData.length; i++) {
+        const item = arrayData[i];
+        if (!item || typeof item !== 'object') {
+            throw new Error(`Item ${i + 1} is not an object`);
+        }
+        const index = Number(item.index);
+        if (!Number.isInteger(index) || index !== i + 1) {
+            throw new Error(`Item ${i + 1} has invalid index ${String(item.index)}`);
+        }
+        const summary = typeof item.summary === 'string' ? item.summary.trim() : '';
+        if (!summary) {
+            throw new Error(`Item ${i + 1} has empty summary`);
+        }
+        summaries.push(summary);
+    }
+
+    return summaries;
+}
+
+async function _fallbackSummarizePerItem(texts, settings) {
+    const out = [];
+    for (const text of texts) {
+        try {
+            out.push(await summarizeText(text, settings));
+        } catch (err) {
+            if (isSummarizationFatalError(err)) throw err;
+            out.push(text);
+        }
+    }
+    return out;
+}
+
+async function _callSummaryProvider(provider, prompt, model, settings, originalLength) {
+    if (provider === 'openrouter') {
+        return _callOpenRouter(prompt, model, settings, originalLength);
+    }
+    if (provider === 'vllm') {
+        return _callVLLM(prompt, model, settings);
+    }
+    return prompt;
 }
 
 /**

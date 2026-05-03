@@ -26,6 +26,7 @@ import {
 import { isBackendAvailable } from '../backends/backend-manager.js';
 import {
     summarizeText,
+    summarizeTextGroup,
     isSummarizationFatalError,
     getSummarizationConfigFingerprint,
 } from './summarizer.js';
@@ -141,7 +142,7 @@ function prepareItemsForInsertion(items) {
  * disable deduplication with no functional benefit.
  *
  * @param {object[]} messages Messages to group
- * @param {string} strategy Chunking strategy: 'per_message', 'conversation_turns', 'message_batch'
+ * @param {string} strategy Chunking strategy: 'per_message', 'conversation_turns', 'message_batch', 'message_group_batch'
  * @param {number} batchSize Number of messages per batch (for message_batch strategy)
  * @param {string} keywordLevel Keyword extraction level: 'off', 'minimal', 'balanced', 'aggressive'
  * @returns {object[]} Grouped message items ready for chunking
@@ -152,12 +153,18 @@ async function groupMessagesByStrategy(messages, strategy, batchSize = 4, keywor
     console.log(`[VectHare] groupMessagesByStrategy: ${messages.length} messages, strategy=${strategy}, summarize_provider=${settings?.summarize_provider || 'off'}`);
 
     const summarize = (text) => summarizeText(text, settings);
+    const summarizeGroup = (texts) => summarizeTextGroup(texts, settings);
 
     // Helper to extract keywords based on level
     const getKeywords = (text) => {
         if (keywordLevel === 'off') return [];
         return extractBM25Keywords(text, { level: keywordLevel, settings });
     };
+
+    const toLabeledText = (batch) => batch.map(m => {
+        const role = m.is_user ? 'User' : 'Character';
+        return `[${role}]: ${m.text}`;
+    }).join('\n\n');
 
     switch (strategy) {
         case 'conversation_turns': {
@@ -168,11 +175,7 @@ async function groupMessagesByStrategy(messages, strategy, batchSize = 4, keywor
                 if (i + 1 < messages.length) {
                     pair.push(messages[i + 1]);
                 }
-                // Combine texts with speaker labels
-                const combinedText = pair.map(m => {
-                    const role = m.is_user ? 'User' : 'Character';
-                    return `[${role}]: ${m.text}`;
-                }).join('\n\n');
+                const combinedText = toLabeledText(pair);
                 const storedText = await summarize(combinedText);
 
                 grouped.push({
@@ -197,11 +200,7 @@ async function groupMessagesByStrategy(messages, strategy, batchSize = 4, keywor
             const grouped = [];
             for (let i = 0; i < messages.length; i += batchSize) {
                 const batch = messages.slice(i, i + batchSize);
-                // Combine texts with speaker labels
-                const combinedText = batch.map(m => {
-                    const role = m.is_user ? 'User' : 'Character';
-                    return `[${role}]: ${m.text}`;
-                }).join('\n\n');
+                const combinedText = toLabeledText(batch);
                 const storedText = await summarize(combinedText);
 
                 grouped.push({
@@ -219,6 +218,114 @@ async function groupMessagesByStrategy(messages, strategy, batchSize = 4, keywor
                     }
                 });
             }
+            return grouped;
+        }
+
+        case 'message_group_batch': {
+            const grouped = [];
+            const unitBatchSize = Math.max(1, Number(batchSize) || 1);
+            const requestMessageBudget = Math.min(30, Math.max(6, Number(settings.group_batch_size || 10)));
+            const MAX_GROUP_CHARS = 18000;
+
+            // Build units first (per-message if unitBatchSize=1, otherwise message batches).
+            const units = [];
+            for (let i = 0; i < messages.length; i += unitBatchSize) {
+                const batch = messages.slice(i, i + unitBatchSize);
+                const combinedText = unitBatchSize === 1
+                    ? batch[0].text
+                    : toLabeledText(batch);
+
+                if (unitBatchSize === 1) {
+                    const m = batch[0];
+                    units.push({
+                        rawText: combinedText,
+                        hash: m.hash,
+                        index: m.index,
+                        is_user: m.is_user,
+                        metadata: {
+                            strategy: 'message_group_batch',
+                            unitMode: 'per_message',
+                            messageId: m.index,
+                            messageHashes: [m.hash],
+                        },
+                    });
+                } else {
+                    units.push({
+                        rawText: combinedText,
+                        hash: getStringHash(combinedText),
+                        index: batch[0].index,
+                        metadata: {
+                            strategy: 'message_group_batch',
+                            unitMode: 'message_batch',
+                            batchSize: batch.length,
+                            messageIds: batch.map(m => m.index),
+                            messageHashes: batch.map(m => m.hash),
+                            startIndex: batch[0].index,
+                            endIndex: batch[batch.length - 1].index,
+                        },
+                    });
+                }
+            }
+
+            // Pack units into grouped summarization requests with message-count and size guardrails.
+            const requestGroups = [];
+            let currentGroup = [];
+            let currentMessageCount = 0;
+            let currentCharCount = 0;
+
+            for (const unit of units) {
+                const unitMessageCount = unit.metadata.unitMode === 'message_batch'
+                    ? (unit.metadata.batchSize || 1)
+                    : 1;
+                const unitCharCount = unit.rawText.length;
+
+                const wouldExceedMessageBudget = currentMessageCount + unitMessageCount > requestMessageBudget;
+                const wouldExceedCharBudget = currentCharCount + unitCharCount > MAX_GROUP_CHARS;
+
+                if (currentGroup.length > 0 && (wouldExceedMessageBudget || wouldExceedCharBudget)) {
+                    requestGroups.push(currentGroup);
+                    currentGroup = [];
+                    currentMessageCount = 0;
+                    currentCharCount = 0;
+                }
+
+                currentGroup.push(unit);
+                currentMessageCount += unitMessageCount;
+                currentCharCount += unitCharCount;
+            }
+
+            if (currentGroup.length > 0) {
+                requestGroups.push(currentGroup);
+            }
+
+            console.log(`[VectHare] message_group_batch: units=${units.length}, requestGroups=${requestGroups.length}, requestMessageBudget=${requestMessageBudget}`);
+
+            for (const requestGroup of requestGroups) {
+                const groupTexts = requestGroup.map(unit => unit.rawText);
+                const groupSummaries = await summarizeGroup(groupTexts);
+
+                if (!Array.isArray(groupSummaries) || groupSummaries.length !== requestGroup.length) {
+                    throw new Error(`Grouped summarization output mismatch: expected ${requestGroup.length}, got ${groupSummaries?.length || 0}`);
+                }
+
+                for (let i = 0; i < requestGroup.length; i++) {
+                    const unit = requestGroup[i];
+                    const storedText = groupSummaries[i];
+                    grouped.push({
+                        text: storedText,
+                        hash: unit.hash,
+                        index: unit.index,
+                        is_user: unit.is_user,
+                        keywords: getKeywords(storedText),
+                        metadata: {
+                            ...unit.metadata,
+                            requestGroupUnits: requestGroup.length,
+                            requestMessageBudget,
+                        },
+                    });
+                }
+            }
+
             return grouped;
         }
 
