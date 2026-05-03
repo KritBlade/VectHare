@@ -190,6 +190,8 @@ export async function vectorizeContent({ contentType, source, settings, abortSig
                         throw err;
                     }
 
+                    // Build all summarized chunks for this group, then insert as one batch
+                    const summarizedChunks = [];
                     for (let i = 0; i < group.length; i++) {
                         const chunk = group[i];
                         const summaryText = summaries[i] || chunk.text;
@@ -200,21 +202,22 @@ export async function vectorizeContent({ contentType, source, settings, abortSig
                                 settings: vecthareSettings,
                             })
                             : [];
-                        const summarizedChunk = { ...chunk, text: summaryText, keywords: summaryKeywords };
-
-                        try {
-                            throwIfAborted();
-                            await insertVectorItems(collectionId, [summarizedChunk], vecthareSettings);
-                        } catch (insertErr) {
-                            if (insertErr?.name === 'AbortError') throw insertErr;
-                            console.error('VectHare: Pipeline insert failed for chunk, skipping:', insertErr.message);
-                            progressTracker.addError(`Chunk ${pipelined + 1}: ${insertErr.message}`);
-                        }
-
-                        pipelined++;
-                        progressTracker.updateProgress(3, `Summarizing + inserting... ${pipelined}/${finalChunks.length}`);
-                        progressTracker.updateEmbeddingProgress(pipelined, finalChunks.length);
+                        summarizedChunks.push({ ...chunk, text: summaryText, keywords: summaryKeywords });
                     }
+
+                    // Insert the entire group as one batch — one embedding API call for all chunks
+                    try {
+                        throwIfAborted();
+                        await insertVectorItems(collectionId, summarizedChunks, vecthareSettings);
+                    } catch (insertErr) {
+                        if (insertErr?.name === 'AbortError') throw insertErr;
+                        console.error('VectHare: Pipeline batch insert failed for group, skipping:', insertErr.message);
+                        progressTracker.addError(`Group insert failed: ${insertErr.message}`);
+                    }
+
+                    pipelined += summarizedChunks.length;
+                    progressTracker.updateProgress(3, `Summarizing + inserting... ${pipelined}/${finalChunks.length}`);
+                    progressTracker.updateEmbeddingProgress(pipelined, finalChunks.length);
                 }
             } else {
                 for (const chunk of finalChunks) {
