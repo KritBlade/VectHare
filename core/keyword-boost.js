@@ -72,6 +72,12 @@ const FREQUENCY_WEIGHT_INCREMENT = 0.1;
 /** Maximum weight cap (prevent runaway weights) */
 const MAX_KEYWORD_WEIGHT = 3.0;
 
+/**
+ * Balanced scan cap when summarization is enabled.
+ * Derived from a typical English summarized chunk (~1328 chars) + 20% buffer.
+ */
+const SUMMARY_BALANCED_HEADER_SIZE = 1600;
+
 const CJK_CHAR_RE = /[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF\u3040-\u309F\u30A0-\u30FF]/;
 
 // In Japanese mode, allow a small set of high-signal 1-char tokens (mostly RPG terms)
@@ -169,6 +175,24 @@ function shouldKeepCjkKeyword(token, frequency, isJapaneseMode, isTraditionalChi
         return SIMPLIFIED_CHINESE_SINGLE_CHAR_ALLOWLIST.has(token);
     }
     return false;
+}
+
+function isSummarizationEnabled(settings) {
+    return (settings?.summarize_provider || 'off') !== 'off';
+}
+
+function getEffectiveHeaderSize(config, level, settings) {
+    if (!config?.headerSize) return null;
+
+    // Keep existing behavior for non-summarized content.
+    if (!isSummarizationEnabled(settings)) return config.headerSize;
+
+    // Summarized text is denser and shorter; cap balanced scan to reduce noise/over-scan.
+    if (level === 'balanced') {
+        return Math.min(config.headerSize, SUMMARY_BALANCED_HEADER_SIZE);
+    }
+
+    return config.headerSize;
 }
 
 /**
@@ -512,6 +536,7 @@ export function extractTextKeywords(text, options = {}) {
     const level = options.level || DEFAULT_EXTRACTION_LEVEL;
     const baseWeight = options.baseWeight || DEFAULT_BASE_WEIGHT;
     const config = EXTRACTION_LEVELS[level];
+    const effectiveHeaderSize = getEffectiveHeaderSize(config, level, options.settings);
 
     // If extraction is disabled, return empty
     if (!config || !config.enabled) {
@@ -531,8 +556,8 @@ export function extractTextKeywords(text, options = {}) {
     cleanedText = cleanedText.replace(/'s\b/g, '');
 
     // Step 2: Determine scan area based on level
-    const scanArea = config.headerSize
-        ? cleanedText.substring(0, config.headerSize)
+    const scanArea = effectiveHeaderSize
+        ? cleanedText.substring(0, effectiveHeaderSize)
         : cleanedText;
 
     // Step 2.5: Detect capitalized words (likely proper nouns/names) before lowercasing
@@ -721,6 +746,7 @@ export function extractBM25Keywords(text, options = {}) {
     // Get extraction level config
     const level = options.level || DEFAULT_EXTRACTION_LEVEL;
     const config = EXTRACTION_LEVELS[level];
+    const effectiveHeaderSize = getEffectiveHeaderSize(config, level, options.settings);
 
     // If extraction is disabled, return empty
     if (!config || !config.enabled) return [];
@@ -737,12 +763,12 @@ export function extractBM25Keywords(text, options = {}) {
 
     // Apply header size limit (scan area)
     let scanText = text;
-    if (config.headerSize && text.length > config.headerSize) {
+    if (effectiveHeaderSize && text.length > effectiveHeaderSize) {
         // For minimal/balanced, focus on the beginning of the text
-        scanText = text.substring(0, config.headerSize);
+        scanText = text.substring(0, effectiveHeaderSize);
         // Try to end at a word boundary
         const lastSpace = scanText.lastIndexOf(' ');
-        if (lastSpace > config.headerSize * 0.8) {
+        if (lastSpace > effectiveHeaderSize * 0.8) {
             scanText = scanText.substring(0, lastSpace);
         }
     }
@@ -914,6 +940,7 @@ export function extractSmartKeywords(text, options = {}) {
 
     const level = options.level || DEFAULT_EXTRACTION_LEVEL;
     const config = EXTRACTION_LEVELS[level];
+    const effectiveHeaderSize = getEffectiveHeaderSize(config, level, options.settings);
     if (!config || !config.enabled) return [];
 
     const baseWeight = options.baseWeight || DEFAULT_BASE_WEIGHT;
@@ -924,10 +951,10 @@ export function extractSmartKeywords(text, options = {}) {
 
     // Apply header size limit
     let scanText = text;
-    if (config.headerSize && text.length > config.headerSize) {
-        scanText = text.substring(0, config.headerSize);
+    if (effectiveHeaderSize && text.length > effectiveHeaderSize) {
+        scanText = text.substring(0, effectiveHeaderSize);
         const lastSpace = scanText.lastIndexOf(' ');
-        if (lastSpace > config.headerSize * 0.8) {
+        if (lastSpace > effectiveHeaderSize * 0.8) {
             scanText = scanText.substring(0, lastSpace);
         }
     }

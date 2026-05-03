@@ -156,7 +156,7 @@ async function groupMessagesByStrategy(messages, strategy, batchSize = 4, keywor
     // Helper to extract keywords based on level
     const getKeywords = (text) => {
         if (keywordLevel === 'off') return [];
-        return extractBM25Keywords(text, { level: keywordLevel });
+        return extractBM25Keywords(text, { level: keywordLevel, settings });
     };
 
     switch (strategy) {

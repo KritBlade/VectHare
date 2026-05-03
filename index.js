@@ -50,7 +50,7 @@ const MODULE_NAME = 'VectHarePlus';
 const defaultSettings = {
     // Core vector settings
     source: 'transformers',
-    vector_backend: 'standard', // Backend: 'standard' (ST Vectra), 'lancedb', 'qdrant'
+    vector_backend: 'qdrant', // Backend: 'standard' (ST Vectra), 'lancedb', 'qdrant'
     qdrant_host: 'localhost',
     qdrant_port: 6333,
     qdrant_url: '',

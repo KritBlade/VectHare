@@ -1994,7 +1994,7 @@ function bindSettingsEvents(settings, callbacks) {
 
     // Vector backend selection
     $('#vecthare_vector_backend')
-        .val(settings.vector_backend || 'standard')
+        .val(settings.vector_backend || 'qdrant')
         .on('change', function() {
             settings.vector_backend = String($(this).val());
             Object.assign(extension_settings.vecthareplus, settings);
@@ -3479,7 +3479,7 @@ function copyDiagnosticsReport(results) {
 
     // Get current settings for the report
     const settings = extension_settings.vecthareplus;
-    const backend = settings.vector_backend || 'standard';
+    const backend = settings.vector_backend || 'qdrant';
     const source = settings.source || 'none';
     const modelField = getModelField(source);
     const model = modelField ? (settings[modelField] || 'not set') : 'n/a (provider handles it)';
