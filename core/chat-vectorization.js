@@ -1757,7 +1757,15 @@ export async function rearrangeChat(chat, settings, type) {
         });
 
         // === STAGE 4: Query all collections and merge results ===
+        if (settings.retrieval_popup_on_start) {
+            toastr.info(`Retrieving context from ${activeCollections.length} collection(s)...`, 'VectHarePlus Retrieval');
+        }
+
         let chunks = await queryAndMergeCollections(activeCollections, queryText, settings, chat, debugData);
+
+        if (settings.retrieval_popup_on_result) {
+            toastr.success(`Retrieved ${chunks.length} result(s) from backend`, 'VectHarePlus Retrieval');
+        }
 
         // === STAGE 4.3: Boost chunks with matching query keywords ===
         if (queryKeywordTexts.length > 0 && chunks.length > 0) {

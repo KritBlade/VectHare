@@ -521,7 +521,18 @@ export function renderSettings(containerId, settings, callbacks) {
                             <div style="margin-top:8px; display:flex; gap:8px; align-items:center;">
                                 <label for="vecthare_topk" style="margin:0; white-space:nowrap;"><small>Top K</small></label>
                                 <input id="vecthare_topk" type="number" class="vecthare-input" min="1" style="width:90px;" />
-                                <small class="vecthare_hint" style="margin-left:8px;">Number of results to retrieve per collection</small>
+                                <small class="vecthare_hint" style="margin-left:8px;">Up to this many results per collection (may be fewer after filtering/dedup)</small>
+                            </div>
+
+                            <div style="margin-top: 8px;">
+                                <label class="checkbox_label" for="vecthare_retrieval_popup_on_start">
+                                    <input id="vecthare_retrieval_popup_on_start" type="checkbox" />
+                                    <span>Popup: show when backend retrieval starts</span>
+                                </label>
+                                <label class="checkbox_label" for="vecthare_retrieval_popup_on_result" style="margin-top: 6px; display: flex;">
+                                    <input id="vecthare_retrieval_popup_on_result" type="checkbox" />
+                                    <span>Popup: show retrieved result count</span>
+                                </label>
                             </div>
 
                             <label style="margin-top: 16px;">
@@ -698,7 +709,8 @@ export function renderSettings(containerId, settings, callbacks) {
                                 <input type="checkbox" id="vecthare_autosync_enabled" />
                                 <span>Enable Auto-Sync</span>
                             </label>
-                            <small class="vecthare_hint">Automatically vectorize new chat messages</small>
+                            <small class="vecthare_hint">Auto-Sync new messages (requires initial vectorization)</small>
+                            <div id="vecthare_autosync_status" style="margin-top: 6px; font-size: 0.82em;"></div>
 
                             <!-- Collection lock moved to Database Browser (per-collection settings) -->
 
@@ -1416,14 +1428,28 @@ export async function loadWebLlmModels(settings) {
  */
 export function refreshAutoSyncCheckbox(settings) {
     const collectionId = getChatCollectionId();
+    const $status = $('#vecthare_autosync_status');
     if (!collectionId) {
         $('#vecthare_autosync_enabled').prop('checked', false);
+        $status.html('');
         return;
     }
     // Dynamically import to avoid circular dependency
     import('../core/collection-metadata.js').then(({ isCollectionAutoSyncEnabled }) => {
         const isEnabled = isCollectionAutoSyncEnabled(collectionId);
         $('#vecthare_autosync_enabled').prop('checked', isEnabled);
+    });
+    // Show initialization status
+    $status.html('<i class="fa-solid fa-spinner fa-spin" style="opacity:0.5;"></i> Checking...');
+    doesChatHaveVectors(settings).then(({ hasVectors, allMatches }) => {
+        if (hasVectors) {
+            const totalChunks = allMatches.reduce((sum, m) => sum + (m.chunkCount || 0), 0);
+            $status.html(`<i class="fa-solid fa-circle-check" style="color: var(--success-color, #27ae60);"></i> Initialized (${totalChunks} chunks)`);
+        } else {
+            $status.html('<i class="fa-solid fa-circle-exclamation" style="color: var(--warning-color, #f39c12);"></i> Not initialized — vectorize chat first');
+        }
+    }).catch(() => {
+        $status.html('');
     });
 }
 
@@ -2268,6 +2294,23 @@ function bindSettingsEvents(settings, callbacks) {
             const value = parseInt($(this).val());
             const safeValue = isNaN(value) ? (settings.insert || 3) : value;
             settings.top_k = safeValue;
+            Object.assign(extension_settings.vecthareplus, settings);
+            saveSettingsDebounced();
+        });
+
+    // Retrieval popups
+    $('#vecthare_retrieval_popup_on_start')
+        .prop('checked', settings.retrieval_popup_on_start || false)
+        .on('change', function() {
+            settings.retrieval_popup_on_start = $(this).prop('checked');
+            Object.assign(extension_settings.vecthareplus, settings);
+            saveSettingsDebounced();
+        });
+
+    $('#vecthare_retrieval_popup_on_result')
+        .prop('checked', settings.retrieval_popup_on_result || false)
+        .on('change', function() {
+            settings.retrieval_popup_on_result = $(this).prop('checked');
             Object.assign(extension_settings.vecthareplus, settings);
             saveSettingsDebounced();
         });
