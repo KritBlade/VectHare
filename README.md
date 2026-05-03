@@ -10,7 +10,7 @@
 Branched from the original VectHare project, VectHarePlus is an **advanced Retrieval-Augmented Generation (RAG) system** for SillyTavern, now featuring newly added, optimized support for Japanese, Traditional Chinese, and Simplified Chinese.
 
 I branched the original VectHare to handle the massive scale of my personal MVU Game Maker projects, which feature:
-- **Extreme scale: 2,000+ replies per story, with 1,000+ words per reply. Summary retrival returns in less than 3 seconds**
+- **Extreme scale: 2,000+ replies per story, with 1,000+ words per reply. Summary retrieval returns in less than 3 seconds**
 - Non-English language support (Japanese, Traditional/Simplified Chinese).  It supports English by default.
 - Strip out all functional tag from MVU Game Maker.
 
