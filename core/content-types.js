@@ -207,6 +207,7 @@ export const CONTENT_TYPES = {
         defaults: {
             chunkSize: 500,
             batchSize: 4,
+            groupBatchSize: 10,
             temporalDecay: { enabled: true, halfLife: 50, floor: 0.3 },
             autoKeywords: false,
         },

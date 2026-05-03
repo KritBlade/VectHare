@@ -1874,7 +1874,7 @@ function bindSettingsEvents(settings, callbacks) {
         const strategy = chatStrategies.find(s => s.id === strategyId);
         $('#vecthare_strategy_description').text(strategy?.description || '');
         // Show/hide strategy-specific settings
-        $('#vecthare_batch_settings').toggle(strategyId === 'message_batch');
+        $('#vecthare_batch_settings').toggle(strategyId === 'message_batch' || strategyId === 'message_group_batch');
         $('#vecthare_group_batch_settings').toggle(strategyId === 'message_group_batch');
     }
 

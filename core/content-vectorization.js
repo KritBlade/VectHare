@@ -76,6 +76,7 @@ export async function vectorizeContent({ contentType, source, settings, abortSig
             chunkSize: settings.chunkSize || type.defaults.chunkSize,
             chunkOverlap: settings.chunkOverlap || type.defaults.chunkOverlap,
             batchSize: settings.batchSize || 4,
+            groupBatchSize: settings.groupBatchSize || 10,
         });
         throwIfAborted();
 
