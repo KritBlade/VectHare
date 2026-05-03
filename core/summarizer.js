@@ -257,11 +257,45 @@ function _buildGroupCorrectionPrompt(texts, settings, parseError) {
 
 function _stripCodeFences(text) {
     const trimmed = String(text || '').trim();
-    if (!trimmed.startsWith('```')) return trimmed;
-    return trimmed
-        .replace(/^```(?:json)?\s*/i, '')
-        .replace(/\s*```$/, '')
-        .trim();
+    // Strip code fences first
+    const stripped = trimmed.startsWith('```')
+        ? trimmed.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
+        : trimmed;
+
+    // Extract the outermost JSON array or object, ignoring any prose before/after.
+    // This handles cases where the model appends a trailing note after the JSON.
+    const arrayStart = stripped.indexOf('[');
+    const objectStart = stripped.indexOf('{');
+    let jsonStart = -1;
+    let openChar, closeChar;
+    if (arrayStart !== -1 && (objectStart === -1 || arrayStart < objectStart)) {
+        jsonStart = arrayStart;
+        openChar = '['; closeChar = ']';
+    } else if (objectStart !== -1) {
+        jsonStart = objectStart;
+        openChar = '{'; closeChar = '}';
+    }
+    if (jsonStart === -1) return stripped;
+
+    // Walk forward to find the matching close bracket
+    let depth = 0;
+    let inString = false;
+    let escape = false;
+    let jsonEnd = -1;
+    for (let i = jsonStart; i < stripped.length; i++) {
+        const ch = stripped[i];
+        if (escape) { escape = false; continue; }
+        if (ch === '\\' && inString) { escape = true; continue; }
+        if (ch === '"') { inString = !inString; continue; }
+        if (inString) continue;
+        if (ch === openChar) depth++;
+        else if (ch === closeChar) {
+            depth--;
+            if (depth === 0) { jsonEnd = i; break; }
+        }
+    }
+    if (jsonEnd === -1) return stripped; // unterminated — return as-is and let JSON.parse fail naturally
+    return stripped.slice(jsonStart, jsonEnd + 1);
 }
 
 function _parseGroupedResponse(raw, expectedCount) {

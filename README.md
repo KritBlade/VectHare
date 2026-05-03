@@ -240,7 +240,7 @@ Supports 28 emotion types with Character Expressions integration!
 3. Click **"Install Extension"**
 4. Paste this URL:
    ```
-   https://github.com/kritblade/VectHare
+   https://github.com/KritBlade/VectHarePlus
    ```
 5. Click **Install**
 
@@ -255,7 +255,7 @@ That's it! VectHarePlus will be downloaded and enabled automatically.
 
 ```bash
 cd SillyTavern/plugins
-git clone -b Similharity-Plugin https://github.com/kritblade/VectHare.git similharity
+git clone -b Similharity-Plugin https://github.com/KritBlade/VectHarePlus.git similharity
 cd similharity
 npm install
 ```

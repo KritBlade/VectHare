@@ -44,13 +44,13 @@ export const API_TIMEOUT_MS = 30000;
 // =============================================================================
 
 /** Maximum retry attempts for failed API calls */
-export const RETRY_MAX_ATTEMPTS = 3;
+export const RETRY_MAX_ATTEMPTS = 5;
 
 /** Initial delay between retries in ms */
-export const RETRY_INITIAL_DELAY_MS = 1000;
+export const RETRY_INITIAL_DELAY_MS = 2000;
 
 /** Maximum delay between retries in ms */
-export const RETRY_MAX_DELAY_MS = 10000;
+export const RETRY_MAX_DELAY_MS = 30000;
 
 /** Backoff multiplier for exponential retry */
 export const RETRY_BACKOFF_MULTIPLIER = 2;

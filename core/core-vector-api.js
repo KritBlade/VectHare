@@ -651,9 +651,19 @@ export async function insertVectorItems(collectionId, items, settings, onProgres
             // Server-side embeddings - backend handles everything
             // VEC-6: Use configurable batch size for optimized bulk inserts
             // Some providers need smaller batches - Ollama and Transformers work best with batch size of 1
-            const smallBatchProviders = ['transformers', 'ollama'];
+            // Qdrant with local GPU sources (transformers/ollama/llamacpp) also defaults to 1:
+            // the Similharity server embeds all items in a single HTTP request sequentially,
+            // so 5 items = 5×T on the GPU inside one request, which 504s for large models.
+            // Sending 1 item per call keeps each request under the gateway timeout.
+            // API-based sources (openai, openrouter, etc.) can batch safely — the server
+            // runs those in parallel so total time stays ~T regardless of item count.
+            const localGpuSources = new Set(['transformers', 'ollama', 'llamacpp', 'koboldcpp']);
             const configuredBatchSize = settings.insert_batch_size || 50;
-            const BATCH_SIZE = smallBatchProviders.includes(settings.source) ? 1 : configuredBatchSize;
+            const hasExplicitBatchSize = !!settings.insert_batch_size;
+            // Force 1-item batches for local GPU sources unless user overrides explicitly.
+            // The Similharity server embeds items sequentially in one HTTP request, so
+            // N items = N×T on the GPU — large batches 504 with high-dim models.
+            const BATCH_SIZE = (!hasExplicitBatchSize && localGpuSources.has(settings.source)) ? 1 : configuredBatchSize;
             const batches = chunkArray(items, BATCH_SIZE);
 
             const hasRateLimit = settings.rate_limit_calls > 0;
