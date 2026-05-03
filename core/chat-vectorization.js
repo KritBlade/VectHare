@@ -1721,9 +1721,18 @@ export async function rearrangeChat(chat, settings, type) {
                 currentCharacter: getContext().name2 || null,
                 activeLorebookEntries: [],
                 currentChatId: getCurrentChatId(),
+                currentChatCollectionId: getChatCollectionId(),
                 currentCharacterId: getContext().characterId || null
             });
             activeCollections = await filterActiveCollections(collectionsToQuery, searchContext);
+
+            // Backward-compat safety: always allow current chat collection when enabled.
+            // Some legacy metadata may not have locks/triggers yet, which can block retrieval.
+            const chatCollectionId = getChatCollectionId();
+            if (chatCollectionId && collectionsToQuery.includes(chatCollectionId) && !activeCollections.includes(chatCollectionId)) {
+                activeCollections.unshift(chatCollectionId);
+                console.log(`VectHare: Forced activation fallback for current chat collection: ${chatCollectionId}`);
+            }
         }
 
         // Allow WI-only mode even if no regular collections pass filters

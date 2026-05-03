@@ -459,7 +459,7 @@ function bindBrowserEvents() {
   });
 
   // Tab switching
-  $(".vecthare-tab-btn").on("click", function (e) {
+  $("#vecthare_database_browser_modal .vecthare-tab-btn").on("click", function (e) {
     e.stopPropagation();
     e.preventDefault();
     const tab = $(this).data("tab");
@@ -467,17 +467,17 @@ function bindBrowserEvents() {
   });
 
   // Scope filters
-  $(".vecthare-scope-filter").on("click", function (e) {
+  $("#vecthare_database_browser_modal .vecthare-scope-filter").on("click", function (e) {
     e.stopPropagation();
     e.preventDefault();
-    $(".vecthare-scope-filter").removeClass("active");
+    $("#vecthare_database_browser_modal .vecthare-scope-filter").removeClass("active");
     $(this).addClass("active");
     browserState.filters.scope = $(this).data("scope");
     renderCollections();
   });
 
   // Type filters
-  $('input[name="vecthare_type_filter"]').on("change", function (e) {
+  $('#vecthare_database_browser_modal input[name="vecthare_type_filter"]').on("change", function (e) {
     e.stopPropagation();
     browserState.filters.collectionType = $(this).val();
     renderCollections();
@@ -636,10 +636,10 @@ function bindBrowserEvents() {
  * @param {string} tabName Tab identifier
  */
 function switchTab(tabName) {
-  $(".vecthare-tab-btn").removeClass("active");
-  $(`.vecthare-tab-btn[data-tab="${tabName}"]`).addClass("active");
+  $("#vecthare_database_browser_modal .vecthare-tab-btn").removeClass("active");
+  $(`#vecthare_database_browser_modal .vecthare-tab-btn[data-tab="${tabName}"]`).addClass("active");
 
-  $(".vecthare-tab-content").removeClass("active");
+  $("#vecthare_database_browser_modal .vecthare-tab-content").removeClass("active");
   $(`#vecthare_tab_${tabName}`).addClass("active");
 
   // Initialize tab-specific content

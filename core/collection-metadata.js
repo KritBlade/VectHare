@@ -909,6 +909,22 @@ async function evaluateAdvancedConditions(meta, context, collectionId) {
 export async function shouldCollectionActivate(collectionId, context) {
     const meta = getCollectionMeta(collectionId);
     const currentChatId = context?.currentChatId;
+    const currentChatCollectionId = context?.currentChatCollectionId;
+
+    // Priority 1.5: Current chat collection should always be eligible for activation.
+    // Supports plain IDs and registry-key variants (backend:source:collectionId).
+    if (currentChatCollectionId) {
+        const targetParsed = parseRegistryKey(collectionId);
+        const currentParsed = parseRegistryKey(currentChatCollectionId);
+        if (
+            collectionId === currentChatCollectionId
+            || targetParsed.collectionId === currentChatCollectionId
+            || targetParsed.collectionId === currentParsed.collectionId
+        ) {
+            console.log(`[VectHare Activation Filter] Collection ${collectionId}: ✓ CURRENT_CHAT_COLLECTION`);
+            return true;
+        }
+    }
 
     // Priority 1: Check if collection is disabled entirely
     if (meta.enabled === false) {
