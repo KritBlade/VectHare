@@ -627,7 +627,7 @@ export async function getSavedHashes(collectionId, settings, includeMetadata = f
  * @param {Function} onProgress - Optional callback (embedded, total) => void for progress updates
  * @returns {Promise<void>}
  */
-export async function insertVectorItems(collectionId, items, settings, onProgress = null) {
+export async function insertVectorItems(collectionId, items, settings, onProgress = null, abortSignal = null) {
     const backend = await getBackend(settings);
 
     // Sources that require client-side embedding generation
@@ -646,7 +646,7 @@ export async function insertVectorItems(collectionId, items, settings, onProgres
             });
 
             // Use streaming embedding generation with immediate writes
-            await streamEmbeddingsAndWrite(backend, collectionId, items, textStrings, settings, onProgress);
+            await streamEmbeddingsAndWrite(backend, collectionId, items, textStrings, settings, onProgress, abortSignal);
         } else {
             // Server-side embeddings - backend handles everything
             // VEC-6: Use configurable batch size for optimized bulk inserts
@@ -659,10 +659,13 @@ export async function insertVectorItems(collectionId, items, settings, onProgres
             const hasRateLimit = settings.rate_limit_calls > 0;
             console.log(`VectHare: Processing ${items.length} items in ${batches.length} batch(es) of up to ${BATCH_SIZE}${hasRateLimit ? ` with rate limit (Max ${settings.rate_limit_calls} calls / ${settings.rate_limit_interval}s)` : ''}`);
 
+            if (abortSignal?.aborted) throw Object.assign(new Error('Vectorization stopped by user'), { name: 'AbortError' });
+
             for (let i = 0; i < batches.length; i++) {
                 const processBatch = async () => {
                     await AsyncUtils.retry(async () => {
-                        await backend.insertVectorItems(collectionId, batches[i], settings);
+                        if (abortSignal?.aborted) throw Object.assign(new Error('Vectorization stopped by user'), { name: 'AbortError' });
+                        await backend.insertVectorItems(collectionId, batches[i], settings, abortSignal);
                     }, RETRY_CONFIG);
                 };
 
@@ -699,7 +702,7 @@ export async function insertVectorItems(collectionId, items, settings, onProgres
  * @param {object} settings - Settings object
  * @param {Function} onProgress - Progress callback
  */
-async function streamEmbeddingsAndWrite(backend, collectionId, items, textStrings, settings, onProgress) {
+async function streamEmbeddingsAndWrite(backend, collectionId, items, textStrings, settings, onProgress, abortSignal = null) {
     // VEC-6: Use configurable batch size for optimized bulk inserts
     const EMBEDDING_BATCH_SIZE = settings.insert_batch_size || 50;
     let totalProcessed = 0;
@@ -762,7 +765,8 @@ async function streamEmbeddingsAndWrite(backend, collectionId, items, textString
         console.log(`VectHare: Writing batch ${batchNum} to database (${itemsToWrite.length} items)`);
         try {
             await AsyncUtils.retry(async () => {
-                await backend.insertVectorItems(collectionId, itemsToWrite, settings);
+                if (abortSignal?.aborted) throw Object.assign(new Error('Vectorization stopped by user'), { name: 'AbortError' });
+                await backend.insertVectorItems(collectionId, itemsToWrite, settings, abortSignal);
             }, RETRY_CONFIG);
         } catch (error) {
             throw new Error(`VectHare: Failed to write batch ${batchNum} to database after retries: ${error.message}`);

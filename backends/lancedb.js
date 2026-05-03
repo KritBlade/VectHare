@@ -153,7 +153,7 @@ export class LanceDBBackend extends VectorBackend {
         return data.items ? data.items.map(item => item.hash) : [];
     }
 
-    async insertVectorItems(collectionId, items, settings) {
+    async insertVectorItems(collectionId, items, settings, abortSignal = null) {
         if (items.length === 0) return;
 
         const actualCollectionId = this._stripRegistryPrefix(collectionId);

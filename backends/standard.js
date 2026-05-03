@@ -188,7 +188,7 @@ export class StandardBackend extends VectorBackend {
      * Insert vector items into a collection
      * Uses plugin API if available (for metadata support), falls back to native ST API
      */
-    async insertVectorItems(collectionId, items, settings) {
+    async insertVectorItems(collectionId, items, settings, abortSignal = null) {
         if (items.length === 0) return;
 
         const providerParams = getProviderSpecificParams(settings, false);
@@ -282,6 +282,9 @@ export class StandardBackend extends VectorBackend {
             const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: getRequestHeaders(),
+                signal: abortSignal
+                    ? AbortSignal.any([abortSignal, AbortSignal.timeout(120000)])
+                    : AbortSignal.timeout(120000),
                 body: JSON.stringify(payload),
             });
 

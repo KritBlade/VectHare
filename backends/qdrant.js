@@ -273,7 +273,7 @@ export class QdrantBackend extends VectorBackend {
         return data.items ? data.items.map(item => item.hash) : [];
     }
 
-    async insertVectorItems(collectionId, items, settings) {
+    async insertVectorItems(collectionId, items, settings, abortSignal = null) {
         if (items.length === 0) return;
 
         // Strip registry key prefix to get the actual collection ID for Qdrant
@@ -298,6 +298,9 @@ export class QdrantBackend extends VectorBackend {
             const response = await fetch('/api/plugins/similharity/chunks/insert', {
                 method: 'POST',
                 headers: getRequestHeaders(),
+                signal: abortSignal
+                    ? AbortSignal.any([abortSignal, AbortSignal.timeout(120000)])
+                    : AbortSignal.timeout(120000),
                 body: JSON.stringify({
                     backend: BACKEND_TYPE,
                     collectionId: actualCollectionId,

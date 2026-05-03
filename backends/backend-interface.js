@@ -48,7 +48,7 @@ export class VectorBackend {
      * @param {object} settings
      * @returns {Promise<void>}
      */
-    async insertVectorItems(collectionId, items, settings) {
+    async insertVectorItems(collectionId, items, settings, abortSignal = null) {
         throw new Error('Backend must implement insertVectorItems()');
     }
 

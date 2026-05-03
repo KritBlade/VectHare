@@ -208,7 +208,7 @@ export async function vectorizeContent({ contentType, source, settings, abortSig
                     // Insert the entire group as one batch — one embedding API call for all chunks
                     try {
                         throwIfAborted();
-                        await insertVectorItems(collectionId, summarizedChunks, vecthareSettings);
+                        await insertVectorItems(collectionId, summarizedChunks, vecthareSettings, null, abortSignal);
                     } catch (insertErr) {
                         if (insertErr?.name === 'AbortError') throw insertErr;
                         console.error('VectHare: Pipeline batch insert failed for group, skipping:', insertErr.message);
@@ -246,7 +246,7 @@ export async function vectorizeContent({ contentType, source, settings, abortSig
 
                     try {
                         throwIfAborted();
-                        await insertVectorItems(collectionId, [summarizedChunk], vecthareSettings);
+                        await insertVectorItems(collectionId, [summarizedChunk], vecthareSettings, null, abortSignal);
                     } catch (insertErr) {
                         if (insertErr?.name === 'AbortError') throw insertErr;
                         console.error('VectHare: Pipeline insert failed for chunk, skipping:', insertErr.message);
@@ -284,7 +284,7 @@ export async function vectorizeContent({ contentType, source, settings, abortSig
                     console.log(`[Content Vectorization] Processing progress callback: ${embedded}/${total}`);
                     progressTracker.updateEmbeddingProgress(embedded, total);
                     progressTracker.updateCurrentItem(`Processing: ${embedded}/${total} chunks (${total - embedded} remaining)`);
-                });
+                }, abortSignal);
             } catch (error) {
                 console.error('VectHare: insertVectorItems failed', error);
                 try { progressTracker.addError(error.message || String(error)); } catch (_) {}

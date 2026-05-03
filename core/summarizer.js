@@ -98,6 +98,7 @@ const GROUP_OUTPUT_CONSTRAINTS =
 - Return a JSON array with exactly {{count}} items.
 - Each item must be an object: {"index": <1-based integer>, "summary": "<text>"}.
 - The array order must be index ascending from 1 to {{count}}.
+- Each summary must be 2-10 sentences — treat each [ITEM N] independently, with the same density as if it were the only input.
 - Preserve language of each input item and include no extra keys or prose outside JSON.`;
 
 /**

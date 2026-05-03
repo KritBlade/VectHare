@@ -245,7 +245,7 @@ export class MilvusBackend extends VectorBackend {
         return data.items ? data.items.map(item => item.hash) : [];
     }
 
-    async insertVectorItems(collectionId, items, settings) {
+    async insertVectorItems(collectionId, items, settings, abortSignal = null) {
         if (items.length === 0) return;
 
         const { type, sourceId } = this._parseCollectionId(collectionId);
