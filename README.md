@@ -10,8 +10,8 @@
 Branched from the original VectHare project, VectHarePlus is an **advanced Retrieval-Augmented Generation (RAG) system** for SillyTavern, now featuring newly added, optimized support for Japanese, Traditional Chinese, and Simplified Chinese.
 
 I branched the original VectHare to handle the massive scale of my personal MVU Game Maker projects, which feature:
+- **Extreme scale: 2,000+ replies per story, with 1,000+ words per reply. Summary retrival returns in less than 3 seconds**
 - Non-English language support (Japanese, Traditional/Simplified Chinese).  It supports English by default.
-- Extreme scale: 2,000+ replies per story, with 1,000+ words per reply.
 - Strip out all functional tag from MVU Game Maker.
 
 Ordinary SillyTavern memory extensions completely buckle under this load, especially when there are a lot of functional tags reside inside the story used by MVU Game Maker, which is useless for memory lookup.  So, I need something that is able to clean up all these functional tags while maintain high speed vectorization on extreme scale.
@@ -47,6 +47,18 @@ Technical Requirement: Because of the high data throughput required, this system
 - **Pause/continue style control** for vector content processing workflows
 - Improved control over long chat ingestion sessions without restarting everything
 
+### 🔒 Per-Chat Collection Scoping
+- Collections are now **scoped to the chat they were vectorized in** — no bleed between different games or characters
+- All new vectorizations **auto-activate for the current chat** with no manual setup required
+- "Active for current chat" checkbox in Collection Settings directly controls the chat lock (what you see is what you get)
+- Lock button in the Database Browser clarifies whether a lock belongs to **this chat** or **another chat**
+
+### 📡 Smarter Status Indicators
+- **Auto-Sync card** now shows initialization status: whether the current chat has been vectorized and how many chunks exist
+- Auto-Sync guides you to the **Vectorize Content panel** if the chat has not been initialized yet
+- **World Info card** shows which lorebooks are currently vectorized by name
+- World Info guides you to the lorebook vectorizer if no vectorized lorebooks are found
+
 ### 🧹 Keyword Quality Improvements
 - Better single-character filtering defaults for CJK keywords
 - Mode-specific exceptions for high-signal 1-character RPG/SoL/school terms
@@ -56,7 +68,7 @@ Technical Requirement: Because of the high data throughput required, this system
 
 ---
 
-## ✨ Key Features
+## ✨ Original Key Features from VectHare
 
 ### 🧠 Intelligent Context Retrieval
 - **Semantic search** through your entire chat history
@@ -392,6 +404,7 @@ MIT License - See LICENSE file for details.
 ## 🙏 Credits
 
 **VectHarePlus** is branched from VectHare which is created by **Coneja Chibi** 
+
 Special thanks to the SillyTavern community for feedback and testing!
 
 ---

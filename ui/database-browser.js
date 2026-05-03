@@ -2294,8 +2294,11 @@ function refreshActivationLockButton() {
       $btn.prop("disabled", false).text("🔒 Manage Locks");
       $btn.attr("title", "No locks set. Click to add locks");
     } else {
-      const lockedStatus = (isLockedToCurrentChat || isLockedToCurrentChar) ? "🔓" : "🔒";
-      $btn.prop("disabled", false).text(`${lockedStatus} ${totalLocks} lock${totalLocks !== 1 ? "s" : ""}`);
+      const hasCurrentChatLock = Boolean(isLockedToCurrentChat);
+      const lockedStatus = hasCurrentChatLock ? "🔓" : "🔒";
+      const lockLabel = `${totalLocks} lock${totalLocks !== 1 ? "s" : ""}`;
+      const scopeLabel = hasCurrentChatLock ? "(this chat)" : "(other chat)";
+      $btn.prop("disabled", false).text(`${lockedStatus} ${lockLabel} ${scopeLabel}`);
 
       let tooltip = `Collection has ${totalLocks} lock${totalLocks !== 1 ? "s" : ""}`;
       if (chatLockCount > 0) tooltip += ` (${chatLockCount} chat${chatLockCount !== 1 ? "s" : ""})`;
