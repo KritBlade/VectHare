@@ -108,7 +108,14 @@ export async function summarizeText(text, settings) {
     //console.log(`[VectHare Summarizer] summarizeText called — provider=${provider}, textLen=${text.length}`);
     if (provider === 'off') return text;
 
-    const model = settings?.summarize_model || '';
+    const model = (settings?.summarize_model || '').trim();
+    if (!model) {
+        throw new SummarizationFatalError(
+            'No summarization model configured. Set a model in Summarize Before Store settings.',
+            provider,
+            'missing_model'
+        );
+    }
     const promptTemplate = settings?.summarize_prompt || DEFAULT_SUMMARIZE_PROMPT;
     const prompt = promptTemplate.replace('{{text}}', text);
 
@@ -145,13 +152,22 @@ export async function summarizeTextGroup(texts, settings) {
     const provider = settings?.summarize_provider || 'off';
     if (provider === 'off') return inputTexts;
 
-    const model = settings?.summarize_model || '';
+    const model = (settings?.summarize_model || '').trim();
+    if (!model) {
+        throw new SummarizationFatalError(
+            'No summarization model configured. Set a model in Summarize Before Store settings.',
+            provider,
+            'missing_model'
+        );
+    }
     const expectedCount = inputTexts.length;
 
     const prompt = _buildGroupPrompt(inputTexts, settings);
+    // Scale token budget: ~400 tokens per summary item, min 512, max 8192
+    const groupMaxTokens = Math.min(8192, Math.max(512, expectedCount * 400));
 
     try {
-        const firstResponse = await _callSummaryProvider(provider, prompt, model, settings, prompt.length);
+        const firstResponse = await _callSummaryProvider(provider, prompt, model, settings, prompt.length, groupMaxTokens);
         console.log('[VectHare Summarizer] grouped summary raw response (retry=0):', firstResponse);
         const parsedFirst = _parseGroupedResponse(firstResponse, expectedCount);
         console.log(`[VectHare Summarizer] grouped summary success: expected=${expectedCount}, parsed=${parsedFirst.length}, retry=0`);
@@ -164,7 +180,7 @@ export async function summarizeTextGroup(texts, settings) {
 
         try {
             const correctionPrompt = _buildGroupCorrectionPrompt(inputTexts, settings, firstMessage);
-            const retryResponse = await _callSummaryProvider(provider, correctionPrompt, model, settings, correctionPrompt.length);
+            const retryResponse = await _callSummaryProvider(provider, correctionPrompt, model, settings, correctionPrompt.length, groupMaxTokens);
             console.log('[VectHare Summarizer] grouped summary raw response (retry=1):', retryResponse);
             const parsedRetry = _parseGroupedResponse(retryResponse, expectedCount);
             console.log(`[VectHare Summarizer] grouped summary success: expected=${expectedCount}, parsed=${parsedRetry.length}, retry=1`);
@@ -188,11 +204,11 @@ export async function summarizeTextGroup(texts, settings) {
  * @param {string} model
  * @returns {object}
  */
-function _buildBody(prompt, model) {
+function _buildBody(prompt, model, maxTokens = 512) {
     return {
-        model: model || 'google/gemini-flash-1.5-8b',
+        model: model,
         messages: [{ role: 'user', content: prompt }],
-        max_tokens: 512,
+        max_tokens: maxTokens,
         temperature: 0.3,
     };
 }
@@ -238,8 +254,16 @@ function _parseGroupedResponse(raw, expectedCount) {
         throw new Error('JSON must be an array (or object with items array)');
     }
 
+    if (arrayData.length === 0) {
+        throw new Error('Response contains empty array');
+    }
+
     if (arrayData.length !== expectedCount) {
-        throw new Error(`Expected ${expectedCount} items, got ${arrayData.length}`);
+        console.warn(`[VectHare Summarizer] grouped response count mismatch: expected=${expectedCount}, got=${arrayData.length}`);
+        // Allow if count is close (within 1) — handle alignment in caller; reject if very wrong
+        if (arrayData.length < Math.ceil(expectedCount * 0.5)) {
+            throw new Error(`Expected ${expectedCount} items, got only ${arrayData.length}`);
+        }
     }
 
     const summaries = [];
@@ -248,10 +272,7 @@ function _parseGroupedResponse(raw, expectedCount) {
         if (!item || typeof item !== 'object') {
             throw new Error(`Item ${i + 1} is not an object`);
         }
-        const index = Number(item.index);
-        if (!Number.isInteger(index) || index !== i + 1) {
-            throw new Error(`Item ${i + 1} has invalid index ${String(item.index)}`);
-        }
+        // Accept items with a summary field; ignore index mismatches (LLM sometimes reorders)
         const summary = typeof item.summary === 'string' ? item.summary.trim() : '';
         if (!summary) {
             throw new Error(`Item ${i + 1} has empty summary`);
@@ -275,12 +296,12 @@ async function _fallbackSummarizePerItem(texts, settings) {
     return out;
 }
 
-async function _callSummaryProvider(provider, prompt, model, settings, originalLength) {
+async function _callSummaryProvider(provider, prompt, model, settings, originalLength, maxTokens = 512) {
     if (provider === 'openrouter') {
-        return _callOpenRouter(prompt, model, settings, originalLength);
+        return _callOpenRouter(prompt, model, settings, originalLength, maxTokens);
     }
     if (provider === 'vllm') {
-        return _callVLLM(prompt, model, settings);
+        return _callVLLM(prompt, model, settings, maxTokens);
     }
     return prompt;
 }
@@ -321,7 +342,7 @@ function _getOpenRouterApiKey(settings) {
     return '';
 }
 
-async function _callOpenRouter(prompt, model, settings, originalLength) {
+async function _callOpenRouter(prompt, model, settings, originalLength, maxTokens = 512) {
     const apiKey = _getOpenRouterApiKey(settings);
     // don't remove 
     // console.log(`[VectHare Summarizer] OpenRouter key present: ${!!apiKey}`);
@@ -339,7 +360,7 @@ async function _callOpenRouter(prompt, model, settings, originalLength) {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${apiKey}`,
         },
-        body: JSON.stringify(_buildBody(prompt, model)),
+        body: JSON.stringify(_buildBody(prompt, model, maxTokens)),
         signal: AbortSignal.timeout(30000),
     });
 
@@ -363,7 +384,7 @@ async function _callOpenRouter(prompt, model, settings, originalLength) {
     return summary;
 }
 
-async function _callVLLM(prompt, model, settings) {
+async function _callVLLM(prompt, model, settings, maxTokens = 512) {
     const baseUrl = (settings?.summarize_vllm_url || '').replace(/\/$/, '');
     if (!baseUrl) {
         throw new SummarizationFatalError(
@@ -380,7 +401,7 @@ async function _callVLLM(prompt, model, settings) {
     const response = await fetch(`${baseUrl}/v1/chat/completions`, {
         method: 'POST',
         headers,
-        body: JSON.stringify(_buildBody(prompt, model)),
+        body: JSON.stringify(_buildBody(prompt, model, maxTokens)),
         signal: AbortSignal.timeout(30000),
     });
 
