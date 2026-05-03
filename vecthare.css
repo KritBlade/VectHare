@@ -32,4 +32,8 @@
 @import url('./ui/health-dashboard.css');
 
 /* Mobile responsive styles - must be last to override */
+/* Tab navigation styles */
+@import url('./styles/tabs.css');
+
+/* Mobile responsive styles - must be last to override */
 @import url('./styles/mobile.css');

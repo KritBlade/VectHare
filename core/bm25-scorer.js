@@ -122,7 +122,7 @@ async function ensureJiebaTwLoaded() {
                 console.warn('[VectHare CJK] Jieba TW module loaded but init() is unavailable');
                 return false;
             }
-            await mod.default(JIEBA_TW_WASM_BINARY_URL);
+            await mod.default({ module_or_path: JIEBA_TW_WASM_BINARY_URL });
 
             if (typeof mod.with_dict !== 'function' || typeof mod.cut !== 'function') {
                 console.warn('[VectHare CJK] Jieba TW module missing with_dict() or cut()');

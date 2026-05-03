@@ -1,0 +1,51 @@
+/* ============================================================================
+ * VECTHARE - SETTINGS TAB NAVIGATION
+ * ============================================================================ */
+
+/* Two-row tab nav */
+.vecthare-tabs {
+    margin-bottom: 10px;
+}
+
+.vecthare-tab-nav-row {
+    display: flex;
+    gap: 3px;
+    margin-bottom: 3px;
+}
+
+.vecthare-tab-btn {
+    flex: 1;
+    padding: 5px 3px;
+    background: var(--SmartThemeBlurTintColor, rgba(0,0,0,0.2));
+    border: 1px solid var(--SmartThemeBorderColor, rgba(255,255,255,0.1));
+    color: var(--SmartThemeBodyColor);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.78em;
+    font-weight: 500;
+    transition: background 0.12s, color 0.12s;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.4;
+}
+
+.vecthare-tab-btn:hover {
+    background: var(--SmartThemeQuoteColor, rgba(255,255,255,0.15));
+}
+
+.vecthare-tab-btn.active {
+    background: var(--SmartThemeQuoteColor, #5474b4);
+    color: #fff;
+    border-color: transparent;
+}
+
+/* Hide all tab panels; show only active */
+[data-vecthare-tab] {
+    display: none;
+}
+
+[data-vecthare-tab].vecthare-tab-active {
+    display: block;
+}

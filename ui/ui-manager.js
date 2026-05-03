@@ -50,8 +50,23 @@ export function renderSettings(containerId, settings, callbacks) {
                 </div>
                 <div class="inline-drawer-content">
 
+                    <!-- Tab Navigation -->
+                    <div class="vecthare-tabs">
+                        <div class="vecthare-tab-nav-row">
+                            <button class="vecthare-tab-btn active" data-tab="core">Core</button>
+                            <button class="vecthare-tab-btn" data-tab="weight">Weight</button>
+                            <button class="vecthare-tab-btn" data-tab="rag">RAG</button>
+                            <button class="vecthare-tab-btn" data-tab="worldinfo">WorldInfo</button>
+                        </div>
+                        <div class="vecthare-tab-nav-row">
+                            <button class="vecthare-tab-btn" data-tab="autosync">AutoSync</button>
+                            <button class="vecthare-tab-btn" data-tab="summarize">Summarize</button>
+                            <button class="vecthare-tab-btn" data-tab="action">Action</button>
+                        </div>
+                    </div>
+
                     <!-- Core Settings Card -->
-                    <div class="vecthare-card">
+                    <div class="vecthare-card vecthare-tab-active" data-vecthare-tab="core">
                         <div class="vecthare-card-header">
                             <h3 class="vecthare-card-title">
                                 <span class="vecthare-icon">
@@ -557,7 +572,7 @@ export function renderSettings(containerId, settings, callbacks) {
                     </div>
 
                     <!-- Global Temporal Weighting Defaults Card -->
-                    <div class="vecthare-card">
+                    <div class="vecthare-card" data-vecthare-tab="weight">
                         <div class="vecthare-card-header">
                             <h3 class="vecthare-card-title">
                                 <span class="vecthare-icon">
@@ -598,7 +613,7 @@ export function renderSettings(containerId, settings, callbacks) {
                     </div>
 
                     <!-- RAG Context Card -->
-                    <div class="vecthare-card">
+                    <div class="vecthare-card" data-vecthare-tab="rag">
                         <div class="vecthare-card-header">
                             <h3 class="vecthare-card-title">
                                 <span class="vecthare-icon">
@@ -631,7 +646,7 @@ export function renderSettings(containerId, settings, callbacks) {
                         </div>
 
                         <!-- World Info Settings Card -->
-                        <div class="vecthare-card">
+                        <div class="vecthare-card" data-vecthare-tab="worldinfo">
                             <div class="vecthare-card-header">
                                 <h3 class="vecthare-card-title">
                                     <span class="vecthare-icon">
@@ -695,7 +710,7 @@ export function renderSettings(containerId, settings, callbacks) {
                         </div>
 
                         <!-- Chat Auto-Sync Card -->
-                    <div class="vecthare-card">
+                    <div class="vecthare-card" data-vecthare-tab="autosync">
                         <div class="vecthare-card-header">
                             <h3 class="vecthare-card-title">
                                 <span class="vecthare-icon">
@@ -741,7 +756,7 @@ export function renderSettings(containerId, settings, callbacks) {
                     </div>
 
                     <!-- Summarization Card -->
-                    <div class="vecthare-card">
+                    <div class="vecthare-card" data-vecthare-tab="summarize">
                         <div class="vecthare-card-header">
                             <h3 class="vecthare-card-title">
                                 <span class="vecthare-icon">
@@ -813,7 +828,7 @@ export function renderSettings(containerId, settings, callbacks) {
                     </div>
 
                     <!-- Actions Card -->
-                    <div class="vecthare-card">
+                    <div class="vecthare-card" data-vecthare-tab="action">
                         <div class="vecthare-card-header">
                             <h3 class="vecthare-card-title">
                                 <span class="vecthare-icon">
@@ -1043,6 +1058,9 @@ export function renderSettings(containerId, settings, callbacks) {
 
     // Initialize collapsible cards
     initializeCollapsibleCards();
+
+    // Initialize tab navigation
+    initializeTabs();
 
     // Initialize modal
     initializeDiagnosticsModal();
@@ -1279,6 +1297,22 @@ function initializeCollapsibleCards() {
         icon.toggleClass('rotated');
     });
 }
+
+    /**
+     * Initializes two-row tab navigation for settings panels.
+     * Each .vecthare-card[data-vecthare-tab] is a panel; only the active one is shown.
+     */
+    function initializeTabs() {
+        $('#vecthare_settings').on('click', '.vecthare-tab-btn', function() {
+            const tab = $(this).data('tab');
+            // Update button active state
+            $('.vecthare-tab-btn', '#vecthare_settings').removeClass('active');
+            $(this).addClass('active');
+            // Show only the matching tab panel
+            $('[data-vecthare-tab]', '#vecthare_settings').removeClass('vecthare-tab-active');
+            $(`[data-vecthare-tab="${tab}"]`, '#vecthare_settings').addClass('vecthare-tab-active');
+        });
+    }
 
 // Use shared WebLLM provider singleton from providers/webllm.js
 // This ensures the same engine instance is shared with core-vector-api.js
