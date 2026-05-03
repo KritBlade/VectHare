@@ -139,7 +139,7 @@ const defaultSettings = {
     // RAG Prompt Context (Global level)
     // Wraps ALL injected content with context prompts and/or XML tags
     rag_context: '',      // Natural language context shown before all RAG content
-    rag_xml_tag: 'VectorHareMemory',      // XML tag to wrap all RAG content (e.g., "retrieved_context")
+    rag_xml_tag: 'VectHareMemory',      // XML tag to wrap all RAG content (e.g., "retrieved_context")
 
     // Collection-level metadata (managed by collection-metadata.js)
     collections: {},
@@ -275,8 +275,8 @@ jQuery(async () => {
 
     // Migrate empty rag_xml_tag to default value
     if (!settings.rag_xml_tag) {
-        settings.rag_xml_tag = 'VectorHareMemory';
-        extension_settings.vecthareplus.rag_xml_tag = 'VectorHareMemory';
+        settings.rag_xml_tag = 'VectHareMemory';
+        extension_settings.vecthareplus.rag_xml_tag = 'VectHareMemory';
     }
 
     // Initialize CJK tokenizer mode before any extraction happens.
