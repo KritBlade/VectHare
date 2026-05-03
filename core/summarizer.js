@@ -85,6 +85,13 @@ Requirements:
 Story excerpt:
 {{text}}`;
 
+/** Default output token budget for a single summary (Latin/other scripts). */
+const DEFAULT_MAX_TOKENS = 768;
+/** Default output token budget for a single summary (CJK-dominant input). */
+const CJK_MAX_TOKENS = 1536;
+/** Default request timeout in ms for a single-item summarization call. */
+const DEFAULT_TIMEOUT_MS = 30000;
+
 const GROUP_OUTPUT_CONSTRAINTS =
 `INTERNAL FORMAT REQUIREMENTS (do not ignore):
 - You must return valid JSON only.
@@ -121,9 +128,9 @@ export async function summarizeText(text, settings) {
 
     try {
         if (provider === 'openrouter') {
-            return await _callOpenRouter(prompt, model, settings, text.length);
+            return await _callOpenRouter(prompt, model, settings, text.length, _estimateSummaryTokenBudget(text));
         } else if (provider === 'vllm') {
-            return await _callVLLM(prompt, model, settings);
+            return await _callVLLM(prompt, model, settings, _estimateSummaryTokenBudget(text));
         }
     } catch (err) {
         if (isSummarizationFatalError(err)) {
@@ -163,24 +170,29 @@ export async function summarizeTextGroup(texts, settings) {
     const expectedCount = inputTexts.length;
 
     const prompt = _buildGroupPrompt(inputTexts, settings);
-    // Scale token budget: ~400 tokens per summary item, min 512, max 8192
-    const groupMaxTokens = Math.min(8192, Math.max(512, expectedCount * 400));
+    // Scale token budget per item using CJK-aware estimate, capped at 8192
+    const perItemBudget = _estimateSummaryTokenBudget(inputTexts.join(' '));
+    const groupMaxTokens = Math.min(8192, perItemBudget * expectedCount);
+    // Scale timeout: 30s base + 10s per item, max 3 minutes
+    const groupTimeoutMs = Math.min(180000, DEFAULT_TIMEOUT_MS + expectedCount * 10000);
 
     try {
-        const firstResponse = await _callSummaryProvider(provider, prompt, model, settings, prompt.length, groupMaxTokens);
+        const firstResponse = await _callSummaryProvider(provider, prompt, model, settings, prompt.length, groupMaxTokens, groupTimeoutMs);
         console.log('[VectHare Summarizer] grouped summary raw response (retry=0):', firstResponse);
         const parsedFirst = _parseGroupedResponse(firstResponse, expectedCount);
         console.log(`[VectHare Summarizer] grouped summary success: expected=${expectedCount}, parsed=${parsedFirst.length}, retry=0`);
         return parsedFirst;
     } catch (err) {
         if (isSummarizationFatalError(err)) throw err;
+        // Re-throw genuine session cancellations so vectorization stops cleanly
+        if (err?.name === 'AbortError' && err?.message !== 'The user aborted a request.') throw err;
 
         const firstMessage = err?.message || String(err);
         console.warn(`[VectHare Summarizer] grouped summary parse failed, retrying once: ${firstMessage}`);
 
         try {
             const correctionPrompt = _buildGroupCorrectionPrompt(inputTexts, settings, firstMessage);
-            const retryResponse = await _callSummaryProvider(provider, correctionPrompt, model, settings, correctionPrompt.length, groupMaxTokens);
+            const retryResponse = await _callSummaryProvider(provider, correctionPrompt, model, settings, correctionPrompt.length, groupMaxTokens, groupTimeoutMs);
             console.log('[VectHare Summarizer] grouped summary raw response (retry=1):', retryResponse);
             const parsedRetry = _parseGroupedResponse(retryResponse, expectedCount);
             console.log(`[VectHare Summarizer] grouped summary success: expected=${expectedCount}, parsed=${parsedRetry.length}, retry=1`);
@@ -199,12 +211,26 @@ export async function summarizeTextGroup(texts, settings) {
 // ---------------------------------------------------------------------------
 
 /**
+ * Estimate a safe output token budget for a summary of the given text.
+ * CJK scripts tokenize at ~2-3 tokens/char vs ~0.75 tokens/word for Latin,
+ * so the same "10 sentence" output costs 4-6x more tokens in Chinese/Japanese.
+ * @param {string} text
+ * @returns {number}
+ */
+function _estimateSummaryTokenBudget(text) {
+    const CJK_RATIO = (text.match(/[\u3000-\u9FFF\uAC00-\uD7AF\uF900-\uFAFF]/g) || []).length / Math.max(1, text.length);
+    // >10% CJK characters → assume CJK-dominant output → use CJK_MAX_TOKENS
+    // Otherwise standard Latin/etc → DEFAULT_MAX_TOKENS (safe headroom for 10 sentences)
+    return CJK_RATIO > 0.1 ? CJK_MAX_TOKENS : DEFAULT_MAX_TOKENS;
+}
+
+/**
  * Build a standard OpenAI-compatible chat completions request body.
  * @param {string} prompt
  * @param {string} model
  * @returns {object}
  */
-function _buildBody(prompt, model, maxTokens = 512) {
+function _buildBody(prompt, model, maxTokens = DEFAULT_MAX_TOKENS) {
     return {
         model: model,
         messages: [{ role: 'user', content: prompt }],
@@ -296,12 +322,12 @@ async function _fallbackSummarizePerItem(texts, settings) {
     return out;
 }
 
-async function _callSummaryProvider(provider, prompt, model, settings, originalLength, maxTokens = 512) {
+async function _callSummaryProvider(provider, prompt, model, settings, originalLength, maxTokens = DEFAULT_MAX_TOKENS, timeoutMs = DEFAULT_TIMEOUT_MS) {
     if (provider === 'openrouter') {
-        return _callOpenRouter(prompt, model, settings, originalLength, maxTokens);
+        return _callOpenRouter(prompt, model, settings, originalLength, maxTokens, timeoutMs);
     }
     if (provider === 'vllm') {
-        return _callVLLM(prompt, model, settings, maxTokens);
+        return _callVLLM(prompt, model, settings, maxTokens, timeoutMs);
     }
     return prompt;
 }
@@ -342,7 +368,7 @@ function _getOpenRouterApiKey(settings) {
     return '';
 }
 
-async function _callOpenRouter(prompt, model, settings, originalLength, maxTokens = 512) {
+async function _callOpenRouter(prompt, model, settings, originalLength, maxTokens = DEFAULT_MAX_TOKENS, timeoutMs = DEFAULT_TIMEOUT_MS) {
     const apiKey = _getOpenRouterApiKey(settings);
     // don't remove 
     // console.log(`[VectHare Summarizer] OpenRouter key present: ${!!apiKey}`);
@@ -361,7 +387,7 @@ async function _callOpenRouter(prompt, model, settings, originalLength, maxToken
             'Authorization': `Bearer ${apiKey}`,
         },
         body: JSON.stringify(_buildBody(prompt, model, maxTokens)),
-        signal: AbortSignal.timeout(30000),
+        signal: AbortSignal.timeout(timeoutMs),
     });
 
     if (!response.ok) {
@@ -384,7 +410,7 @@ async function _callOpenRouter(prompt, model, settings, originalLength, maxToken
     return summary;
 }
 
-async function _callVLLM(prompt, model, settings, maxTokens = 512) {
+async function _callVLLM(prompt, model, settings, maxTokens = DEFAULT_MAX_TOKENS, timeoutMs = DEFAULT_TIMEOUT_MS) {
     const baseUrl = (settings?.summarize_vllm_url || '').replace(/\/$/, '');
     if (!baseUrl) {
         throw new SummarizationFatalError(
@@ -402,7 +428,7 @@ async function _callVLLM(prompt, model, settings, maxTokens = 512) {
         method: 'POST',
         headers,
         body: JSON.stringify(_buildBody(prompt, model, maxTokens)),
-        signal: AbortSignal.timeout(30000),
+        signal: AbortSignal.timeout(timeoutMs),
     });
 
     if (!response.ok) {
