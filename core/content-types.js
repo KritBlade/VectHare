@@ -54,7 +54,7 @@ export const CHUNKING_STRATEGIES = {
     message_group_batch: {
         id: 'message_group_batch',
         name: 'Message Group Batch',
-        description: 'Summarizes multiple message units in one LLM call and returns one summary per unit.',
+        description: 'Groups N messages together and summarizes each batch in a single LLM call. Configurable batch size.',
         needsSize: false,
         needsOverlap: false,
         needsBatchSize: true,

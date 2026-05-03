@@ -59,6 +59,17 @@ Technical Requirement: Because of the high data throughput required, this system
 - **World Info card** shows which lorebooks are currently vectorized by name
 - World Info guides you to the lorebook vectorizer if no vectorized lorebooks are found
 
+### 🗂️ Tabbed Interface
+- Settings are organized into a clean tabbed layout for easier navigation
+- Tabs group related controls together — General, Chat, Retrieval, Collections, Advanced, and more
+- Reduces visual clutter compared to a single long settings panel
+
+### ⚡ Message Group Batch Vectorization
+- Groups N messages into a batch and summarizes all of them in a **single LLM call**, returning one summary per message
+- Batch requests run in **parallel**, making ingestion significantly faster on large chats
+- Configurable batch size to balance throughput and LLM context usage
+- Ideal for rapid vectorization of long conversations without sacrificing summary quality
+
 ### 🧹 Keyword Quality Improvements
 - Better single-character filtering defaults for CJK keywords
 - Mode-specific exceptions for high-signal 1-character RPG/SoL/school terms
@@ -112,7 +123,8 @@ Technical Requirement: Because of the high data throughput required, this system
 ### 🔍 Advanced Chunking Strategies
 - **Per Message**: Each message = one chunk (best for chat recall)
 - **Conversation Turns**: Group by speaker turns
-- **Message Batch**: Process in configurable batches
+- **Message Batch**: Groups N messages together into a single chunk. Configurable batch size
+- **Message Group Batch**: Groups N messages into a batch and summarizes them all in one LLM call, producing one summary per message. Supports parallel batch processing for fast large-scale ingestion
 - **Per Scene**: Scene-marked groups become chunks
 
 ### 🗃️ Database Browser
@@ -291,7 +303,7 @@ Look for the update notification in the Extensions panel, or manually check with
 | Setting | Description |
 |---------|-------------|
 | **Enable Auto-Sync** | Automatically vectorize new messages |
-| **Chunking Strategy** | Per Message, Conversation Turns, Message Batch, Per Scene |
+| **Chunking Strategy** | Per Message, Conversation Turns, Message Batch, Message Group Batch, Per Scene |
 | **Score Threshold** | Minimum similarity to include chunk (0.0-1.0) |
 | **Query Depth** | How many chunks to retrieve |
 | **Insert Count** | How many chunks to inject into prompt |
@@ -314,8 +326,7 @@ Look for the update notification in the Extensions panel, or manually check with
 - **Set temporally blind on character intros** so your AI never forgets who people are
 
 ### 🚀 Performance
-- **Start with Standard backend** - upgrade to LanceDB when needed
-- **Large chats (10k+ messages)?** LanceDB handles it smoothly
+- **Large chats (10k+ messages)?** Use the **Message Group Batch** strategy for fast parallel summarization during ingestion
 - **Lower score threshold** if memories aren't being retrieved (try 0.3)
 
 ### 🎭 Conditional Activation
@@ -346,12 +357,10 @@ Look for the update notification in the Extensions panel, or manually check with
 
 ### "Backend health check failed"
 1. Run Diagnostics to see which backend failed
-2. **LanceDB**: Ensure Similharity plugin is installed
-3. **Qdrant**: Ensure Qdrant server is running
-4. **Fallback**: Switch to Standard backend
+2. **Qdrant**: Ensure the Qdrant server is running and the Similharity plugin is installed
 
 ### Slow performance
-1. Switch to LanceDB backend for large datasets
+1. Switch to the **Message Group Batch** chunking strategy for faster parallel ingestion
 2. Increase chunk size (fewer, larger chunks)
 3. Reduce query depth and insert count
 

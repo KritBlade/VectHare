@@ -885,11 +885,11 @@ export function renderSettings(containerId, settings, callbacks) {
                                 ${getHealthIndicatorHtml()}
                             </div>
 
-                            <label class="checkbox_label" for="vecthare_include_production_tests" style="margin-top: 20px;">
-                                <input type="checkbox" id="vecthare_include_production_tests" />
-                                <span>Include Production Tests</span>
+                            <label class="checkbox_label" for="vecthare_injection_debug_logging" style="margin-top: 20px;">
+                                <input type="checkbox" id="vecthare_injection_debug_logging" />
+                                <span>Debug Injection Logging</span>
                             </label>
-                            <small class="vecthare_hint">Tests actual embedding generation, storage, and retrieval (slower but thorough)</small>
+                            <small class="vecthare_hint">Log [VectHare Injection Control] details to the browser console (useful for diagnosing retrieval/injection issues)</small>
 
                         </div>
                     </div>
@@ -2864,6 +2864,15 @@ function bindSettingsEvents(settings, callbacks) {
         .prop('checked', settings.bananabread_rerank)
         .on('input', function() {
             settings.bananabread_rerank = $(this).prop('checked');
+            Object.assign(extension_settings.vecthareplus, settings);
+            saveSettingsDebounced();
+        });
+
+    // Debug injection logging toggle
+    $('#vecthare_injection_debug_logging')
+        .prop('checked', settings.injection_debug_logging || false)
+        .on('change', function() {
+            settings.injection_debug_logging = $(this).prop('checked');
             Object.assign(extension_settings.vecthareplus, settings);
             saveSettingsDebounced();
         });
