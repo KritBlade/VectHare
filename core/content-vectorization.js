@@ -13,7 +13,7 @@
 import { getContentType, getContentTypeDefaults, hasFeature } from './content-types.js';
 import { chunkText } from './chunking.js';
 import { insertVectorItems, purgeVectorIndex, getSavedHashes } from './core-vector-api.js';
-import { setCollectionMeta, getDefaultDecayForType, setCollectionCharacterLock } from './collection-metadata.js';
+import { setCollectionMeta, getDefaultDecayForType, setCollectionLock } from './collection-metadata.js';
 import { registerCollection } from './collection-loader.js';
 import { getBackend } from '../backends/backend-manager.js';
 // Import from collection-ids.js - single source of truth for collection ID operations
@@ -29,6 +29,7 @@ import { cleanText, cleanMessages } from './text-cleaning.js';
 import { summarizeText, isSummarizationFatalError } from './summarizer.js';
 import { progressTracker } from '../ui/progress-tracker.js';
 import { extension_settings, getContext } from '../../../../extensions.js';
+import { getCurrentChatId } from '../../../../../script.js';
 import { getStringHash } from '../../../../utils.js';
 
 /**
@@ -238,16 +239,11 @@ export async function vectorizeContent({ contentType, source, settings, abortSig
         registerCollection(collectionId);
         console.log(`VectHare: Registered collection ${collectionId}`);
 
-        // Lock collection to the current character so it only activates when
-        // this character card is active — prevents bleeding into other games.
-        // Chat collections skip this (they're already scoped by chat ID).
-        if (contentType !== 'chat') {
-            const ctx = getContext();
-            const charId = ctx?.characterId;
-            if (charId != null) {
-                setCollectionCharacterLock(collectionId, charId);
-                console.log(`VectHare: Locked collection ${collectionId} to character ${charId} (${ctx?.name2 || charId})`);
-            }
+        // Make newly vectorized collections active for the current chat by default.
+        const currentChatId = getCurrentChatId();
+        if (currentChatId) {
+            setCollectionLock(collectionId, currentChatId);
+            console.log(`VectHare: Locked collection ${collectionId} to current chat ${currentChatId}`);
         }
 
         throwIfAborted();

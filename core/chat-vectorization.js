@@ -32,7 +32,7 @@ import {
 import { applyDecayToResults, applySceneAwareDecay } from './temporal-decay.js';
 import { isChunkDisabledByScene } from './scenes.js';
 import { registerCollection, getCollectionRegistry } from './collection-loader.js';
-import { isCollectionEnabled, filterActiveCollections, setCollectionMeta, setCollectionLock } from './collection-metadata.js';
+import { isCollectionEnabled, filterActiveCollections, setCollectionLock } from './collection-metadata.js';
 import { progressTracker } from '../ui/progress-tracker.js';
 import { buildSearchContext, filterChunksByConditions, processChunkLinks } from './conditional-activation.js';
 import { getChunkMetadata, getCollectionMeta } from './collection-metadata.js';
@@ -533,7 +533,6 @@ export async function synchronizeChat(settings, batchSize = 5) {
                         if (chatId) {
                             setCollectionLock(collectionId, chatId);
                         }
-                        setCollectionMeta(collectionId, { alwaysActive: false });
                         console.log(`VectHare: Registered collection ${registryKey} after first successful insert`);
                     }
                 }

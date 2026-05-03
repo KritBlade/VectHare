@@ -909,7 +909,6 @@ async function evaluateAdvancedConditions(meta, context, collectionId) {
 export async function shouldCollectionActivate(collectionId, context) {
     const meta = getCollectionMeta(collectionId);
     const currentChatId = context?.currentChatId;
-    const isChatCollection = meta.contentType === 'chat' || String(collectionId || '').includes('vecthare_chat_');
 
     // Priority 1: Check if collection is disabled entirely
     if (meta.enabled === false) {
@@ -917,32 +916,13 @@ export async function shouldCollectionActivate(collectionId, context) {
         return false;
     }
 
-    // Compatibility guard: legacy chat collections may still have alwaysActive=true.
-    // Do not let them bleed across chats; require lock match or collectionId chat UUID match.
-    if (isChatCollection && meta.alwaysActive === true) {
-        const chatLocked = currentChatId && isCollectionLockedToChat(collectionId, currentChatId);
-        const chatIdMatch = currentChatId && String(collectionId).endsWith(`_${currentChatId}`);
-        if (chatLocked || chatIdMatch) {
-            console.log(`[VectHare Activation Filter] Collection ${collectionId}: ✓ CHAT_SCOPED_ALWAYS_ACTIVE`);
-            return true;
-        }
-        console.log(`[VectHare Activation Filter] Collection ${collectionId}: ✗ CHAT_ALWAYS_ACTIVE_IGNORED_OUTSIDE_CHAT`);
-        return false;
-    }
-
-    // Priority 2: Check if always active (ignores everything else)
-    if (meta.alwaysActive === true) {
-        console.log(`[VectHare Activation Filter] Collection ${collectionId}: ✓ ALWAYS_ACTIVE`);
-        return true;
-    }
-
-    // Priority 2.5: Check if locked to current chat (overrides other conditions)
+    // Priority 2: Check if locked to current chat (overrides other conditions)
     if (currentChatId && isCollectionLockedToChat(collectionId, currentChatId)) {
         console.log(`[VectHare Activation Filter] Collection ${collectionId}: ✓ LOCKED_TO_CURRENT_CHAT (${currentChatId})`);
         return true;
     }
 
-    // Priority 2.6: Check if locked to current character (overrides other conditions)
+    // Priority 2.5: Check if locked to current character (overrides other conditions)
     const currentCharacterId = context?.currentCharacterId;
     if (currentCharacterId && isCollectionLockedToCharacter(collectionId, currentCharacterId)) {
         console.log(`[VectHare Activation Filter] Collection ${collectionId}: ✓ LOCKED_TO_CURRENT_CHARACTER (${currentCharacterId})`);
@@ -982,9 +962,7 @@ export async function shouldCollectionActivate(collectionId, context) {
     }
 
     // Priority 5: No triggers AND no conditions = do not activate.
-    // Collections must explicitly set alwaysActive=true, or configure triggers/conditions.
-    // Chat collections get alwaysActive=true written to metadata at creation time,
-    // so they hit Priority 2 above instead of reaching here.
+    // Collections must be locked to chat/character, or configure triggers/conditions.
     console.log(`[VectHare Activation Filter] Collection ${collectionId}: ✗ NO_TRIGGERS_OR_CONDITIONS`);
     return false;
 }

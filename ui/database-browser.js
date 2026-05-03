@@ -1732,19 +1732,14 @@ function openActivationEditor(collectionId, collectionName) {
     meta.scope === "chat" ? "chat" : meta.type || "unknown";
   const decaySettings = getCollectionDecaySettings(collectionId);
 
-  const isChatCollection = collectionId.startsWith('vecthare_chat_');
-  // Read raw stored meta to distinguish "explicitly set false" from "never configured"
-  const rawCollectionsMeta = window.extension_settings?.vecthare?.collections || {};
-  const rawMeta = rawCollectionsMeta[collectionId];
-  const hasExplicitAlwaysActive = rawMeta && Object.prototype.hasOwnProperty.call(rawMeta, 'alwaysActive');
-  // Default to false for all collections. Chat activation is handled via chat locks,
-  // not by a global always-active default.
-  const defaultAlwaysActive = false;
-  const resolvedAlwaysActive = hasExplicitAlwaysActive ? rawMeta.alwaysActive : defaultAlwaysActive;
+  const currentChatId = getCurrentChatId();
+  const hasChatLockMatch = currentChatId && isCollectionLockedToChat(collectionId, currentChatId);
+  const chatScopedActive = Boolean(hasChatLockMatch);
+  const resolvedAlwaysActive = chatScopedActive;
   console.log(
-    `[VectHare DB Browser] Always Active resolution for ${collectionId}: ` +
-    `stored=${hasExplicitAlwaysActive ? String(rawMeta.alwaysActive) : 'unset'}, ` +
-    `default=${defaultAlwaysActive}, resolved=${resolvedAlwaysActive}, isChat=${isChatCollection}`
+    `[VectHare DB Browser] Active-for-current-chat resolution for ${collectionId}: ` +
+    `resolved=${resolvedAlwaysActive}, ` +
+    `chatScopedActive=${chatScopedActive}, currentChatId=${currentChatId || 'none'}`
   );
 
   activationEditorState = {
@@ -1820,9 +1815,9 @@ function createActivationEditorModal() {
                     <div class="vecthare-activation-section vecthare-always-active">
                         <label class="vecthare-checkbox-label">
                             <input type="checkbox" id="vecthare_always_active">
-                            <strong>∞ Always Active</strong>
+                        <strong id="vecthare_always_active_label">Active for current chat</strong>
                         </label>
-                        <small>When enabled, this collection always queries (ignores triggers and conditions)</small>
+                      <small id="vecthare_always_active_hint">When enabled, this collection is active for the current chat</small>
                     </div>
 
                     <!-- ========================================== -->
@@ -2115,14 +2110,9 @@ function bindActivationEditorEvents() {
     if (e.target === this) closeActivationEditor();
   });
 
-  // Always active disables other sections
+  // Active-for-current-chat toggle (status only, does not disable other settings)
   $("#vecthare_always_active").on("change", function (e) {
     e.stopPropagation();
-    const isAlwaysActive = $(this).prop("checked");
-    $(".vecthare-triggers-section, .vecthare-conditions-section").toggleClass(
-      "vecthare-disabled",
-      isAlwaysActive,
-    );
   });
 
   // Decay enabled toggle shows/hides advanced settings
@@ -2201,6 +2191,9 @@ function renderActivationEditor() {
 
   $("#vecthare_activation_collection_name").text(state.collectionName);
   $("#vecthare_always_active").prop("checked", state.alwaysActive);
+  $("#vecthare_always_active").prop("disabled", false);
+  $("#vecthare_always_active_label").text("Active for current chat");
+  $("#vecthare_always_active_hint").text("When enabled, this collection is active for the current chat");
 
   // Triggers
   const triggersText = state.triggers.join("\n");
@@ -2263,12 +2256,8 @@ function renderActivationEditor() {
   // Show depth row only if position is "In-Chat @ Depth" (value 1)
   $("#vecthare_collection_depth_row").toggle(state.position === 1);
 
-  // Disable sections if always active
-  const isAlwaysActive = state.alwaysActive;
-  $(".vecthare-triggers-section, .vecthare-conditions-section").toggleClass(
-    "vecthare-disabled",
-    isAlwaysActive,
-  );
+  // Keep trigger/condition sections enabled regardless of chat activation toggle.
+  $(".vecthare-triggers-section, .vecthare-conditions-section").removeClass("vecthare-disabled");
 
   // Refresh lock button state for this collection
   refreshActivationLockButton();
@@ -2358,9 +2347,23 @@ function saveActivation() {
       ? parseInt($("#vecthare_collection_depth").val()) || 2
       : null;
 
+  const isChecked = $("#vecthare_always_active").prop("checked");
+  const currentChatId = getCurrentChatId();
+  if (currentChatId) {
+    if (isChecked) {
+      setCollectionLock(state.collectionId, currentChatId);
+    } else {
+      removeCollectionLock(state.collectionId, currentChatId);
+    }
+  } else {
+    toastr.info('No active chat context; "Active for current chat" was not changed');
+  }
+
+  const alwaysActiveValue = false;
+
   // Update metadata (all in one call)
   setCollectionMeta(state.collectionId, {
-    alwaysActive: $("#vecthare_always_active").prop("checked"),
+    alwaysActive: alwaysActiveValue,
     triggers: triggers,
     triggerMatchMode: $("#vecthare_trigger_match_mode").val(),
     triggerScanDepth: parseInt($("#vecthare_trigger_scan_depth").val()) || 5,
