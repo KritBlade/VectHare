@@ -1737,13 +1737,21 @@ function openActivationEditor(collectionId, collectionName) {
   const rawCollectionsMeta = window.extension_settings?.vecthare?.collections || {};
   const rawMeta = rawCollectionsMeta[collectionId];
   const hasExplicitAlwaysActive = rawMeta && Object.prototype.hasOwnProperty.call(rawMeta, 'alwaysActive');
-  const defaultAlwaysActive = isChatCollection ? true : false;
+  // Default to false for all collections. Chat activation is handled via chat locks,
+  // not by a global always-active default.
+  const defaultAlwaysActive = false;
+  const resolvedAlwaysActive = hasExplicitAlwaysActive ? rawMeta.alwaysActive : defaultAlwaysActive;
+  console.log(
+    `[VectHare DB Browser] Always Active resolution for ${collectionId}: ` +
+    `stored=${hasExplicitAlwaysActive ? String(rawMeta.alwaysActive) : 'unset'}, ` +
+    `default=${defaultAlwaysActive}, resolved=${resolvedAlwaysActive}, isChat=${isChatCollection}`
+  );
 
   activationEditorState = {
     collectionId,
     collectionName,
     collectionType,
-    alwaysActive: hasExplicitAlwaysActive ? rawMeta.alwaysActive : defaultAlwaysActive,
+    alwaysActive: resolvedAlwaysActive,
     triggers: triggerSettings.triggers || [],
     triggerMatchMode: triggerSettings.matchMode || "any",
     triggerCaseSensitive: triggerSettings.caseSensitive || false,
