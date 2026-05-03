@@ -56,6 +56,8 @@ let allChunksMap = new Map(); // uniqueId -> chunk
 let filteredChunksMap = new Map(); // uniqueId -> index in filteredChunks
 let selectedChunkId = null; // Use uniqueId, not hash (hashes can be duplicated)
 let displayLimit = 50;
+let chunkFetchLimit = 1000;
+let onReloadCallback = null;
 let sortBy = 'index'; // 'index', 'length-desc', 'length-asc', 'keywords', 'modified'
 let filterBy = 'all'; // 'all', 'enabled', 'disabled', 'conditions', 'blind'
 let searchQuery = '';
@@ -252,10 +254,11 @@ function discardAllChanges() {
 // MAIN API
 // ============================================================================
 
-export function openVisualizer(results, collectionId, settings) {
+export function openVisualizer(results, collectionId, settings, onReload = null) {
     currentResults = results;
     currentCollectionId = collectionId;
     currentSettings = settings;
+    onReloadCallback = onReload;
     selectedChunkId = null;
     displayLimit = 50;
     searchQuery = '';
@@ -432,6 +435,11 @@ function createModal() {
                                     <option value="blind">Decay Immune</option>
                                 </select>
                             </div>
+                                <div class="vecthare-fetch-limit-control">
+                                    <label>Fetch limit:</label>
+                                    <input type="number" id="vecthare_fetch_limit" min="100" max="99999" step="100" value="${chunkFetchLimit}" title="Max chunks loaded from server">
+                                    <button id="vecthare_reload_chunks" title="Reload chunks from server with new limit">↺ Reload</button>
+                                </div>
                         </div>
                         <div class="vecthare-chunk-list" id="vecthare_chunk_list"></div>
                         <div class="vecthare-bulk-actions">
@@ -1685,6 +1693,18 @@ function bindEvents() {
         filterBy = $(this).val();
         applyFilters();
         renderChunkList();
+    });
+
+    // Fetch limit
+    $('#vecthare_fetch_limit').on('change', function() {
+        const val = parseInt($(this).val());
+        chunkFetchLimit = isNaN(val) || val < 100 ? 1000 : val;
+        $(this).val(chunkFetchLimit);
+    });
+
+    // Reload button
+    $('#vecthare_reload_chunks').off('click').on('click', function() {
+        if (onReloadCallback) onReloadCallback(chunkFetchLimit);
     });
 
     // Chunk selection - bind to container, not document (because modal stops propagation)

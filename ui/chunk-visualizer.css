@@ -183,6 +183,45 @@
     opacity: 1;
 }
 
+.vecthare-fetch-limit-control {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-top: 4px;
+}
+
+.vecthare-fetch-limit-control label {
+    font-size: 0.8em;
+    opacity: 0.7;
+    white-space: nowrap;
+}
+
+.vecthare-fetch-limit-control input[type="number"] {
+    width: 80px;
+    padding: 4px 6px;
+    border: 1px solid var(--SmartThemeBorderColor);
+    border-radius: 6px;
+    background: var(--SmartThemeBlurTintColor);
+    color: var(--SmartThemeBodyColor);
+    font-size: 0.85em;
+}
+
+.vecthare-fetch-limit-control button {
+    padding: 4px 10px;
+    background: none;
+    border: 1px solid var(--SmartThemeBorderColor);
+    border-radius: 6px;
+    color: var(--SmartThemeBodyColor);
+    cursor: pointer;
+    font-size: 0.85em;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.vecthare-fetch-limit-control button:hover {
+    opacity: 1;
+}
+
 /* Chunk List */
 .vecthare-chunk-list {
     flex: 1;

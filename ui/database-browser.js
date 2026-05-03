@@ -1188,56 +1188,57 @@ function bindCollectionCardEvents() {
           vector_backend: collection.backend,
         };
 
-        // Use unified plugin endpoint
-        const requestBody = {
-          backend: collection.backend || "vectra",
-          collectionId: collection.id,
-          source: collection.source || "transformers",
-          model: collection.model || "",
-          limit: 1000, // Get first 1000 chunks
+        const doLoad = async (limit) => {
+          const requestBody = {
+            backend: collection.backend || "vectra",
+            collectionId: collection.id,
+            source: collection.source || "transformers",
+            model: collection.model || "",
+            ...(limit ? { limit } : {}),
+          };
+
+          console.log("VectHare DB Browser: Requesting chunks with:", requestBody);
+
+          const response = await fetch("/api/plugins/similharity/chunks/list", {
+            method: "POST",
+            headers: getRequestHeaders(),
+            body: JSON.stringify(requestBody),
+          });
+
+          if (!response.ok) {
+            throw new Error(`Failed to list chunks: ${response.statusText}`);
+          }
+
+          const data = await response.json();
+          // Support all plugin response shapes: items (new), chunks/results (older/backends)
+          const results = data.items || data.chunks || data.results || [];
+
+          if (!results || results.length === 0) {
+            toastr.warning("No chunks found in this collection", "VectHarePlus");
+            return;
+          }
+
+          const chunks = results.map((item, idx) => ({
+            hash: item.hash,
+            index: item.index ?? idx,
+            text: item.text || item.metadata?.text || "No text available",
+            score: 1.0,
+            similarity: 1.0,
+            messageAge: item.metadata?.messageAge,
+            decayApplied: false,
+            decayMultiplier: 1.0,
+            metadata: item.metadata,
+          }));
+
+          openVisualizer(
+            { chunks, collectionType: collection.type },
+            collection.id,
+            collectionSettings,
+            doLoad,
+          );
         };
 
-        console.log("VectHare DB Browser: Requesting chunks with:", requestBody);
-
-        const response = await fetch("/api/plugins/similharity/chunks/list", {
-          method: "POST",
-          headers: getRequestHeaders(),
-          body: JSON.stringify(requestBody),
-        });
-
-        if (!response.ok) {
-          throw new Error(`Failed to list chunks: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        // Support all plugin response shapes: items (new), chunks/results (older/backends)
-        const results = data.items || data.chunks || data.results || [];
-
-        if (!results || results.length === 0) {
-          toastr.warning("No chunks found in this collection", "VectHarePlus");
-          return;
-        }
-
-        // Format chunks for visualizer
-        const chunks = results.map((item, idx) => ({
-          hash: item.hash,
-          index: item.index ?? idx,
-          text: item.text || item.metadata?.text || "No text available",
-          score: 1.0,
-          similarity: 1.0,
-          messageAge: item.metadata?.messageAge,
-          decayApplied: false,
-          decayMultiplier: 1.0,
-          metadata: item.metadata, // Pass through all metadata including keywords
-        }));
-
-        // Pass collection-specific settings so visualizer uses correct backend for edits/deletes
-        // Include collection type so visualizer knows if this is a chat (for Scenes tab)
-        openVisualizer(
-          { chunks, collectionType: collection.type },
-          collection.id,
-          collectionSettings,
-        );
+        await doLoad(null);
       } catch (error) {
         console.error("VectHare: Failed to load chunks", error);
         toastr.error(`Failed to load chunks: ${error.message}`, "VectHarePlus");
@@ -3336,51 +3337,52 @@ function renderSearchResults(results, query, originalResults = null) {
           vector_backend: collection.backend,
         };
 
-        // Use unified plugin endpoint
-        const response = await fetch("/api/plugins/similharity/chunks/list", {
-          method: "POST",
-          headers: getRequestHeaders(),
-          body: JSON.stringify({
-            backend: collection.backend || "vectra",
-            collectionId: collection.id,
-            source: collection.source || "transformers",
-            model: collection.model || "",
-            limit: 1000, // Get first 1000 chunks
-          }),
-        });
+        const doLoad = async (limit) => {
+          const response = await fetch("/api/plugins/similharity/chunks/list", {
+            method: "POST",
+            headers: getRequestHeaders(),
+            body: JSON.stringify({
+              backend: collection.backend || "vectra",
+              collectionId: collection.id,
+              source: collection.source || "transformers",
+              model: collection.model || "",
+              ...(limit ? { limit } : {}),
+            }),
+          });
 
-        if (!response.ok) {
-          throw new Error(`Failed to list chunks: ${response.statusText}`);
-        }
+          if (!response.ok) {
+            throw new Error(`Failed to list chunks: ${response.statusText}`);
+          }
 
-        const data = await response.json();
-        const results = data.items || [];
+          const data = await response.json();
+          const results = data.items || [];
 
-        if (!results || results.length === 0) {
-          toastr.warning("No chunks found in this collection", "VectHarePlus");
-          return;
-        }
+          if (!results || results.length === 0) {
+            toastr.warning("No chunks found in this collection", "VectHarePlus");
+            return;
+          }
 
-        // Format chunks for visualizer
-        const chunks = results.map((item, idx) => ({
-          hash: item.hash,
-          index: item.index ?? idx,
-          text: item.text || item.metadata?.text || "No text available",
-          score: 1.0,
-          similarity: 1.0,
-          messageAge: item.metadata?.messageAge,
-          decayApplied: false,
-          decayMultiplier: 1.0,
-          metadata: item.metadata, // Pass through all metadata including keywords
-        }));
+          const chunks = results.map((item, idx) => ({
+            hash: item.hash,
+            index: item.index ?? idx,
+            text: item.text || item.metadata?.text || "No text available",
+            score: 1.0,
+            similarity: 1.0,
+            messageAge: item.metadata?.messageAge,
+            decayApplied: false,
+            decayMultiplier: 1.0,
+            metadata: item.metadata,
+          }));
 
-        // Pass collection-specific settings so visualizer uses correct backend for edits/deletes
-        // Include collection type so visualizer knows if this is a chat (for Scenes tab)
-        openVisualizer(
-          { chunks, collectionType: collection.type },
-          collection.id,
-          collectionSettings,
-        );
+          openVisualizer(
+            { chunks, collectionType: collection.type },
+            collection.id,
+            collectionSettings,
+            doLoad,
+          );
+        };
+
+        await doLoad(null);
       } catch (error) {
         console.error("VectHare: Failed to load chunks", error);
         toastr.error(`Failed to load chunks: ${error.message}`, "VectHarePlus");
