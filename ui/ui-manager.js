@@ -502,12 +502,12 @@ export function renderSettings(containerId, settings, callbacks) {
                                     <small><b>CJK Tokenizer Mode</b></small>
                                 </label>
                                 <select id="vecthare_cjk_tokenizer_mode" class="vecthare-select" style="margin-top: 4px;">
-                                    <option value="intl">Intl.Segmenter (default, Chinese + English)</option>
+                                    <option value="intl">Intl.Segmenter (English / Korean / Latin)</option>
                                     <option value="jieba">Simplified Chinese (Jieba WASM)</option>
                                     <option value="jieba_tw">Traditional Chinese (Jieba WASM)</option>
                                     <option value="tiny_segmenter">Japanese (TinySegmenter)</option>
                                 </select>
-                                <small class="vecthare_hint">Jieba WASM loads only when selected. Traditional Chinese also downloads a TW dictionary (~2–5 MB, one-time). TinySegmenter is used for kana-containing Japanese text.</small>
+                                <small class="vecthare_hint">Default mode uses Intl.Segmenter — supports Korean, Chinese, and any Latin-script language (English, French, etc.) with no extra downloads. Jieba WASM loads only when selected. Traditional Chinese also downloads a TW dictionary (~2–5 MB, one-time). TinySegmenter is used for kana-containing Japanese text.</small>
                             </div>
 
                             <!-- Custom Stopwords -->

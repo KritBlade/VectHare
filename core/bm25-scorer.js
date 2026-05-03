@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ============================================================================
  * BM25+ KEYWORD SCORING (ENHANCED)
  * ============================================================================
@@ -234,7 +234,32 @@ const STOP_WORDS = new Set([
     'そして', 'しかし', 'だから', 'また', 'ただ', 'でも', 'ので', 'など', 'ため',
     'よう', 'もの', 'こと', 'ところ', 'ほう', 'ほか', 'まで', 'より', 'だけ', 'ばかり',
     'くらい', 'ぐらい', 'ほとんど', 'とても', 'かなり',
-]);
+
+    // Korean stopwords (particles, postpositions, auxiliary verbs, conjunctions)
+    // Subject/topic/object markers
+    '은', '는', '이', '가', '을', '를', '의', '에', '에서', '에게',
+    '에서', '로', '으로', '와', '과', '도', '만', '부터', '까지', '보다',
+    '처럼', '같이', '마다', '이나', '나', '든', '든지', '라도', '조차', '마저',
+    // Demonstratives / pronouns
+    '이것', '그것', '저것', '이게', '그게', '저게', '여기', '거기', '저기',
+    '이', '그', '저', '어디', '누구', '무엇', '어느',
+    // Copula / auxiliaries
+    '이다', '이에요', '예요', '입니다', '이었다', '였다', '있다', '없다',
+    '하다', '했다', '한다', '합니다', '했습니다', '되다', '됩니다', '됐다',
+    '같다', '같은', '그런', '이런', '저런',
+    // Negation
+    '안', '못', '않다', '않고', '없이',
+    // Conjunctions / connectors
+    '그리고', '그러나', '하지만', '그래서', '따라서', '그러므로', '또한', '또는',
+    '혹은', '아니면', '만약', '비록', '비록', '즉', '결국', '왜냐하면', '때문에',
+    '때문에', '위해', '위해서', '통해', '통해서',
+    // Adverbs / degree words
+    '매우', '아주', '너무', '정말', '참', '좀', '조금', '많이', '잘', '더',
+    '가장', '제일', '별로', '전혀', '거의', '약간', '꽤', '다시', '또', '이미',
+    '아직', '항상', '자주', '보통', '갑자기', '함께', '서로', '모두', '다',
+    // Common light verbs / action stubs that produce noise
+    '말하다', '생각하다', '보다', '오다', '가다', '나오다', '들어오다', '돌아오다',
+])
 
 /**
  * Porter Stemmer cache (LRU-style with max size)
@@ -386,7 +411,7 @@ function tokenize(text, options = {}) {
     const cjkTokens = extractCJKTokens(text);
 
     // Strip CJK chars before Latin tokenization to avoid mixed clumps
-    const _cjkCharRe = /[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF]/g;
+    const _cjkCharRe = /[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF\uAC00-\uD7AF]/g;
     const latinText = text.replace(_cjkCharRe, ' ');
 
     // Normalize and split Latin
@@ -772,16 +797,19 @@ export function applyBM25Scoring(results, query, options = {}) {
 //
 // LANGUAGE SUPPORT:
 //   Currently active:  Chinese (zh) — CJK Unified Ideographs
+//                      Korean  (ko) — Hangul syllable blocks (Intl.Segmenter)
 //   Prepared for:      Japanese (ja) — add Hiragana/Katakana to _CJK_SPAN_RE and
 //                        call _getSegmenter(span) which already auto-detects kana
-//   Future:            Korean (ko) — add Hangul to _CJK_SPAN_RE, detected via _KANA_RE
 // ---------------------------------------------------------------------------
 
-/** Matches Chinese Han + Japanese Kana spans. */
-const _CJK_SPAN_RE = /[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF\u3040-\u309F\u30A0-\u30FF]+/g;
+/** Matches Chinese Han + Japanese Kana + Korean Hangul spans. */
+const _CJK_SPAN_RE = /[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF\u3040-\u309F\u30A0-\u30FF\uAC00-\uD7AF]+/g;
 
-/** Kana presence → Japanese locale. Extend when adding Korean (\uAC00-\uD7AF). */
+/** Kana presence → Japanese locale. */
 const _KANA_RE = /[\u3040-\u309F\u30A0-\u30FF]/;
+
+/** Hangul presence → Korean locale. */
+const _HANGUL_RE = /[\uAC00-\uD7AF]/;
 
 let _zhSegmenter;
 function _getZhSegmenter() {
@@ -802,18 +830,25 @@ function _getJaSegmenter() {
     return _jaSegmenter;
 }
 
+let _koSegmenter;
+function _getKoSegmenter() {
+    if (_koSegmenter === undefined) {
+        try { _koSegmenter = new Intl.Segmenter('ko', { granularity: 'word' }); }
+        catch (e) { _koSegmenter = null; }
+    }
+    return _koSegmenter;
+}
+
 /**
  * Return the best available Intl.Segmenter for the given span.
- * Kana characters signal Japanese; otherwise assume Chinese.
+ * Kana characters signal Japanese; Hangul signals Korean; otherwise assume Chinese.
  * Add new locale branches here as languages are enabled.
  * @param {string} span
  * @returns {Intl.Segmenter|null}
  */
 function _getSegmenter(span) {
-    // Japanese detection: span contains Hiragana or Katakana
-    // (Currently _CJK_SPAN_RE never produces kana spans, so this branch is
-    //  a no-op until _CJK_SPAN_RE is extended to include kana ranges.)
     if (_KANA_RE.test(span)) return _getJaSegmenter();
+    if (_HANGUL_RE.test(span)) return _getKoSegmenter();
     return _getZhSegmenter();
 }
 

@@ -35,6 +35,7 @@ Technical Requirement: Because of the high data throughput required, this system
 - **Japanese mode** with TinySegmenter-aware extraction behavior
 - **Traditional Chinese mode** with Jieba WASM + Traditional dictionary lazy loading
 - **Simplified Chinese mode** with Jieba WASM support
+- **English, Korean and other Latin language mode** with Intl.Segmenter
 - Language-aware keyword filtering with cleaner CJK token handling
 
 ### 📝 Summarize Before Store
