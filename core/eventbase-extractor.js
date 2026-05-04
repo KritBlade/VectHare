@@ -130,6 +130,12 @@ function _parseJsonArray(raw, debugLog = false, windowIndex = -1) {
         const direct = JSON.parse(text);
         if (Array.isArray(direct)) candidates.push(direct);
         if (direct && typeof direct === 'object' && !Array.isArray(direct)) {
+            // Some providers under json_object mode emit {} when the correct
+            // semantic answer is "no events". Treat that as an empty result
+            // instead of failing the whole window.
+            if (Object.keys(direct).length === 0) {
+                candidates.push([]);
+            }
             const wrappedArr = Object.values(direct).find(v => Array.isArray(v));
             if (Array.isArray(wrappedArr)) candidates.push(wrappedArr);
         }
