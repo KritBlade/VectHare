@@ -888,15 +888,15 @@ export function renderSettings(containerId, settings, callbacks) {
 
                             <label class="checkbox_label" for="vecthare_injection_debug_logging" style="margin-top: 20px;">
                                 <input type="checkbox" id="vecthare_injection_debug_logging" />
-                                <span>Debug Injection Logging</span>
+                                <span>Debug Injection Logging (Chunk Path)</span>
                             </label>
                             <small class="vecthare_hint">Log [VectHare Injection Control] details to the browser console (useful for diagnosing retrieval/injection issues)</small>
 
                             <label class="checkbox_label" for="vecthare_debug_vectorizing_log" style="margin-top: 12px;">
                                 <input type="checkbox" id="vecthare_debug_vectorizing_log" />
-                                <span>Debug Vectorizing Log</span>
+                                <span>Debug Logging</span>
                             </label>
-                            <small class="vecthare_hint">Log vectorization progress details (ProgressTracker + EventBase batch diagnostics) to the browser console.</small>
+                            <small class="vecthare_hint">Log [EventBase] details and vectorization progress diagnostics (ProgressTracker + batch/parsing logs) to the browser console.</small>
 
                         </div>
                     </div>
@@ -1046,15 +1046,6 @@ export function renderSettings(containerId, settings, callbacks) {
                                 <input type="number" id="vecthare_eventbase_inject_max_chars" class="vecthare-input" min="500" max="32000" step="100" style="width:130px;" />
                                 <small class="vecthare_hint">Lowest-scoring events are dropped first to fit within budget.</small>
                             </div>
-
-                            <hr style="margin: 16px 0; opacity:0.2;" />
-
-                            <!-- Debug -->
-                            <label class="checkbox_label" for="vecthare_eventbase_debug_logging">
-                                <input type="checkbox" id="vecthare_eventbase_debug_logging" />
-                                <span>Debug Logging</span>
-                            </label>
-                            <small class="vecthare_hint">Log [EventBase] details to the browser console.</small>
 
                             <hr style="margin: 16px 0; opacity:0.2;" />
 
@@ -3068,9 +3059,12 @@ function bindSettingsEvents(settings, callbacks) {
 
     // Debug vectorizing log toggle
     $('#vecthare_debug_vectorizing_log')
-        .prop('checked', settings.debug_vectorizing_log || false)
+        .prop('checked', (settings.debug_vectorizing_log || settings.eventbase_debug_logging) || false)
         .on('change', function() {
-            settings.debug_vectorizing_log = $(this).prop('checked');
+            const enabled = $(this).prop('checked');
+            // Merged control: one checkbox drives both EventBase and vectorizing logs.
+            settings.debug_vectorizing_log = enabled;
+            settings.eventbase_debug_logging = enabled;
             Object.assign(extension_settings.vecthareplus, settings);
             saveSettingsDebounced();
         });
@@ -3224,14 +3218,6 @@ function bindSettingsEvents(settings, callbacks) {
         });
 
     _bindEventBaseNumber('inject_max_chars', 'eventbase_inject_max_chars');
-
-    $('#vecthare_eventbase_debug_logging')
-        .prop('checked', settings.eventbase_debug_logging || false)
-        .on('change', function() {
-            settings.eventbase_debug_logging = $(this).prop('checked');
-            Object.assign(extension_settings.vecthareplus, settings);
-            saveSettingsDebounced();
-        });
 
     // Custom extraction prompt textarea — pre-fill with default if nothing saved
     (async () => {
