@@ -58,6 +58,18 @@ export const COLLECTION_SCOPES = {
     UNKNOWN: 'unknown',
 };
 
+/**
+ * Normalize backend names used in IDs.
+ * Keeps old alias "vectra" mapped to "standard" to avoid split IDs.
+ * @param {string} backend
+ * @returns {string}
+ */
+function normalizeBackendForId(backend) {
+    const b = String(backend || '').toLowerCase();
+    if (!b) return '';
+    return b === 'vectra' ? 'standard' : b;
+}
+
 // ============================================================================
 // CHAT UUID UTILITIES
 // ============================================================================
@@ -175,12 +187,14 @@ export function buildDocumentCollectionId(documentName, timestamp) {
 
 /**
  * Builds an EventBase collection ID for the given chat.
- * Format: vecthare_eventbase_{handleId}_{charName}_{chatUUID}
+ * New format (backend-aware): vecthare_eventbase_{backend}_{handleId}_{charName}_{chatUUID}
+ * Legacy format (no backend):  vecthare_eventbase_{handleId}_{charName}_{chatUUID}
  * Kept in collection-ids.js as the single source of truth for IDs.
  * @param {string} [chatUUID] Optional UUID override
+ * @param {string} [backend] Optional backend name; when omitted, returns legacy format
  * @returns {string|null} Collection ID or null if no chat
  */
-export function buildEventBaseCollectionId(chatUUID) {
+export function buildEventBaseCollectionId(chatUUID, backend) {
     const uuid = chatUUID || getChatUUID();
     if (!uuid) return null;
 
@@ -196,6 +210,11 @@ export function buildEventBaseCollectionId(chatUUID) {
         .replace(/[^a-z0-9]+/g, '_')
         .replace(/^_|_$/g, '')
         .substring(0, 30) || 'chat';
+
+    const normalizedBackend = normalizeBackendForId(backend);
+    if (normalizedBackend) {
+        return `${COLLECTION_PREFIXES.VECTHARE_EVENTBASE}${normalizedBackend}_${sanitizedHandle}_${sanitizedChar}_${uuid}`;
+    }
 
     return `${COLLECTION_PREFIXES.VECTHARE_EVENTBASE}${sanitizedHandle}_${sanitizedChar}_${uuid}`;
 }

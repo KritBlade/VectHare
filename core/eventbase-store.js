@@ -13,6 +13,7 @@ import {
     queryCollection,
     deleteVectorItems,
     getAdditionalArgs,
+    getSavedHashes,
 } from './core-vector-api.js';
 import { getChatUUID, buildEventBaseCollectionId } from './collection-ids.js';
 import { registerCollection } from './collection-loader.js';
@@ -38,7 +39,7 @@ export async function insertEvents(events, settings, abortSignal = null) {
     if (!events?.length) return;
 
     const chatUUID = events[0].chat_uuid;
-    const collectionId = buildEventBaseCollectionId(chatUUID);
+    const collectionId = buildEventBaseCollectionId(chatUUID, settings?.vector_backend);
     if (!collectionId) throw new Error('EventBase: Cannot build collection ID — no active chat');
 
     const debugLog = settings.eventbase_debug_logging;
@@ -115,7 +116,7 @@ export async function insertEvents(events, settings, abortSignal = null) {
  */
 export async function queryEvents(searchText, topK, settings, chatUUID) {
     const uuid = chatUUID || getChatUUID();
-    const collectionId = buildEventBaseCollectionId(uuid);
+    const collectionId = await _resolveEventBaseCollectionIdForRead(settings, uuid);
     if (!collectionId) return [];
 
     const { hashes, metadata } = await queryCollection(collectionId, searchText, topK, settings);
@@ -158,7 +159,7 @@ export async function listEvents(settings, limit = 100, chatUUID) {
  */
 export async function deleteEventByHash(hash, settings, chatUUID) {
     const uuid = chatUUID || getChatUUID();
-    const collectionId = buildEventBaseCollectionId(uuid);
+    const collectionId = await _resolveEventBaseCollectionIdForRead(settings, uuid);
     if (!collectionId) return;
 
     await deleteVectorItems(collectionId, [hash], settings);
@@ -188,7 +189,7 @@ export async function isWindowAlreadyExtracted(sourceHashes, messageIds, setting
 
     try {
         const uuid = chatUUID || getChatUUID();
-        const collectionId = buildEventBaseCollectionId(uuid);
+        const collectionId = await _resolveEventBaseCollectionIdForRead(settings, uuid);
         if (!collectionId) return false;
 
         // Query with a broad overfetch to find candidate events from this window
@@ -214,6 +215,44 @@ export async function isWindowAlreadyExtracted(sourceHashes, messageIds, setting
     }
 
     return false;
+}
+
+/**
+ * Resolve which EventBase collection ID to read from.
+ * Prefers new backend-scoped ID, but falls back to legacy no-backend ID
+ * so existing users can still read old data without re-vectorizing.
+ *
+ * @param {object} settings
+ * @param {string} [chatUUID]
+ * @returns {Promise<string|null>}
+ */
+async function _resolveEventBaseCollectionIdForRead(settings, chatUUID) {
+    const uuid = chatUUID || getChatUUID();
+    if (!uuid) return null;
+
+    const backendScopedId = buildEventBaseCollectionId(uuid, settings?.vector_backend);
+    const legacyId = buildEventBaseCollectionId(uuid);
+
+    if (!backendScopedId) return legacyId || null;
+
+    try {
+        const scopedHashes = await getSavedHashes(backendScopedId, settings);
+        if (scopedHashes?.length > 0) return backendScopedId;
+    } catch {
+        // Ignore and try legacy fallback.
+    }
+
+    // If no backend-scoped data exists yet, read legacy collection if present.
+    if (legacyId && legacyId !== backendScopedId) {
+        try {
+            const legacyHashes = await getSavedHashes(legacyId, settings);
+            if (legacyHashes?.length > 0) return legacyId;
+        } catch {
+            // Ignore; we'll return backend-scoped ID for future writes/reads.
+        }
+    }
+
+    return backendScopedId;
 }
 
 // ---------------------------------------------------------------------------
