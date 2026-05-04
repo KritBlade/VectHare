@@ -144,20 +144,28 @@ function _parseJsonArray(raw) {
             const obj = JSON.parse(text.slice(objectStart));
             // Find the first array value
             const arr = Object.values(obj).find(v => Array.isArray(v));
-            if (Array.isArray(arr)) return arr;
-            // No array found in object — fall through to direct parse
+            if (Array.isArray(arr) && arr.length > 0 && typeof arr[0] === 'object') {
+                return arr;
+            }
+            // No valid array found in object — fall through to direct parse
         } catch {
             // fall through
         }
     }
 
+    // Extract the outermost [ ... ]
     if (arrayStart !== -1) {
-        // Find matching close bracket
         let depth = 0;
         let end = -1;
         for (let i = arrayStart; i < text.length; i++) {
             if (text[i] === '[') depth++;
-            else if (text[i] === ']') { depth--; if (depth === 0) { end = i; break; } }
+            else if (text[i] === ']') {
+                depth--;
+                if (depth === 0) {
+                    end = i;
+                    break;
+                }
+            }
         }
         if (end !== -1) {
             jsonText = text.slice(arrayStart, end + 1);
@@ -168,6 +176,16 @@ function _parseJsonArray(raw) {
     if (!Array.isArray(parsed)) {
         throw new EventBaseExtractionError(`Parsed JSON is not an array: ${typeof parsed}`);
     }
+
+    // Sanity check: array must contain objects (events), not primitives
+    if (parsed.length > 0 && typeof parsed[0] !== 'object') {
+        throw new EventBaseExtractionError(
+            `Parsed array contains primitives (${typeof parsed[0]}), not event objects. ` +
+            `This usually means the wrong nested array was extracted. ` +
+            `Raw: ${JSON.stringify(parsed).slice(0, 100)}`
+        );
+    }
+
     return parsed;
 }
 

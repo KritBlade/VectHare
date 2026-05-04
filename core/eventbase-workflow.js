@@ -162,12 +162,20 @@ export async function runEventBaseIngestion({ messages, chatUUID, settings, abor
                     windowsSkipped++;
                 } else {
                     windowsProcessed++;
-                    eventsExtracted += result.value?.events?.length || 0;
+                    const extractedThisBatch = result.value?.events?.length || 0;
+                    eventsExtracted += extractedThisBatch;
+                    
+                    // Update display with running event count (shown in "Chunks" stat)
+                    progressTracker.updateChunks(eventsExtracted);
                 }
             }
         }
 
-        progressTracker.updateProgress(windowIdx, `Extracted ${eventsExtracted} event(s)...`);
+        // Update progress with current window number and running event count
+        progressTracker.updateProgress(
+            windowIdx,
+            `${eventsExtracted} event(s) found, processing windows...`
+        );
     }
 
     progressTracker.complete(true, `EventBase: extracted ${eventsExtracted} event(s) from ${windowsProcessed} window(s)`);
