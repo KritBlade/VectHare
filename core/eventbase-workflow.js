@@ -47,6 +47,7 @@ const EVENTBASE_PROMPT_TAG = `${EXTENSION_PROMPT_TAG}_eventbase`;
  */
 export async function runEventBaseIngestion({ messages, chatUUID, settings, abortSignal = null, progressPlan = null }) {
     const debugLog = settings.eventbase_debug_logging;
+    const debugVectorizing = settings.debug_vectorizing_log === true;
     const uuid = chatUUID || getChatUUID();
 
     const windowSize = Math.max(2, settings.eventbase_window_size || 6);
@@ -130,6 +131,13 @@ export async function runEventBaseIngestion({ messages, chatUUID, settings, abor
                         windowIndex: wIdx,
                     });
                 } catch (err) {
+                    // User/request cancellation is expected and should not be logged as a failure.
+                    if (err?.name === 'AbortError' || abortSignal?.aborted) {
+                        if (debugLog) {
+                            console.log(`[EventBase] Window ${wIdx}: request aborted`);
+                        }
+                        return { skipped: true };
+                    }
                     if (err instanceof EventBaseFatalError) throw err; // propagate
                     if (err instanceof EventBaseExtractionError) {
                         console.warn(`[EventBase] Window ${wIdx}: extraction error (skipped) — ${err.message}`);
@@ -165,7 +173,9 @@ export async function runEventBaseIngestion({ messages, chatUUID, settings, abor
                     progressTracker.complete(false, `EventBase fatal error: ${err.message}`);
                     throw err; // bubble up to caller
                 }
-                console.warn('[EventBase] Batch window error:', err?.message || err);
+                if (debugVectorizing || debugLog) {
+                    console.warn('[EventBase] Batch window error:', err?.message || err);
+                }
             } else {
                 if (result.value?.skipped) {
                     windowsSkipped++;

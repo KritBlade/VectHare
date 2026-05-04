@@ -892,6 +892,12 @@ export function renderSettings(containerId, settings, callbacks) {
                             </label>
                             <small class="vecthare_hint">Log [VectHare Injection Control] details to the browser console (useful for diagnosing retrieval/injection issues)</small>
 
+                            <label class="checkbox_label" for="vecthare_debug_vectorizing_log" style="margin-top: 12px;">
+                                <input type="checkbox" id="vecthare_debug_vectorizing_log" />
+                                <span>Debug Vectorizing Log</span>
+                            </label>
+                            <small class="vecthare_hint">Log vectorization progress details (ProgressTracker + EventBase batch diagnostics) to the browser console.</small>
+
                         </div>
                     </div>
 
@@ -3056,6 +3062,15 @@ function bindSettingsEvents(settings, callbacks) {
         .prop('checked', settings.injection_debug_logging || false)
         .on('change', function() {
             settings.injection_debug_logging = $(this).prop('checked');
+            Object.assign(extension_settings.vecthareplus, settings);
+            saveSettingsDebounced();
+        });
+
+    // Debug vectorizing log toggle
+    $('#vecthare_debug_vectorizing_log')
+        .prop('checked', settings.debug_vectorizing_log || false)
+        .on('change', function() {
+            settings.debug_vectorizing_log = $(this).prop('checked');
             Object.assign(extension_settings.vecthareplus, settings);
             saveSettingsDebounced();
         });

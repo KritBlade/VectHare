@@ -67,7 +67,11 @@ function _getOpenRouterApiKey(settings) {
 // ---------------------------------------------------------------------------
 
 /**
- * Build an OpenAI-compatible chat completions request body with JSON mode.
+ * Build an OpenAI-compatible chat completions request body.
+ *
+ * Note: EventBase prompt requires a top-level JSON array. Do not force
+ * response_format=json_object here, or providers will coerce output to an
+ * object and suppress valid array responses.
  * @param {string} prompt
  * @param {string} model
  * @param {number} maxTokens
@@ -80,7 +84,6 @@ function _buildBody(prompt, model, maxTokens, temperature) {
         messages: [{ role: 'user', content: prompt }],
         max_tokens: maxTokens,
         temperature,
-        response_format: { type: 'json_object' },
     };
 }
 
@@ -422,6 +425,7 @@ async function _callVLLM(prompt, settings, windowIndex) {
  */
 export async function extractEvents({ messages, windowStart, windowEnd, settings, windowIndex = 0 }) {
     const debugLog = settings.eventbase_debug_logging;
+    const debugVectorizing = settings.debug_vectorizing_log === true;
 
     // Build excerpt text from messages
     const excerptLines = messages.map(m => {
@@ -475,6 +479,10 @@ export async function extractEvents({ messages, windowStart, windowEnd, settings
             `EventBase: JSON parse failed for window ${windowIndex}: ${parseErr.message}`,
             windowIndex,
         );
+    }
+
+    if (debugVectorizing) {
+        console.log(`[EventBase] Window ${windowIndex}: parsed ${rawArray.length} event candidate(s)`);
     }
 
     // Empty array is valid (no events extracted)
