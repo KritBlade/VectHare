@@ -157,6 +157,32 @@ const defaultSettings = {
     // Keyword Extraction
     custom_stopwords: '',               // Custom stopwords (comma-separated)
     cjk_tokenizer_mode: CJK_TOKENIZER_MODES.intl, // intl | jieba | jieba_tw | tiny_segmenter
+
+    // EventBase workflow
+    eventbase_enabled: false,                     // Enable EventBase extraction + retrieval path
+    eventbase_provider: 'openrouter',             // 'openrouter' | 'vllm'
+    eventbase_model: '',                          // Model ID (e.g. 'google/gemini-flash-1.5-8b')
+    eventbase_openrouter_api_key: '',             // API key (falls back to summarize key then ST secrets)
+    eventbase_vllm_url: '',                       // vLLM base URL
+    eventbase_vllm_api_key: '',                   // vLLM API key
+    eventbase_temperature: 0.2,
+    eventbase_max_tokens: 2048,
+    eventbase_timeout_ms: 60000,
+    eventbase_window_size: 6,                     // Chat messages per extraction window
+    eventbase_window_overlap: 1,                  // Window overlap to avoid edge cuts
+    eventbase_min_importance_store: 3,            // Drop events below this importance before storing
+    eventbase_max_events_per_window: 5,           // Hard cap on events returned per LLM call
+    eventbase_retrieval_top_k: 8,                 // Events to retrieve per generation
+    eventbase_retrieval_min_importance: 1,        // Minimum importance for retrieval
+    eventbase_retrieval_filters_enabled: true,
+    eventbase_inject_format: 'json',              // 'json' | 'bullet'
+    eventbase_inject_max_chars: 4000,
+    eventbase_debug_logging: false,
+    // Re-rank weights (sum is normalized to 1.0 at runtime)
+    eventbase_rerank_w_cosine: 0.55,
+    eventbase_rerank_w_importance: 0.20,
+    eventbase_rerank_w_persist: 0.15,
+    eventbase_rerank_w_recency: 0.10,
 };
 
 // Runtime settings (merged with saved settings)

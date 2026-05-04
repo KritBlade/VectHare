@@ -28,6 +28,7 @@ export const COLLECTION_PREFIXES = {
     VECTHARE_LOREBOOK: 'vecthare_lorebook_',
     VECTHARE_CHARACTER: 'vecthare_character_',
     VECTHARE_DOCUMENT: 'vecthare_document_',
+    VECTHARE_EVENTBASE: 'vecthare_eventbase_',
 
     // Legacy/external formats
     FILE: 'file_',
@@ -170,6 +171,33 @@ export function buildDocumentCollectionId(documentName, timestamp) {
         .replace(/[^a-z0-9]+/g, '_')
         .substring(0, 50);
     return `${COLLECTION_PREFIXES.VECTHARE_DOCUMENT}${sanitizedName}_${timestamp || Date.now()}`;
+}
+
+/**
+ * Builds an EventBase collection ID for the given chat.
+ * Format: vecthare_eventbase_{handleId}_{charName}_{chatUUID}
+ * Kept in collection-ids.js as the single source of truth for IDs.
+ * @param {string} [chatUUID] Optional UUID override
+ * @returns {string|null} Collection ID or null if no chat
+ */
+export function buildEventBaseCollectionId(chatUUID) {
+    const uuid = chatUUID || getChatUUID();
+    if (!uuid) return null;
+
+    const context = getContext();
+    const sanitizedHandle = (context?.name1 || 'user')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_|_$/g, '')
+        .substring(0, 30) || 'user';
+
+    const sanitizedChar = (context?.name2 || 'chat')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_|_$/g, '')
+        .substring(0, 30) || 'chat';
+
+    return `${COLLECTION_PREFIXES.VECTHARE_EVENTBASE}${sanitizedHandle}_${sanitizedChar}_${uuid}`;
 }
 
 /**

@@ -42,6 +42,10 @@ import { getStringHash } from '../../../../utils.js';
  * @returns {Promise<{success: boolean, chunkCount: number, collectionId: string}>}
  */
 export async function vectorizeContent({ contentType, source, settings, abortSignal = null, continueMode = false }) {
+    // EventBase workflow only handles chat messages; non-chat content vectorization
+    // continues with the legacy path regardless of eventbase_enabled.
+    // (Future phases may add EventBase handling for lorebooks/characters here.)
+
     const throwIfAborted = () => {
         if (abortSignal?.aborted) {
             const err = new Error('Vectorization stopped by user');

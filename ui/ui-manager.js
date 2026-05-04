@@ -62,6 +62,7 @@ export function renderSettings(containerId, settings, callbacks) {
                             <button class="vecthare-tab-btn" data-tab="autosync">AutoSync</button>
                             <button class="vecthare-tab-btn" data-tab="summarize">Summarize</button>
                             <button class="vecthare-tab-btn" data-tab="action">Action</button>
+                            <button class="vecthare-tab-btn" data-tab="eventbase">EventBase</button>
                         </div>
                     </div>
 
@@ -890,6 +891,172 @@ export function renderSettings(containerId, settings, callbacks) {
                                 <span>Debug Injection Logging</span>
                             </label>
                             <small class="vecthare_hint">Log [VectHare Injection Control] details to the browser console (useful for diagnosing retrieval/injection issues)</small>
+
+                        </div>
+                    </div>
+
+                    <!-- EventBase Card -->
+                    <div class="vecthare-card" data-vecthare-tab="eventbase">
+                        <div class="vecthare-card-header">
+                            <h3 class="vecthare-card-title">
+                                <span class="vecthare-icon"><i class="fa-solid fa-database"></i></span>
+                                EventBase
+                            </h3>
+                            <p class="vecthare-card-subtitle">AI-extracted structured story events — stored in Qdrant for semantic retrieval</p>
+                        </div>
+                        <div class="vecthare-card-body">
+
+                            <!-- Enable toggle -->
+                            <label class="checkbox_label" for="vecthare_eventbase_enabled">
+                                <input type="checkbox" id="vecthare_eventbase_enabled" />
+                                <span>Enable EventBase Workflow</span>
+                            </label>
+                            <small class="vecthare_hint" style="color: var(--warning, #e8a83b);">⚠ Enabling this switches both ingestion and retrieval to a separate experimental path. Legacy chunking is bypassed. Disable to recover the standard workflow.</small>
+
+                            <!-- Provider -->
+                            <div class="vecthare-form-group" style="margin-top:16px;">
+                                <label class="vecthare-label">Extraction Provider</label>
+                                <select id="vecthare_eventbase_provider" class="vecthare-select">
+                                    <option value="openrouter">OpenRouter</option>
+                                    <option value="vllm">vLLM (local)</option>
+                                </select>
+                            </div>
+
+                            <div class="vecthare-form-group">
+                                <label class="vecthare-label">Model ID</label>
+                                <input type="text" id="vecthare_eventbase_model" class="vecthare-input" placeholder="e.g. google/gemini-flash-1.5-8b" />
+                                <small class="vecthare_hint">The model used to extract structured events. Uses OpenRouter API key from Summarize settings if not overridden below.</small>
+                            </div>
+
+                            <div id="vecthare_eventbase_openrouter_key_row" class="vecthare-form-group">
+                                <label class="vecthare-label">OpenRouter API Key (override)</label>
+                                <input type="password" id="vecthare_eventbase_openrouter_api_key" class="vecthare-input" placeholder="Leave empty to reuse Summarize key" />
+                            </div>
+
+                            <div id="vecthare_eventbase_vllm_row" class="vecthare-form-group" style="display:none;">
+                                <label class="vecthare-label">vLLM Base URL</label>
+                                <input type="text" id="vecthare_eventbase_vllm_url" class="vecthare-input" placeholder="http://localhost:8000" />
+                                <label class="vecthare-label" style="margin-top:8px;">vLLM API Key</label>
+                                <input type="password" id="vecthare_eventbase_vllm_api_key" class="vecthare-input" placeholder="Optional" />
+                            </div>
+
+                            <hr style="margin: 16px 0; opacity:0.2;" />
+
+                            <!-- Extraction settings -->
+                            <p class="vecthare-section-label"><strong>Extraction</strong></p>
+
+                            <div class="vecthare-form-group">
+                                <label class="vecthare-label">Window Size <span id="vecthare_eventbase_window_size_val">6</span> messages</label>
+                                <input type="range" id="vecthare_eventbase_window_size" min="2" max="20" step="1" class="vecthare-range" />
+                                <small class="vecthare_hint">Number of consecutive messages sent to the AI per extraction call.</small>
+                            </div>
+
+                            <div class="vecthare-form-group">
+                                <label class="vecthare-label">Window Overlap <span id="vecthare_eventbase_window_overlap_val">1</span></label>
+                                <input type="range" id="vecthare_eventbase_window_overlap" min="0" max="5" step="1" class="vecthare-range" />
+                            </div>
+
+                            <div class="vecthare-form-group">
+                                <label class="vecthare-label">Min Importance to Store <span id="vecthare_eventbase_min_importance_store_val">3</span></label>
+                                <input type="range" id="vecthare_eventbase_min_importance_store" min="1" max="10" step="1" class="vecthare-range" />
+                                <small class="vecthare_hint">Events below this importance threshold are discarded before writing to Qdrant.</small>
+                            </div>
+
+                            <div class="vecthare-form-group">
+                                <label class="vecthare-label">Max Events per Window <span id="vecthare_eventbase_max_events_per_window_val">5</span></label>
+                                <input type="range" id="vecthare_eventbase_max_events_per_window" min="1" max="10" step="1" class="vecthare-range" />
+                                <small class="vecthare_hint">Hard cap per LLM call. AI is instructed to return fewer (or zero) for filler / 日常生活 / non-narrative scenes.</small>
+                            </div>
+
+                            <div class="vecthare-form-group">
+                                <label class="vecthare-label">Temperature</label>
+                                <input type="number" id="vecthare_eventbase_temperature" class="vecthare-input" min="0" max="2" step="0.05" style="width:100px;" />
+                            </div>
+
+                            <div class="vecthare-form-group">
+                                <label class="vecthare-label">Max Output Tokens</label>
+                                <input type="number" id="vecthare_eventbase_max_tokens" class="vecthare-input" min="256" max="8192" step="64" style="width:120px;" />
+                            </div>
+
+                            <div class="vecthare-form-group">
+                                <label class="vecthare-label">Timeout (ms)</label>
+                                <input type="number" id="vecthare_eventbase_timeout_ms" class="vecthare-input" min="5000" max="300000" step="1000" style="width:130px;" />
+                            </div>
+
+                            <hr style="margin: 16px 0; opacity:0.2;" />
+
+                            <!-- Retrieval settings -->
+                            <p class="vecthare-section-label"><strong>Retrieval</strong></p>
+
+                            <div class="vecthare-form-group">
+                                <label class="vecthare-label">Retrieve Top-K <span id="vecthare_eventbase_retrieval_top_k_val">8</span></label>
+                                <input type="range" id="vecthare_eventbase_retrieval_top_k" min="1" max="32" step="1" class="vecthare-range" />
+                            </div>
+
+                            <div class="vecthare-form-group">
+                                <label class="vecthare-label">Min Importance for Retrieval <span id="vecthare_eventbase_retrieval_min_importance_val">1</span></label>
+                                <input type="range" id="vecthare_eventbase_retrieval_min_importance" min="1" max="10" step="1" class="vecthare-range" />
+                            </div>
+
+                            <!-- Re-rank weights -->
+                            <p style="margin: 12px 0 4px; font-size:0.85em; font-weight:600;">Re-rank Weights</p>
+                            <small class="vecthare_hint">Weights are normalized to sum to 1.0 on save. Defaults are tuned for long-form SillyTavern RP.</small>
+
+                            <div class="vecthare-rerank-weights" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;">
+                                <div class="vecthare-form-group">
+                                    <label class="vecthare-label">Cosine (semantic)</label>
+                                    <input type="number" id="vecthare_eventbase_rerank_w_cosine" class="vecthare-input" min="0" max="1" step="0.05" style="width:80px;" />
+                                </div>
+                                <div class="vecthare-form-group">
+                                    <label class="vecthare-label">Importance</label>
+                                    <input type="number" id="vecthare_eventbase_rerank_w_importance" class="vecthare-input" min="0" max="1" step="0.05" style="width:80px;" />
+                                </div>
+                                <div class="vecthare-form-group">
+                                    <label class="vecthare-label">Persist bonus</label>
+                                    <input type="number" id="vecthare_eventbase_rerank_w_persist" class="vecthare-input" min="0" max="1" step="0.05" style="width:80px;" />
+                                </div>
+                                <div class="vecthare-form-group">
+                                    <label class="vecthare-label">Recency decay</label>
+                                    <input type="number" id="vecthare_eventbase_rerank_w_recency" class="vecthare-input" min="0" max="1" step="0.05" style="width:80px;" />
+                                </div>
+                            </div>
+                            <button id="vecthare_eventbase_reset_weights" class="vecthare-btn vecthare-btn-secondary" style="margin-top:6px; font-size:0.8em;">Reset to defaults</button>
+
+                            <hr style="margin: 16px 0; opacity:0.2;" />
+
+                            <!-- Injection settings -->
+                            <p class="vecthare-section-label"><strong>Injection</strong></p>
+
+                            <div class="vecthare-form-group">
+                                <label class="vecthare-label">Injection Format</label>
+                                <select id="vecthare_eventbase_inject_format" class="vecthare-select" style="width:auto;">
+                                    <option value="json">JSON array (full structured data)</option>
+                                    <option value="bullet">Bullet points (compact)</option>
+                                </select>
+                            </div>
+
+                            <div class="vecthare-form-group">
+                                <label class="vecthare-label">Max Injection Characters</label>
+                                <input type="number" id="vecthare_eventbase_inject_max_chars" class="vecthare-input" min="500" max="32000" step="100" style="width:130px;" />
+                                <small class="vecthare_hint">Lowest-scoring events are dropped first to fit within budget.</small>
+                            </div>
+
+                            <hr style="margin: 16px 0; opacity:0.2;" />
+
+                            <!-- Debug -->
+                            <label class="checkbox_label" for="vecthare_eventbase_debug_logging">
+                                <input type="checkbox" id="vecthare_eventbase_debug_logging" />
+                                <span>Debug Logging</span>
+                            </label>
+                            <small class="vecthare_hint">Log [EventBase] details to the browser console.</small>
+
+                            <!-- Browser button -->
+                            <div style="margin-top:20px;">
+                                <button id="vecthare_eventbase_open_browser" class="vecthare-action-btn vecthare-btn-secondary">
+                                    <i class="fa-solid fa-list"></i>
+                                    <span>Open Event Browser</span>
+                                </button>
+                            </div>
 
                         </div>
                     </div>
@@ -2876,6 +3043,170 @@ function bindSettingsEvents(settings, callbacks) {
             Object.assign(extension_settings.vecthareplus, settings);
             saveSettingsDebounced();
         });
+
+    // ── EventBase settings ──────────────────────────────────────────────────
+
+    // Helper: normalize re-rank weights to sum = 1.0
+    const _normalizeRerankWeights = () => {
+        const keys = ['rerank_w_cosine', 'rerank_w_importance', 'rerank_w_persist', 'rerank_w_recency'];
+        const values = keys.map(k => parseFloat(settings[`eventbase_${k}`]) || 0);
+        const total = values.reduce((a, b) => a + b, 0);
+        if (total === 0) return;
+        keys.forEach((k, i) => {
+            settings[`eventbase_${k}`] = Math.round((values[i] / total) * 1000) / 1000;
+            $(`#vecthare_eventbase_${k}`).val(settings[`eventbase_${k}`]);
+        });
+    };
+
+    const _showHideEventBaseProviderRows = (provider) => {
+        if (provider === 'vllm') {
+            $('#vecthare_eventbase_vllm_row').show();
+            $('#vecthare_eventbase_openrouter_key_row').hide();
+        } else {
+            $('#vecthare_eventbase_vllm_row').hide();
+            $('#vecthare_eventbase_openrouter_key_row').show();
+        }
+    };
+
+    $('#vecthare_eventbase_enabled')
+        .prop('checked', settings.eventbase_enabled || false)
+        .on('change', function() {
+            settings.eventbase_enabled = $(this).prop('checked');
+            Object.assign(extension_settings.vecthareplus, settings);
+            saveSettingsDebounced();
+        });
+
+    $('#vecthare_eventbase_provider')
+        .val(settings.eventbase_provider || 'openrouter')
+        .on('change', function() {
+            const val = String($(this).val());
+            settings.eventbase_provider = val;
+            _showHideEventBaseProviderRows(val);
+            Object.assign(extension_settings.vecthareplus, settings);
+            saveSettingsDebounced();
+        });
+    _showHideEventBaseProviderRows(settings.eventbase_provider || 'openrouter');
+
+    $('#vecthare_eventbase_model')
+        .val(settings.eventbase_model || '')
+        .on('input', function() {
+            settings.eventbase_model = String($(this).val()).trim();
+            Object.assign(extension_settings.vecthareplus, settings);
+            saveSettingsDebounced();
+        });
+
+    $('#vecthare_eventbase_openrouter_api_key')
+        .on('change', function() {
+            settings.eventbase_openrouter_api_key = String($(this).val()).trim();
+            Object.assign(extension_settings.vecthareplus, settings);
+            saveSettingsDebounced();
+        });
+
+    $('#vecthare_eventbase_vllm_url')
+        .val(settings.eventbase_vllm_url || '')
+        .on('input', function() {
+            settings.eventbase_vllm_url = String($(this).val()).trim();
+            Object.assign(extension_settings.vecthareplus, settings);
+            saveSettingsDebounced();
+        });
+
+    $('#vecthare_eventbase_vllm_api_key')
+        .on('change', function() {
+            settings.eventbase_vllm_api_key = String($(this).val()).trim();
+            Object.assign(extension_settings.vecthareplus, settings);
+            saveSettingsDebounced();
+        });
+
+    // Range inputs with live label update
+    const _bindEventBaseRange = (id, settingKey, labelId) => {
+        const $el = $(`#vecthare_eventbase_${id}`);
+        $el.val(settings[settingKey] ?? $el.attr('min') ?? 0)
+            .on('input', function() {
+                const v = parseInt($(this).val(), 10);
+                settings[settingKey] = v;
+                if (labelId) $(`#vecthare_eventbase_${labelId}_val`).text(v);
+                Object.assign(extension_settings.vecthareplus, settings);
+                saveSettingsDebounced();
+            });
+        if (labelId) $(`#vecthare_eventbase_${labelId}_val`).text(settings[settingKey] ?? $el.val());
+    };
+
+    _bindEventBaseRange('window_size', 'eventbase_window_size', 'window_size');
+    _bindEventBaseRange('window_overlap', 'eventbase_window_overlap', 'window_overlap');
+    _bindEventBaseRange('min_importance_store', 'eventbase_min_importance_store', 'min_importance_store');
+    _bindEventBaseRange('max_events_per_window', 'eventbase_max_events_per_window', 'max_events_per_window');
+    _bindEventBaseRange('retrieval_top_k', 'eventbase_retrieval_top_k', 'retrieval_top_k');
+    _bindEventBaseRange('retrieval_min_importance', 'eventbase_retrieval_min_importance', 'retrieval_min_importance');
+
+    // Number inputs (temperature, max_tokens, timeout_ms)
+    const _bindEventBaseNumber = (id, settingKey) => {
+        $(`#vecthare_eventbase_${id}`)
+            .val(settings[settingKey] ?? '')
+            .on('change', function() {
+                const v = parseFloat($(this).val());
+                if (!isNaN(v)) {
+                    settings[settingKey] = v;
+                    Object.assign(extension_settings.vecthareplus, settings);
+                    saveSettingsDebounced();
+                }
+            });
+    };
+
+    _bindEventBaseNumber('temperature', 'eventbase_temperature');
+    _bindEventBaseNumber('max_tokens', 'eventbase_max_tokens');
+    _bindEventBaseNumber('timeout_ms', 'eventbase_timeout_ms');
+
+    // Re-rank weight inputs
+    ['rerank_w_cosine', 'rerank_w_importance', 'rerank_w_persist', 'rerank_w_recency'].forEach(k => {
+        $(`#vecthare_eventbase_${k}`)
+            .val(settings[`eventbase_${k}`] ?? '')
+            .on('change', function() {
+                const v = parseFloat($(this).val());
+                if (!isNaN(v) && v >= 0) {
+                    settings[`eventbase_${k}`] = v;
+                    _normalizeRerankWeights();
+                    Object.assign(extension_settings.vecthareplus, settings);
+                    saveSettingsDebounced();
+                }
+            });
+    });
+
+    $('#vecthare_eventbase_reset_weights').on('click', function() {
+        settings.eventbase_rerank_w_cosine    = 0.55;
+        settings.eventbase_rerank_w_importance = 0.20;
+        settings.eventbase_rerank_w_persist   = 0.15;
+        settings.eventbase_rerank_w_recency   = 0.10;
+        ['rerank_w_cosine', 'rerank_w_importance', 'rerank_w_persist', 'rerank_w_recency'].forEach(k => {
+            $(`#vecthare_eventbase_${k}`).val(settings[`eventbase_${k}`]);
+        });
+        Object.assign(extension_settings.vecthareplus, settings);
+        saveSettingsDebounced();
+        toastr.success('Re-rank weights reset to defaults');
+    });
+
+    $('#vecthare_eventbase_inject_format')
+        .val(settings.eventbase_inject_format || 'json')
+        .on('change', function() {
+            settings.eventbase_inject_format = String($(this).val());
+            Object.assign(extension_settings.vecthareplus, settings);
+            saveSettingsDebounced();
+        });
+
+    _bindEventBaseNumber('inject_max_chars', 'eventbase_inject_max_chars');
+
+    $('#vecthare_eventbase_debug_logging')
+        .prop('checked', settings.eventbase_debug_logging || false)
+        .on('change', function() {
+            settings.eventbase_debug_logging = $(this).prop('checked');
+            Object.assign(extension_settings.vecthareplus, settings);
+            saveSettingsDebounced();
+        });
+
+    $('#vecthare_eventbase_open_browser').on('click', function() {
+        toastr.info('Event Browser coming in a future update.', 'EventBase');
+    });
+
+    // ── End EventBase settings ───────────────────────────────────────────────
 
     // BananaBread API key
     // Note: We store in extension settings because custom keys aren't returned by ST's readSecretState()

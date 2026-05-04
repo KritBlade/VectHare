@@ -540,6 +540,26 @@ export async function synchronizeChat(settings, batchSize = 5) {
         return { remaining: 0, messagesProcessed: 0, chunksCreated: 0 };
     }
 
+    // EventBase workflow: extract structured events instead of raw-chunk vectorization
+    if (settings.eventbase_enabled) {
+        const context = getContext();
+        if (getCurrentChatId() && Array.isArray(context.chat)) {
+            const { runEventBaseIngestion } = await import('./eventbase-workflow.js');
+            const messages = context.chat.filter(m => !m.is_system);
+            const result = await runEventBaseIngestion({
+                messages,
+                chatUUID: getChatUUID(),
+                settings,
+            });
+            return {
+                remaining: 0,
+                messagesProcessed: result.eventsExtracted,
+                chunksCreated: result.eventsExtracted,
+            };
+        }
+        return { remaining: 0, messagesProcessed: 0, chunksCreated: 0 };
+    }
+
     try {
         await waitUntilCondition(() => !syncBlocked && !is_send_press, 1000);
     } catch {
@@ -1792,6 +1812,21 @@ export async function rearrangeChat(chat, settings, type) {
         if (minChatLength > 0 && chat.length < minChatLength) {
             console.warn(`⚠️ VectHare: Not enough messages to inject chunks (${chat.length} < ${minChatLength})`);
             console.log(`   💡 You need at least ${minChatLength} messages before chunk injection starts`);
+            return;
+        }
+
+        // EventBase workflow: structured event retrieval instead of chunk-based RAG
+        if (settings.eventbase_enabled) {
+            const queryText = buildSearchQuery(chat, settings);
+            if (queryText) {
+                const { runEventBaseRetrieval } = await import('./eventbase-workflow.js');
+                await runEventBaseRetrieval({
+                    chat,
+                    searchText: queryText,
+                    settings,
+                    chatUUID: getChatUUID(),
+                });
+            }
             return;
         }
 
