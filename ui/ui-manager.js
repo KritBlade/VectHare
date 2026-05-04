@@ -3218,19 +3218,26 @@ function bindSettingsEvents(settings, callbacks) {
             saveSettingsDebounced();
         });
 
-    // Custom extraction prompt textarea
-    $('#vecthare_eventbase_custom_prompt')
-        .val(settings.eventbase_custom_prompt || '')
-        .on('input', function() {
-            settings.eventbase_custom_prompt = $(this).val();
-            Object.assign(extension_settings.vecthareplus, settings);
-            saveSettingsDebounced();
-        });
+    // Custom extraction prompt textarea — pre-fill with default if nothing saved
+    (async () => {
+        const { DEFAULT_EXTRACTION_PROMPT } = await import('../core/eventbase-schema.js');
+        const saved = settings.eventbase_custom_prompt || '';
+        $('#vecthare_eventbase_custom_prompt').val(saved || DEFAULT_EXTRACTION_PROMPT);
+    })();
+
+    $('#vecthare_eventbase_custom_prompt').on('input', function() {
+        settings.eventbase_custom_prompt = $(this).val();
+        Object.assign(extension_settings.vecthareplus, settings);
+        saveSettingsDebounced();
+    });
 
     // Reset prompt to built-in default
     $('#vecthare_eventbase_prompt_reset').on('click', async function() {
         const { DEFAULT_EXTRACTION_PROMPT } = await import('../core/eventbase-schema.js');
-        $('#vecthare_eventbase_custom_prompt').val(DEFAULT_EXTRACTION_PROMPT).trigger('input');
+        settings.eventbase_custom_prompt = '';
+        $('#vecthare_eventbase_custom_prompt').val(DEFAULT_EXTRACTION_PROMPT);
+        Object.assign(extension_settings.vecthareplus, settings);
+        saveSettingsDebounced();
         toastr.success('Extraction prompt reset to default', 'EventBase');
     });
 

@@ -170,9 +170,28 @@ export async function retrieveEvents({ searchText, chatLength, settings, chatUUI
         if (!isDuplicate) dedupedEvents.push(candidate);
     }
 
-    // 6. Trim to requested top-K
+    // 6. Dedup depth — skip events whose source window is already visible in recent context.
+    // If source_window_end falls within the last deduplication_depth messages, the LLM can
+    // already see that content directly; injecting the event adds redundant information.
+    const dedupDepth = settings.deduplication_depth ?? 50;
+    const visibleThreshold = dedupDepth > 0 ? chatLength - dedupDepth : -1;
+
+    const contextDedupedEvents = dedupedEvents.filter(e => {
+        const windowEnd = e.source_window_end ?? -1;
+        const inRecentContext = dedupDepth > 0 && windowEnd >= visibleThreshold;
+        if (inRecentContext && debugLog) {
+            console.log(`[EventBase] Dedup-depth skip: event "${e.event_type}" source_window_end=${windowEnd} is within last ${dedupDepth} messages (threshold=${visibleThreshold})`);
+        }
+        return !inRecentContext;
+    });
+
+    if (debugLog && contextDedupedEvents.length < dedupedEvents.length) {
+        console.log(`[EventBase] Dedup depth (${dedupDepth}) removed ${dedupedEvents.length - contextDedupedEvents.length} event(s) already visible in context`);
+    }
+
+    // 7. Trim to requested top-K
     const finalTopK = settings.eventbase_retrieval_top_k || 8;
-    const finalEvents = dedupedEvents.slice(0, finalTopK);
+    const finalEvents = contextDedupedEvents.slice(0, finalTopK);
 
     if (debugLog) {
         console.log(`[EventBase] Final events after dedup + trim: ${finalEvents.length}`);
@@ -187,6 +206,7 @@ export async function retrieveEvents({ searchText, chatLength, settings, chatUUI
             rawCount: rawCandidates.length,
             afterImportanceFilter: importanceFiltered.length,
             afterDedup: dedupedEvents.length,
+            afterContextDedup: contextDedupedEvents.length,
             finalCount: finalEvents.length,
             weights,
         },

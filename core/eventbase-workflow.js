@@ -230,6 +230,10 @@ export async function runEventBaseRetrieval({ chat, searchText, settings, chatUU
         console.log('[EventBase] Retrieval start, searchText length:', searchText?.length);
     }
 
+    if (settings.retrieval_popup_on_start) {
+        toastr.info('Retrieving context from EventBase...', 'VectHarePlus Retrieval');
+    }
+
     const { events, debug } = await retrieveEvents({
         searchText,
         chatLength: chat?.length || 0,
@@ -243,6 +247,9 @@ export async function runEventBaseRetrieval({ chat, searchText, settings, chatUU
 
     if (!events?.length) {
         if (debugLog) console.log('[EventBase] No events to inject');
+        if (settings.retrieval_popup_on_result) {
+            toastr.info('EventBase: no events matched', 'VectHarePlus Retrieval');
+        }
         return;
     }
 
@@ -261,6 +268,10 @@ export async function runEventBaseRetrieval({ chat, searchText, settings, chatUU
     if (debugLog) {
         console.log(`[EventBase] Injected ${events.length} event(s), text length: ${injectionText.length}`);
         console.log('[EventBase] Injection preview:', injectionText.slice(0, 300));
+    }
+
+    if (settings.retrieval_popup_on_result) {
+        toastr.success(`EventBase: injected ${events.length} event(s)`, 'VectHarePlus Retrieval');
     }
 }
 

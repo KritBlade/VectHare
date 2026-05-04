@@ -207,7 +207,7 @@ Return ONLY a valid JSON array. No prose. No markdown. No code fences.
 Each event object MUST have these fields:
 - event_type: one of [main_quest_update, side_quest_update, combat, travel, discovery, dialogue_significant, relationship_change, character_introduction, character_state_change, item_acquired, item_lost, faction_change, location_change, revelation, promise_or_oath, betrayal, death, other]
 - importance: integer 1-10 (10 = pivotal main plot, 1 = minor flavor worth remembering)
-- summary: 4-8 dense sentences capturing WHO did WHAT, the key detail, the emotional/narrative impact, and any important consequences or reactions. SAME LANGUAGE AS EXCERPT (see Rule 1)
+- summary: 2-8 dense sentences capturing WHO did WHAT, the key detail, the emotional/narrative impact, and any important consequences or reactions. SAME LANGUAGE AS EXCERPT (see Rule 1)
 - cause: short explanation of why it happened, SAME LANGUAGE AS EXCERPT (may be "")
 - result: outcome / state change, SAME LANGUAGE AS EXCERPT (may be "")
 - characters: array of proper-noun names, EXACT ORIGINAL SCRIPT
