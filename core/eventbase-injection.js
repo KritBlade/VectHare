@@ -28,6 +28,7 @@ function _cleanEventForInjection(event) {
         event_type: event.event_type,
         importance: event.importance,
         summary: event.summary,
+        DateTime: event.DateTime || null,
         cause: event.cause || '',
         result: event.result || '',
         characters: event.characters || [],
@@ -63,6 +64,7 @@ function _formatAsBullet(events) {
     const lines = ['# Story Memory'];
     for (const e of events) {
         lines.push(`\n- [${e.event_type} | importance ${e.importance}] ${e.summary}`);
+        if (e.DateTime) lines.push(`  time: ${e.DateTime}`);
         if (e.cause) lines.push(`  cause: ${e.cause}`);
         if (e.result) lines.push(`  result: ${e.result}`);
         if (e.characters?.length) lines.push(`  characters: ${e.characters.join(', ')}`);

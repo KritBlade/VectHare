@@ -21,6 +21,7 @@ import {
     buildExtractionPrompt,
     EVENTBASE_SCHEMA_VERSION,
 } from './eventbase-schema.js';
+import { cleanText } from './text-cleaning.js';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -430,7 +431,7 @@ export async function extractEvents({ messages, windowStart, windowEnd, settings
     // Build excerpt text from messages
     const excerptLines = messages.map(m => {
         const speaker = m.name || (m.is_user ? 'User' : 'Assistant');
-        const text = (m.mes || '').trim();
+        const text = cleanText(String(m.mes || '')).trim();
         return `${speaker}: ${text}`;
     });
     const excerptText = excerptLines.join('\n\n');

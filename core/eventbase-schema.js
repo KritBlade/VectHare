@@ -79,6 +79,30 @@ function ensureArray(val) {
     return [...new Set(val.map(s => (typeof s === 'string' ? s.trim() : String(s ?? '').trim())).filter(Boolean))];
 }
 
+/**
+ * Normalize optional DateTime field (ISO 8601 string) from LLM output.
+ * Accepts DateTime/dateTime/datetime/date_time keys; invalid values become null.
+ * @param {unknown} raw
+ * @param {string[]} errors
+ * @returns {string|null}
+ */
+function ensureDateTime(raw, errors) {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+    const v = (/** @type {any} */ (raw)).DateTime
+        ?? (/** @type {any} */ (raw)).dateTime
+        ?? (/** @type {any} */ (raw)).datetime
+        ?? (/** @type {any} */ (raw)).date_time
+        ?? null;
+
+    if (v == null || v === '') return null;
+    const s = String(v).trim();
+    const ms = Date.parse(s);
+    if (!Number.isNaN(ms)) return new Date(ms).toISOString();
+
+    errors.push(`DateTime "${s}" is not valid ISO-8601 — dropped`);
+    return null;
+}
+
 // ---------------------------------------------------------------------------
 // Validator
 // ---------------------------------------------------------------------------
@@ -126,6 +150,7 @@ export function validateEvent(raw) {
         event_type,
         importance,
         summary,
+        DateTime: ensureDateTime(raw, errors),
         cause: typeof (/** @type {any} */ (raw)).cause === 'string' ? (/** @type {any} */ (raw)).cause.trim() : '',
         result: typeof (/** @type {any} */ (raw)).result === 'string' ? (/** @type {any} */ (raw)).result.trim() : '',
         characters: ensureArray((/** @type {any} */ (raw)).characters),
@@ -153,6 +178,7 @@ export function validateEvent(raw) {
  */
 export function buildEmbedText(event) {
     const parts = [`[${event.event_type}] ${event.summary}`];
+    if (event.DateTime) parts.push(`TIME: ${event.DateTime}`);
     if (event.cause) parts.push(`CAUSE: ${event.cause}`);
     if (event.result) parts.push(`RESULT: ${event.result}`);
     if (event.characters?.length) parts.push(`CHARS: ${event.characters.join(', ')}`);
@@ -213,6 +239,7 @@ Each event object MUST have these fields:
 - characters: array of proper-noun names, EXACT ORIGINAL SCRIPT
 - locations: array of strings, EXACT ORIGINAL SCRIPT
 - factions: array of strings, EXACT ORIGINAL SCRIPT
+- DateTime: in the format of ISO 8601 string (e.g., "2024-01-01T12:00:00Z") representing when the event occurred in the story timeline, if it can be determined from the excerpt; otherwise, this field can be omitted or set to null. 
 - items: array of strings, EXACT ORIGINAL SCRIPT
 - concepts: array of strings, SAME LANGUAGE AS EXCERPT
 - keywords: array of strings, SAME LANGUAGE AS EXCERPT (search aids)
@@ -226,7 +253,7 @@ Zero events (filler scene):
 []
 
 One event (Traditional Chinese excerpt):
-[{"event_type":"promise_or_oath","importance":9,"summary":"師傅承諾幫梅拉尋找失蹤的父親暗影之翼。","cause":"梅拉在房間中央哭著請求幫助。","result":"尋找暗影之翼成為隊伍的核心目標。","characters":["梅拉","師父"],"locations":["星月綠洲頂樓公寓"],"factions":[],"items":[],"concepts":["失蹤的父親"],"keywords":["暗影之翼","尋找父親"],"open_threads":["確定暗影之翼是生是死"],"should_persist":true}]
+[{"event_type":"promise_or_oath","importance":9,"summary":"師傅承諾幫梅拉尋找失蹤的父親暗影之翼。","cause":"梅拉在房間中央哭著請求幫助。","result":"尋找暗影之翼成為隊伍的核心目標。","characters":["梅拉","師父"],"locations":["星月綠洲頂樓公寓"],"factions":[],"DateTime":"2024-05-01T20:30:00Z","items":[],"concepts":["失蹤的父親"],"keywords":["暗影之翼","尋找父親"],"open_threads":["確定暗影之翼是生是死"],"should_persist":true}]
 
 =========================
 EXCERPT
