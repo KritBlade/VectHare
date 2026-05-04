@@ -61,6 +61,21 @@ export async function insertEvents(events, settings, abortSignal = null) {
             text: embedText,
             index: idx,
             vector,             // null → server-side embedding
+            // Top-level fields read by qdrant.js's payload builder.
+            // qdrant.js spreads item.metadata first then explicitly overwrites these
+            // fields from the top-level item. Without them defined here, they are
+            // undefined → JSON.stringify drops them → Similharity server applies its
+            // own defaults (importance=100, summary=null). EventBase does not use the
+            // legacy chunk fields (chunkGroup, conditions, parentHash) so they stay null.
+            importance: event.importance,
+            summary: event.summary,
+            keywords: event.keywords || [],
+            customWeights: [],
+            disabledKeywords: [],
+            chunkGroup: null,
+            conditions: null,
+            isSummaryChunk: false,
+            parentHash: null,
             metadata: {
                 ...event,
                 embed_text: embedText,
