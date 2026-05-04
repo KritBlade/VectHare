@@ -387,15 +387,18 @@ class QdrantBackend {
                 messageIndex: item.metadata?.messageIndex,
 
                 // ===== LEGACY VECTHARE FEATURES =====
-                importance: item.importance !== undefined ? item.importance : 100,
+                // Fall back to item.metadata.* when the top-level field is undefined.
+                // EventBase items store importance/summary inside metadata only;
+                // legacy chunk items set them at the top level.
+                importance: item.importance !== undefined ? item.importance : (item.metadata?.importance ?? 100),
                 keywords: item.keywords || item.metadata?.keywords || [],
-                customWeights: item.customWeights || {},
-                disabledKeywords: item.disabledKeywords || [],
-                chunkGroup: item.chunkGroup || null,
-                conditions: item.conditions || null,
-                summary: item.summary || null,
-                isSummaryChunk: item.isSummaryChunk || false,
-                parentHash: item.parentHash || null,
+                customWeights: item.customWeights || item.metadata?.customWeights || {},
+                disabledKeywords: item.disabledKeywords || item.metadata?.disabledKeywords || [],
+                chunkGroup: item.chunkGroup !== undefined ? item.chunkGroup : (item.metadata?.chunkGroup ?? null),
+                conditions: item.conditions !== undefined ? item.conditions : (item.metadata?.conditions ?? null),
+                summary: item.summary !== undefined ? item.summary : (item.metadata?.summary ?? null),
+                isSummaryChunk: item.isSummaryChunk !== undefined ? item.isSummaryChunk : (item.metadata?.isSummaryChunk ?? false),
+                parentHash: item.parentHash !== undefined ? item.parentHash : (item.metadata?.parentHash ?? null),
 
                 // ===== CHAT-SPECIFIC =====
                 speaker: item.metadata?.speaker,
