@@ -1,0 +1,7 @@
+const ctx = globalThis.SillyTavern?.getContext?.();
+const uuid = ctx?.chatMetadata?.integrity || null;
+console.log("=== IDs ===");
+console.log("uuid:", uuid);
+console.log("chatId:", ctx.chatId);
+console.log("handleid:", ctx.name1);
+console.log("cardname:", ctx.name2);

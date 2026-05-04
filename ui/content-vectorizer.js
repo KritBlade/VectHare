@@ -2531,6 +2531,10 @@ async function startContinueVectorization() {
 
     // If no vectors exist yet, just run the normal vectorization
     if (currentContentType === 'chat' && source.sourceType === 'current') {
+        const globalSettings = extension_settings.vecthareplus || {};
+        if (globalSettings.eventbase_enabled) {
+            return _runEventBaseBackfill();
+        }
         try {
             const { doesChatHaveVectors } = await import('../core/collection-loader.js');
             const existing = await doesChatHaveVectors(currentSettings);
@@ -2579,6 +2583,58 @@ async function startContinueVectorization() {
 }
 
 /**
+ * Runs EventBase ingestion as a backfill for the current chat.
+ * Called by startVectorization / continueVectorization when eventbase_enabled.
+ */
+async function _runEventBaseBackfill() {
+    if (isVectorizing) return;
+
+    isVectorizing = true;
+    activeVectorizeAbortController = new AbortController();
+    updateVectorizeButtonState(true);
+    progressTracker.setCancelHandler(() => stopActiveVectorization());
+
+    try {
+        const { runEventBaseIngestion } = await import('../core/eventbase-workflow.js');
+        const { getChatUUID } = await import('../core/chat-vectorization.js');
+        const context = getContext();
+        const settings = extension_settings.vecthareplus || {};
+
+        if (!Array.isArray(context.chat) || context.chat.length === 0) {
+            toastr.warning('No chat messages to process', 'EventBase');
+            return;
+        }
+
+        const messages = context.chat.filter(m => !m.is_system);
+        const result = await runEventBaseIngestion({
+            messages,
+            chatUUID: getChatUUID(),
+            settings,
+            abortSignal: activeVectorizeAbortController.signal,
+        });
+
+        toastr.success(
+            `EventBase: extracted ${result.eventsExtracted} events across ${result.windowsProcessed} windows`,
+            'VectHare'
+        );
+        closeContentVectorizer();
+    } catch (e) {
+        const isStopped = e?.name === 'AbortError' || String(e?.message || '').toLowerCase().includes('stopped by user');
+        if (isStopped) {
+            toastr.info('EventBase ingestion stopped', 'VectHare');
+            return;
+        }
+        console.error('[EventBase] Backfill failed:', e);
+        toastr.error('EventBase ingestion failed: ' + e.message, 'VectHare');
+    } finally {
+        progressTracker.clearCancelHandler();
+        isVectorizing = false;
+        activeVectorizeAbortController = null;
+        updateVectorizeButtonState(false);
+    }
+}
+
+/**
  * Starts the vectorization process
  */
 async function startVectorization() {
@@ -2590,6 +2646,14 @@ async function startVectorization() {
     if (!source) {
         toastr.warning('Please select or enter content first');
         return;
+    }
+
+    // EventBase mode: redirect chat backfill through EventBase ingestion pipeline
+    if (currentContentType === 'chat' && source.sourceType === 'current') {
+        const globalSettings = extension_settings.vecthareplus || {};
+        if (globalSettings.eventbase_enabled) {
+            return _runEventBaseBackfill();
+        }
     }
 
     // Check if vectors already exist for this content (chat specifically)
