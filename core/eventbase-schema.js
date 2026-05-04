@@ -92,7 +92,8 @@ export function validateEvent(raw) {
     const errors = [];
 
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
-        return { ok: false, errors: ['Event is not an object'] };
+        const debugInfo = typeof raw === 'string' ? `string "${raw.slice(0, 50)}"` : typeof raw;
+        return { ok: false, errors: [`Event is not an object (got ${debugInfo})`] };
     }
 
     // event_type — coerce unknown to 'other'

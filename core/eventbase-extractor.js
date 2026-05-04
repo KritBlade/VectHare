@@ -114,6 +114,20 @@ function _parseJsonArray(raw) {
         text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
     }
 
+    // Handle NDJSON (newline-delimited JSON) — convert to array
+    if (text.includes('\n') && !text.includes('[')) {
+        const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0 && l.startsWith('{'));
+        if (lines.length > 0) {
+            try {
+                const arr = lines.map(line => JSON.parse(line));
+                console.log(`[EventBase] Converted NDJSON (${lines.length} lines) to array`);
+                return arr;
+            } catch (e) {
+                // Not NDJSON, continue with normal parsing
+            }
+        }
+    }
+
     // Locate outermost [ ... ] or { "events": [...] }
     const arrayStart = text.indexOf('[');
     const objectStart = text.indexOf('{');
@@ -364,6 +378,13 @@ export async function extractEvents({ messages, windowStart, windowEnd, settings
     if (rawArray.length === 0) {
         if (debugLog) console.log(`[EventBase] Window ${windowIndex}: LLM returned no events (valid skip)`);
         return [];
+    }
+
+    if (debugLog) {
+        console.log(`[EventBase] Parsed array (window=${windowIndex}): ${rawArray.length} items, types: [${rawArray.map(item => typeof item).join(', ')}]`);
+        if (rawArray.length > 0 && typeof rawArray[0] !== 'object') {
+            console.log(`[EventBase] First item (non-object): ${JSON.stringify(rawArray[0]).slice(0, 100)}`);
+        }
     }
 
     // Enforce hard cap — sort by importance desc, then truncate
