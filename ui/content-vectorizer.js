@@ -2530,7 +2530,7 @@ async function startContinueVectorization() {
     }
 
     // If no vectors exist yet, just run the normal vectorization
-    if (currentContentType === 'chat' && source.sourceType === 'current') {
+    if (currentContentType === 'chat' && source.type === 'current') {
         const globalSettings = extension_settings.vecthareplus || {};
         if (globalSettings.eventbase_enabled) {
             return _runEventBaseBackfill();
@@ -2649,7 +2649,7 @@ async function startVectorization() {
     }
 
     // EventBase mode: redirect chat backfill through EventBase ingestion pipeline
-    if (currentContentType === 'chat' && source.sourceType === 'current') {
+    if (currentContentType === 'chat' && source.type === 'current') {
         const globalSettings = extension_settings.vecthareplus || {};
         if (globalSettings.eventbase_enabled) {
             return _runEventBaseBackfill();
@@ -2657,7 +2657,7 @@ async function startVectorization() {
     }
 
     // Check if vectors already exist for this content (chat specifically)
-    if (currentContentType === 'chat' && source.sourceType === 'current') {
+    if (currentContentType === 'chat' && source.type === 'current') {
         try {
             const { doesChatHaveVectors } = await import('../core/collection-loader.js');
             const existing = await doesChatHaveVectors(currentSettings);
