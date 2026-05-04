@@ -177,7 +177,8 @@ export async function isWindowAlreadyExtracted(sourceHashes, messageIds, setting
         if (!collectionId) return false;
 
         // Query with a broad overfetch to find candidate events from this window
-        const { metadata } = await queryCollection(collectionId, '', 50, settings);
+        // Use a dummy non-empty search text to avoid hybrid search errors when collection is empty
+        const { metadata } = await queryCollection(collectionId, 'event', 50, settings);
         if (!metadata?.length) return false;
 
         const windowHashSet = new Set(sourceHashes.map(String));

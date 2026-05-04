@@ -2589,23 +2589,37 @@ async function startContinueVectorization() {
 async function _runEventBaseBackfill() {
     if (isVectorizing) return;
 
+    console.log('[EventBase] _runEventBaseBackfill: starting...');
+
     isVectorizing = true;
     activeVectorizeAbortController = new AbortController();
     updateVectorizeButtonState(true);
     progressTracker.setCancelHandler(() => stopActiveVectorization());
 
     try {
+        console.log('[EventBase] Importing runEventBaseIngestion...');
         const { runEventBaseIngestion } = await import('../core/eventbase-workflow.js');
         const { getChatUUID } = await import('../core/chat-vectorization.js');
         const context = getContext();
         const settings = extension_settings.vecthareplus || {};
 
+        console.log('[EventBase] Context chat length:', context.chat?.length, 'EventBase enabled:', settings.eventbase_enabled);
+
         if (!Array.isArray(context.chat) || context.chat.length === 0) {
             toastr.warning('No chat messages to process', 'EventBase');
+            console.warn('[EventBase] No chat messages available');
             return;
         }
 
         const messages = context.chat.filter(m => !m.is_system);
+        console.log('[EventBase] Filtered messages (non-system):', messages.length);
+        console.log('[EventBase] Starting ingestion with settings:', { 
+            eventbase_enabled: settings.eventbase_enabled,
+            eventbase_window_size: settings.eventbase_window_size,
+            eventbase_window_overlap: settings.eventbase_window_overlap,
+            eventbase_debug_logging: settings.eventbase_debug_logging,
+        });
+
         const result = await runEventBaseIngestion({
             messages,
             chatUUID: getChatUUID(),
@@ -2613,6 +2627,7 @@ async function _runEventBaseBackfill() {
             abortSignal: activeVectorizeAbortController.signal,
         });
 
+        console.log('[EventBase] Ingestion result:', result);
         toastr.success(
             `EventBase: extracted ${result.eventsExtracted} events across ${result.windowsProcessed} windows`,
             'VectHare'
@@ -2622,6 +2637,7 @@ async function _runEventBaseBackfill() {
         const isStopped = e?.name === 'AbortError' || String(e?.message || '').toLowerCase().includes('stopped by user');
         if (isStopped) {
             toastr.info('EventBase ingestion stopped', 'VectHare');
+            console.log('[EventBase] Ingestion stopped by user');
             return;
         }
         console.error('[EventBase] Backfill failed:', e);
