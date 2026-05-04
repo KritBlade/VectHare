@@ -431,7 +431,7 @@ export async function extractEvents({ messages, windowStart, windowEnd, settings
     }
 
     const maxCount = settings.eventbase_max_events_per_window || 5;
-    const prompt = buildExtractionPrompt(excerptText, maxCount);
+    const prompt = buildExtractionPrompt(excerptText, maxCount, settings.eventbase_custom_prompt || '');
     const provider = (settings.eventbase_provider || 'openrouter').toLowerCase();
 
     if (debugLog) {

@@ -178,6 +178,7 @@ const defaultSettings = {
     eventbase_inject_format: 'json',              // 'json' | 'bullet'
     eventbase_inject_max_chars: 4000,
     eventbase_debug_logging: false,
+    eventbase_custom_prompt: '',                  // Custom extraction prompt (empty = use built-in default)
     // Re-rank weights (sum is normalized to 1.0 at runtime)
     eventbase_rerank_w_cosine: 0.55,
     eventbase_rerank_w_importance: 0.20,

@@ -1050,6 +1050,22 @@ export function renderSettings(containerId, settings, callbacks) {
                             </label>
                             <small class="vecthare_hint">Log [EventBase] details to the browser console.</small>
 
+                            <hr style="margin: 16px 0; opacity:0.2;" />
+
+                            <!-- Extraction Prompt -->
+                            <div class="vecthare-setting-row" style="flex-direction:column; align-items:flex-start; gap:6px;">
+                                <label style="font-weight:600;">Extraction Prompt</label>
+                                <small class="vecthare_hint">Full prompt sent to the LLM for each window. Use <code>{{text}}</code> where the excerpt goes and <code>{{maxCount}}</code> for the event cap. Leave empty to use the built-in default.</small>
+                                <div style="display:flex; gap:6px; width:100%; margin-bottom:4px;">
+                                    <button id="vecthare_eventbase_prompt_reset" class="vecthare-action-btn vecthare-btn-secondary" style="font-size:11px; padding:3px 10px;">Reset to Default</button>
+                                </div>
+                                <textarea id="vecthare_eventbase_custom_prompt"
+                                    class="vecthare-input"
+                                    rows="12"
+                                    style="width:100%; font-family:monospace; font-size:11px; resize:vertical;"
+                                    placeholder="Leave empty to use the built-in default prompt…"></textarea>
+                            </div>
+
                             <!-- Browser button -->
                             <div style="margin-top:20px;">
                                 <button id="vecthare_eventbase_open_browser" class="vecthare-action-btn vecthare-btn-secondary">
@@ -3201,6 +3217,22 @@ function bindSettingsEvents(settings, callbacks) {
             Object.assign(extension_settings.vecthareplus, settings);
             saveSettingsDebounced();
         });
+
+    // Custom extraction prompt textarea
+    $('#vecthare_eventbase_custom_prompt')
+        .val(settings.eventbase_custom_prompt || '')
+        .on('input', function() {
+            settings.eventbase_custom_prompt = $(this).val();
+            Object.assign(extension_settings.vecthareplus, settings);
+            saveSettingsDebounced();
+        });
+
+    // Reset prompt to built-in default
+    $('#vecthare_eventbase_prompt_reset').on('click', async function() {
+        const { DEFAULT_EXTRACTION_PROMPT } = await import('../core/eventbase-schema.js');
+        $('#vecthare_eventbase_custom_prompt').val(DEFAULT_EXTRACTION_PROMPT).trigger('input');
+        toastr.success('Extraction prompt reset to default', 'EventBase');
+    });
 
     $('#vecthare_eventbase_open_browser').on('click', function() {
         toastr.info('Event Browser coming in a future update.', 'EventBase');

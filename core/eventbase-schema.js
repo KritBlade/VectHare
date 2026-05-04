@@ -168,13 +168,11 @@ export function buildEmbedText(event) {
 // ---------------------------------------------------------------------------
 
 /**
- * Builds the LLM extraction prompt for a given excerpt.
- * @param {string} text  - The chat excerpt (already joined messages)
- * @param {number} maxCount - Max events to return (eventbase_max_events_per_window)
- * @returns {string}
+ * The built-in default extraction prompt template.
+ * Use {{maxCount}} and {{text}} as placeholders — they are replaced at runtime.
+ * Exposed so the UI can pre-fill the custom prompt textarea with this value.
  */
-export function buildExtractionPrompt(text, maxCount) {
-    return `You are a story event archivist for a roleplay session. Extract ONLY narratively significant story events from the excerpt below.
+export const DEFAULT_EXTRACTION_PROMPT = `You are a story event archivist for a roleplay session. Extract ONLY narratively significant story events from the excerpt below.
 
 =========================
 ABSOLUTE RULES (DO NOT BREAK)
@@ -191,7 +189,7 @@ ABSOLUTE RULES (DO NOT BREAK)
    - Violating this rule makes the output invalid.
 
 2. EVENT COUNT — STRICT:
-   - Return AT MOST ${maxCount} events.
+   - Return AT MOST {{maxCount}} events.
    - Returning fewer is correct and expected. Returning ZERO events ([]) is correct when the excerpt has no narrative impact.
    - DO NOT pad. DO NOT invent events. DO NOT split one event into multiple. Quality over quantity.
 
@@ -209,7 +207,7 @@ Return ONLY a valid JSON array. No prose. No markdown. No code fences.
 Each event object MUST have these fields:
 - event_type: one of [main_quest_update, side_quest_update, combat, travel, discovery, dialogue_significant, relationship_change, character_introduction, character_state_change, item_acquired, item_lost, faction_change, location_change, revelation, promise_or_oath, betrayal, death, other]
 - importance: integer 1-10 (10 = pivotal main plot, 1 = minor flavor worth remembering)
-- summary: 1-3 sentences, SAME LANGUAGE AS EXCERPT (see Rule 1)
+- summary: 4-8 dense sentences capturing WHO did WHAT, the key detail, the emotional/narrative impact, and any important consequences or reactions. SAME LANGUAGE AS EXCERPT (see Rule 1)
 - cause: short explanation of why it happened, SAME LANGUAGE AS EXCERPT (may be "")
 - result: outcome / state change, SAME LANGUAGE AS EXCERPT (may be "")
 - characters: array of proper-noun names, EXACT ORIGINAL SCRIPT
@@ -233,5 +231,20 @@ One event (Traditional Chinese excerpt):
 =========================
 EXCERPT
 =========================
-${text}`;
+{{text}}`;
+
+/**
+ * Builds the LLM extraction prompt for a given excerpt.
+ * If settings.eventbase_custom_prompt is non-empty, it is used as the template
+ * with `{{text}}` and `{{maxCount}}` replaced. Otherwise the built-in default is used.
+ * @param {string} text  - The chat excerpt (already joined messages)
+ * @param {number} maxCount - Max events to return (eventbase_max_events_per_window)
+ * @param {string} [customPrompt] - Optional custom prompt template from settings
+ * @returns {string}
+ */
+export function buildExtractionPrompt(text, maxCount, customPrompt = '') {
+    const template = (customPrompt && customPrompt.trim()) ? customPrompt : DEFAULT_EXTRACTION_PROMPT;
+    return template
+        .replace(/\{\{maxCount\}\}/g, String(maxCount))
+        .replace(/\{\{text\}\}/g, text);
 }
