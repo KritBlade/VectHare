@@ -21,8 +21,8 @@ import { retrieveEvents } from './eventbase-retrieval.js';
 import { formatEventsForInjection } from './eventbase-injection.js';
 import { progressTracker } from '../ui/progress-tracker.js';
 
-/** Extension prompt tag suffix for EventBase (distinct from legacy chunks tag) */
-const EVENTBASE_PROMPT_TAG = `${EXTENSION_PROMPT_TAG}:eventbase`;
+/** Extension prompt tag for EventBase (distinct from legacy chunks tag) */
+const EVENTBASE_PROMPT_TAG = `${EXTENSION_PROMPT_TAG}_eventbase`;
 
 // ---------------------------------------------------------------------------
 // Ingestion
@@ -253,10 +253,16 @@ export async function runEventBaseRetrieval({ chat, searchText, settings, chatUU
         return;
     }
 
-    const injectionText = formatEventsForInjection(events, settings);
+    let injectionText = formatEventsForInjection(events, settings);
     if (!injectionText) {
         if (debugLog) console.log('[EventBase] Injection text empty after formatting');
         return;
+    }
+
+    // Wrap with XML tag if configured (same as legacy path)
+    const xmlTag = settings.rag_xml_tag || '';
+    if (xmlTag) {
+        injectionText = `<${xmlTag}>\n${injectionText}\n</${xmlTag}>`;
     }
 
     // Clear any previous EventBase injection
@@ -267,6 +273,11 @@ export async function runEventBaseRetrieval({ chat, searchText, settings, chatUU
 
     if (debugLog) {
         console.log(`[EventBase] Injected ${events.length} event(s), text length: ${injectionText.length}`);
+        console.log(`[EventBase] setExtensionPrompt tag="${EVENTBASE_PROMPT_TAG}" position=${settings.position} depth=${settings.depth}`);
+        // Verify the slot is actually populated
+        const slotContent = extension_prompts[EVENTBASE_PROMPT_TAG];
+        console.log(`[EventBase] Slot verification — key exists: ${EVENTBASE_PROMPT_TAG in extension_prompts}, value type: ${typeof slotContent?.value}, length: ${slotContent?.value?.length ?? slotContent?.length ?? '?'}`);
+        console.log('[EventBase] extension_prompts keys:', Object.keys(extension_prompts));
         console.log('[EventBase] Injection preview:', injectionText.slice(0, 300));
     }
 
