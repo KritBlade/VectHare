@@ -226,15 +226,20 @@ function _parseJsonArray(raw, debugLog = false, windowIndex = -1) {
         );
     }
 
-    const chosen = candidates.find(arr => {
-        if (!Array.isArray(arr)) return false;
-        if (arr.length === 0) return true;
+    // Prefer a non-empty array whose first item looks like an event object.
+    // Only fall back to an empty array [] if no event-object array is found
+    // (handles a legit "no events" response without mistaking property arrays
+    // like "items":[], "factions":[] for the top-level event array).
+    const isEventArray = arr => {
+        if (!Array.isArray(arr) || arr.length === 0) return false;
         const first = arr[0];
         if (!first || typeof first !== 'object' || Array.isArray(first)) return false;
         return Object.prototype.hasOwnProperty.call(first, 'event_type')
             || Object.prototype.hasOwnProperty.call(first, 'summary')
             || Object.prototype.hasOwnProperty.call(first, 'importance');
-    });
+    };
+    const chosen = candidates.find(isEventArray)
+        ?? candidates.find(arr => Array.isArray(arr) && arr.length === 0);
 
     if (!chosen) {
         const sample = candidates[0];
