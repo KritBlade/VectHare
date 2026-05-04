@@ -2600,6 +2600,7 @@ async function _runEventBaseBackfill() {
         console.log('[EventBase] Importing runEventBaseIngestion...');
         const { runEventBaseIngestion } = await import('../core/eventbase-workflow.js');
         const { getChatUUID } = await import('../core/chat-vectorization.js');
+        const { chunkText } = await import('../core/chunking.js');
         const context = getContext();
         const settings = extension_settings.vecthareplus || {};
 
@@ -2612,12 +2613,28 @@ async function _runEventBaseBackfill() {
         }
 
         const messages = context.chat.filter(m => !m.is_system);
+        const legacyStrategy = currentSettings.strategy || 'per_message';
+        const legacyBatchSize = Number(currentSettings.batchSize) || 4;
+        const legacyGroupBatchSize = Number(currentSettings.groupBatchSize) || 10;
+
+        // Reuse legacy chunk math so progress aligns with the Vectorize Content modal.
+        const legacyChunks = await chunkText(messages, {
+            strategy: legacyStrategy,
+            chunkSize: currentSettings.chunkSize || 1000,
+            chunkOverlap: currentSettings.chunkOverlap || 200,
+            batchSize: legacyBatchSize,
+            groupBatchSize: legacyGroupBatchSize,
+        });
+        const legacyTotalChunks = Array.isArray(legacyChunks) ? legacyChunks.length : 0;
+
         console.log('[EventBase] Filtered messages (non-system):', messages.length);
         console.log('[EventBase] Starting ingestion with settings:', { 
             eventbase_enabled: settings.eventbase_enabled,
             eventbase_window_size: settings.eventbase_window_size,
             eventbase_window_overlap: settings.eventbase_window_overlap,
             eventbase_debug_logging: settings.eventbase_debug_logging,
+            legacy_progress_strategy: legacyStrategy,
+            legacy_total_chunks: legacyTotalChunks,
         });
 
         const result = await runEventBaseIngestion({
@@ -2625,6 +2642,11 @@ async function _runEventBaseBackfill() {
             chatUUID: getChatUUID(),
             settings,
             abortSignal: activeVectorizeAbortController.signal,
+            progressPlan: {
+                strategy: legacyStrategy,
+                batchSize: legacyBatchSize,
+                totalChunks: legacyTotalChunks,
+            },
         });
 
         console.log('[EventBase] Ingestion result:', result);

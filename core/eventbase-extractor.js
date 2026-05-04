@@ -106,87 +106,159 @@ function _extractReply(data) {
  * @param {string} raw
  * @returns {unknown[]}
  */
-function _parseJsonArray(raw) {
+function _parseJsonArray(raw, debugLog = false, windowIndex = -1) {
     let text = (raw || '').trim();
+
+    if (debugLog) {
+        console.log(`[EventBase] Parser window=${windowIndex}: raw length=${text.length}, preview:`, text.slice(0, 150));
+    }
 
     // Strip code fences
     if (text.startsWith('```')) {
         text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
     }
 
-    // Handle NDJSON (newline-delimited JSON) — convert to array
-    if (text.includes('\n') && !text.includes('[')) {
-        const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0 && l.startsWith('{'));
+    if (!text) {
+        throw new EventBaseExtractionError('Empty LLM response');
+    }
+
+    /** @type {unknown[][]} */
+    const candidates = [];
+
+    // 1) Direct parse first (covers valid array JSON immediately).
+    try {
+        const direct = JSON.parse(text);
+        if (Array.isArray(direct)) candidates.push(direct);
+        if (direct && typeof direct === 'object' && !Array.isArray(direct)) {
+            const wrappedArr = Object.values(direct).find(v => Array.isArray(v));
+            if (Array.isArray(wrappedArr)) candidates.push(wrappedArr);
+        }
+    } catch {
+        // Continue with extraction-based parsing.
+    }
+
+    // 2) NDJSON / object-stream: one JSON object per line.
+    if (text.includes('\n')) {
+        const lines = text
+            .split('\n')
+            .map(l => l.trim())
+            .filter(l => l.length > 0 && l.startsWith('{') && l.endsWith('}'));
         if (lines.length > 0) {
             try {
                 const arr = lines.map(line => JSON.parse(line));
-                console.log(`[EventBase] Converted NDJSON (${lines.length} lines) to array`);
-                return arr;
-            } catch (e) {
-                // Not NDJSON, continue with normal parsing
+                candidates.push(arr);
+            } catch {
+                // Ignore and continue.
             }
         }
     }
 
-    // Locate outermost [ ... ] or { "events": [...] }
-    const arrayStart = text.indexOf('[');
-    const objectStart = text.indexOf('{');
-
-    if (arrayStart === -1 && objectStart === -1) {
-        throw new EventBaseExtractionError(`No JSON found in LLM response: ${text.slice(0, 200)}`);
-    }
-
-    let jsonText = text;
-
-    // If the model wrapped in an object like {"events":[...]} unwrap it
-    if (objectStart !== -1 && (arrayStart === -1 || objectStart < arrayStart)) {
-        try {
-            const obj = JSON.parse(text.slice(objectStart));
-            // Find the first array value
-            const arr = Object.values(obj).find(v => Array.isArray(v));
-            if (Array.isArray(arr) && arr.length > 0 && typeof arr[0] === 'object') {
-                return arr;
-            }
-            // No valid array found in object — fall through to direct parse
-        } catch {
-            // fall through
-        }
-    }
-
-    // Extract the outermost [ ... ]
-    if (arrayStart !== -1) {
+    // 3) Try every balanced array slice and keep parseable ones.
+    for (let i = 0; i < text.length; i++) {
+        if (text[i] !== '[') continue;
         let depth = 0;
         let end = -1;
-        for (let i = arrayStart; i < text.length; i++) {
-            if (text[i] === '[') depth++;
-            else if (text[i] === ']') {
+        for (let j = i; j < text.length; j++) {
+            if (text[j] === '[') depth++;
+            else if (text[j] === ']') {
                 depth--;
                 if (depth === 0) {
-                    end = i;
+                    end = j;
                     break;
                 }
             }
         }
-        if (end !== -1) {
-            jsonText = text.slice(arrayStart, end + 1);
+        if (end === -1) continue;
+
+        const slice = text.slice(i, end + 1);
+        try {
+            const parsed = JSON.parse(slice);
+            if (Array.isArray(parsed)) candidates.push(parsed);
+        } catch {
+            // Keep scanning for other candidates.
         }
     }
 
-    const parsed = JSON.parse(jsonText);
-    if (!Array.isArray(parsed)) {
-        throw new EventBaseExtractionError(`Parsed JSON is not an array: ${typeof parsed}`);
+    // 4) Extract top-level object stream from first '{' to last '}' as a fallback.
+    const firstBrace = text.indexOf('{');
+    const lastBrace = text.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace > firstBrace) {
+        const objectRegion = text.slice(firstBrace, lastBrace + 1);
+        const stream = [];
+        let depth = 0;
+        let start = -1;
+        for (let i = 0; i < objectRegion.length; i++) {
+            if (objectRegion[i] === '{') {
+                if (depth === 0) start = i;
+                depth++;
+            } else if (objectRegion[i] === '}') {
+                depth--;
+                if (depth === 0 && start !== -1) {
+                    const part = objectRegion.slice(start, i + 1);
+                    try {
+                        const obj = JSON.parse(part);
+                        if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+                            stream.push(obj);
+                        }
+                    } catch {
+                        // Skip malformed object parts.
+                    }
+                    start = -1;
+                }
+            }
+        }
+        if (stream.length > 0) {
+            candidates.push(stream);
+        }
     }
 
-    // Sanity check: array must contain objects (events), not primitives
-    if (parsed.length > 0 && typeof parsed[0] !== 'object') {
-        throw new EventBaseExtractionError(
-            `Parsed array contains primitives (${typeof parsed[0]}), not event objects. ` +
-            `This usually means the wrong nested array was extracted. ` +
-            `Raw: ${JSON.stringify(parsed).slice(0, 100)}`
+    // Pick the first candidate that looks like event objects.
+    if (debugLog) {
+        console.log(`[EventBase] Parser window=${windowIndex}: ${candidates.length} candidate array(s) found:`,
+            candidates.map((c, i) => {
+                const first = c[0];
+                const type = Array.isArray(first) ? 'array' : typeof first;
+                const keys = (first && typeof first === 'object' && !Array.isArray(first))
+                    ? Object.keys(first).slice(0, 5).join(',')
+                    : JSON.stringify(first)?.slice(0, 40);
+                return `[${i}] len=${c.length} firstType=${type} keys/val=${keys}`;
+            })
         );
     }
 
-    return parsed;
+    const chosen = candidates.find(arr => {
+        if (!Array.isArray(arr)) return false;
+        if (arr.length === 0) return true;
+        const first = arr[0];
+        if (!first || typeof first !== 'object' || Array.isArray(first)) return false;
+        return Object.prototype.hasOwnProperty.call(first, 'event_type')
+            || Object.prototype.hasOwnProperty.call(first, 'summary')
+            || Object.prototype.hasOwnProperty.call(first, 'importance');
+    });
+
+    if (!chosen) {
+        const sample = candidates[0];
+        const sampleType = Array.isArray(sample) && sample.length > 0 ? typeof sample[0] : 'none';
+        throw new EventBaseExtractionError(
+            `Unable to find event-object array in LLM response. ` +
+            `candidateCount=${candidates.length}, firstCandidateItemType=${sampleType}, ` +
+            `rawPreview=${text.slice(0, 200)}`
+        );
+    }
+
+    if (debugLog) {
+        const chosenIdx = candidates.indexOf(chosen);
+        console.log(`[EventBase] Parser window=${windowIndex}: chose candidate[${chosenIdx}] len=${chosen.length}`);
+    }
+
+    if (chosen.length > 0 && (typeof chosen[0] !== 'object' || Array.isArray(chosen[0]))) {
+        throw new EventBaseExtractionError(
+            `Parsed array contains non-object items (first type: ${typeof chosen[0]}). ` +
+            `Raw: ${JSON.stringify(chosen).slice(0, 120)}`
+        );
+    }
+
+    return chosen;
 }
 
 // ---------------------------------------------------------------------------
@@ -384,8 +456,10 @@ export async function extractEvents({ messages, windowStart, windowEnd, settings
     // Parse JSON
     let rawArray;
     try {
-        rawArray = _parseJsonArray(rawReply);
+        rawArray = _parseJsonArray(rawReply, debugLog, windowIndex);
     } catch (parseErr) {
+        // Always log full raw reply on parse failure regardless of debugLog flag
+        console.warn(`[EventBase] Window ${windowIndex}: parse failed. Full raw reply:\n${rawReply}`);
         throw new EventBaseExtractionError(
             `EventBase: JSON parse failed for window ${windowIndex}: ${parseErr.message}`,
             windowIndex,

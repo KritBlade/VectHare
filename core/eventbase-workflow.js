@@ -42,9 +42,10 @@ const EVENTBASE_PROMPT_TAG = `${EXTENSION_PROMPT_TAG}:eventbase`;
  * @param {string}  [params.chatUUID]   - Override chat UUID
  * @param {object}   params.settings    - VectHare settings
  * @param {AbortSignal|null} [params.abortSignal]
+ * @param {{ strategy?: string, batchSize?: number, totalChunks?: number }|null} [params.progressPlan]
  * @returns {Promise<{ eventsExtracted: number, windowsProcessed: number, windowsSkipped: number }>}
  */
-export async function runEventBaseIngestion({ messages, chatUUID, settings, abortSignal = null }) {
+export async function runEventBaseIngestion({ messages, chatUUID, settings, abortSignal = null, progressPlan = null }) {
     const debugLog = settings.eventbase_debug_logging;
     const uuid = chatUUID || getChatUUID();
 
@@ -70,6 +71,14 @@ export async function runEventBaseIngestion({ messages, chatUUID, settings, abor
     }
 
     progressTracker.show('EventBase Extraction', windows.length, 'Windows');
+
+    const totalLegacyChunks = Number(progressPlan?.totalChunks) || 0;
+    const legacyStrategy = progressPlan?.strategy || 'per_message';
+    const legacyBatchSize = Math.max(1, Number(progressPlan?.batchSize) || 1);
+    if (totalLegacyChunks > 0) {
+        // Keep the CHUNKS card on legacy math (total + remaining), like standard vectorization.
+        progressTracker.updateEmbeddingProgress(0, totalLegacyChunks);
+    }
 
     let eventsExtracted = 0;
     let windowsProcessed = 0;
@@ -172,6 +181,18 @@ export async function runEventBaseIngestion({ messages, chatUUID, settings, abor
         }
 
         // Update progress with current window number and running event count
+        if (totalLegacyChunks > 0) {
+            const coveredMessages = Math.min(messages.length, (windowIdx * step) + windowOverlap);
+            const processedLegacyChunks = _estimateProcessedLegacyChunks({
+                coveredMessages,
+                totalMessages: messages.length,
+                totalChunks: totalLegacyChunks,
+                strategy: legacyStrategy,
+                batchSize: legacyBatchSize,
+            });
+            progressTracker.updateEmbeddingProgress(processedLegacyChunks, totalLegacyChunks);
+        }
+
         progressTracker.updateProgress(
             windowIdx,
             `${eventsExtracted} event(s) found, processing windows...`
@@ -246,6 +267,46 @@ export async function runEventBaseRetrieval({ chat, searchText, settings, chatUU
 // ---------------------------------------------------------------------------
 // Utilities
 // ---------------------------------------------------------------------------
+
+/**
+ * Estimate how many legacy chunks are effectively processed based on covered messages.
+ * This keeps EventBase progress aligned with the Vectorize Content chunk semantics.
+ *
+ * @param {object} params
+ * @param {number} params.coveredMessages
+ * @param {number} params.totalMessages
+ * @param {number} params.totalChunks
+ * @param {string} params.strategy
+ * @param {number} params.batchSize
+ * @returns {number}
+ */
+function _estimateProcessedLegacyChunks({ coveredMessages, totalMessages, totalChunks, strategy, batchSize }) {
+    if (totalChunks <= 0 || totalMessages <= 0) return 0;
+
+    const covered = Math.max(0, Math.min(totalMessages, coveredMessages));
+    let processed = 0;
+
+    switch (strategy) {
+        case 'per_message':
+            processed = covered;
+            break;
+        case 'conversation_turns':
+            processed = Math.ceil(covered / 2);
+            break;
+        case 'message_batch':
+        case 'message_group_batch':
+            processed = Math.ceil(covered / Math.max(1, batchSize));
+            break;
+        default: {
+            // Fallback to proportional estimate for size-based strategies.
+            const ratio = covered / totalMessages;
+            processed = Math.round(totalChunks * ratio);
+            break;
+        }
+    }
+
+    return Math.max(0, Math.min(totalChunks, processed));
+}
 
 /**
  * Minimal djb2 hash (matches eventbase-extractor.js — kept local to avoid circular dep).
