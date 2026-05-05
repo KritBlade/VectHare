@@ -276,7 +276,7 @@ export async function runEventBaseRetrieval({ chat, searchText, settings, chatUU
         collectionId,
         `${source}:${collectionId}`,
         `${backend}:${source}:${collectionId}`,
-    ];
+    ].filter(Boolean);
     const disabledKey = candidateKeys.find(key => key && !isCollectionEnabled(key));
     if (disabledKey) {
         if (debugLog) {
@@ -287,22 +287,27 @@ export async function runEventBaseRetrieval({ chat, searchText, settings, chatUU
     }
 
     // 2. "Active for current chat" checkbox in Collection Settings.
-    //    The checkbox writes to lockedToChatIds in the plain-ID metadata entry.
-    //    If the user has ever saved that panel, lockedToChatIds will exist in the
-    //    stored object (even when empty).  Only gate when it was explicitly set.
+    //    EventBase collections are chat-scoped, so retrieval must only run when
+    //    the matching EventBase collection is explicitly locked to the current
+    //    chat. The UI may save metadata under plain, source-scoped, or full
+    //    registry keys, so inspect all candidate keys instead of only plain ID.
     const currentChatId = getCurrentChatId();
-    const storedMeta = extension_settings?.vecthareplus?.collections?.[collectionId];
-    if (storedMeta && Object.prototype.hasOwnProperty.call(storedMeta, 'lockedToChatIds')) {
-        if (!isCollectionLockedToChat(collectionId, currentChatId)) {
-            if (debugLog) {
-                console.log(
-                    `[EventBase] Not locked to current chat (${currentChatId}), ` +
-                    `lockedChats=${JSON.stringify(storedMeta.lockedToChatIds)} — skipping retrieval`
-                );
-            }
-            setExtensionPrompt(EVENTBASE_PROMPT_TAG, '', settings.position, settings.depth, false);
-            return;
+    const collectionsMeta = extension_settings?.vecthareplus?.collections || {};
+    const lockMetaKey = candidateKeys.find(key =>
+        collectionsMeta[key] && Object.prototype.hasOwnProperty.call(collectionsMeta[key], 'lockedToChatIds')
+    );
+    const lockedToCurrentChat = currentChatId && candidateKeys.some(key => isCollectionLockedToChat(key, currentChatId));
+
+    if (!lockedToCurrentChat) {
+        if (debugLog) {
+            const lockedChats = lockMetaKey ? collectionsMeta[lockMetaKey]?.lockedToChatIds : [];
+            console.log(
+                `[EventBase] Not active for current chat (${currentChatId || 'none'}), ` +
+                `lockMetaKey=${lockMetaKey || 'none'}, lockedChats=${JSON.stringify(lockedChats)} — skipping retrieval`
+            );
         }
+        setExtensionPrompt(EVENTBASE_PROMPT_TAG, '', settings.position, settings.depth, false);
+        return;
     }
 
     if (debugLog) {
