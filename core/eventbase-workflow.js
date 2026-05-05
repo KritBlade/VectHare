@@ -261,6 +261,7 @@ export async function runEventBaseRetrieval({ chat, searchText, settings, chatUU
         if (debugLog) {
             console.log(`[EventBase] Collection paused (key="${disabledKey}") — skipping retrieval`);
         }
+        setExtensionPrompt(EVENTBASE_PROMPT_TAG, '', settings.position, settings.depth, false);
         return;
     }
 
@@ -278,6 +279,7 @@ export async function runEventBaseRetrieval({ chat, searchText, settings, chatUU
                     `lockedChats=${JSON.stringify(storedMeta.lockedToChatIds)} — skipping retrieval`
                 );
             }
+            setExtensionPrompt(EVENTBASE_PROMPT_TAG, '', settings.position, settings.depth, false);
             return;
         }
     }
