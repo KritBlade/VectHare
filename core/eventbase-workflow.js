@@ -11,7 +11,8 @@
  * ============================================================================
  */
 
-import { setExtensionPrompt, extension_prompts } from '../../../../../script.js';
+import { setExtensionPrompt, extension_prompts, getCurrentChatId } from '../../../../../script.js';
+import { extension_settings } from '../../../../extensions.js';
 import { getChatUUID } from './collection-ids.js';
 import { EXTENSION_PROMPT_TAG } from './constants.js';
 import { EventBaseFatalError, EventBaseExtractionError } from './eventbase-schema.js';
@@ -19,7 +20,7 @@ import { extractEvents } from './eventbase-extractor.js';
 import { insertEvents, isWindowAlreadyExtracted, buildEventBaseCollectionId } from './eventbase-store.js';
 import { retrieveEvents } from './eventbase-retrieval.js';
 import { formatEventsForInjectionDetailed } from './eventbase-injection.js';
-import { isCollectionEnabled } from './collection-metadata.js';
+import { isCollectionEnabled, isCollectionLockedToChat } from './collection-metadata.js';
 import { progressTracker } from '../ui/progress-tracker.js';
 
 /** Extension prompt tag for EventBase (distinct from legacy chunks tag) */
@@ -245,6 +246,9 @@ export async function runEventBaseRetrieval({ chat, searchText, settings, chatUU
 
     // Respect the "Active for current chat" toggle in Collection Settings.
     const collectionId = buildEventBaseCollectionId(uuid, settings?.vector_backend);
+
+    // 1. Global enabled flag (collection card pause/resume toggle).
+    //    Stored under registry key (backend:source:id) so check all key variants.
     const backend = settings?.vector_backend || 'standard';
     const source = settings?.source || 'transformers';
     const candidateKeys = [
@@ -255,9 +259,27 @@ export async function runEventBaseRetrieval({ chat, searchText, settings, chatUU
     const disabledKey = candidateKeys.find(key => key && !isCollectionEnabled(key));
     if (disabledKey) {
         if (debugLog) {
-            console.log(`[EventBase] Collection disabled (key="${disabledKey}") — skipping retrieval`);
+            console.log(`[EventBase] Collection paused (key="${disabledKey}") — skipping retrieval`);
         }
         return;
+    }
+
+    // 2. "Active for current chat" checkbox in Collection Settings.
+    //    The checkbox writes to lockedToChatIds in the plain-ID metadata entry.
+    //    If the user has ever saved that panel, lockedToChatIds will exist in the
+    //    stored object (even when empty).  Only gate when it was explicitly set.
+    const currentChatId = getCurrentChatId();
+    const storedMeta = extension_settings?.vecthareplus?.collections?.[collectionId];
+    if (storedMeta && Object.prototype.hasOwnProperty.call(storedMeta, 'lockedToChatIds')) {
+        if (!isCollectionLockedToChat(collectionId, currentChatId)) {
+            if (debugLog) {
+                console.log(
+                    `[EventBase] Not locked to current chat (${currentChatId}), ` +
+                    `lockedChats=${JSON.stringify(storedMeta.lockedToChatIds)} — skipping retrieval`
+                );
+            }
+            return;
+        }
     }
 
     if (debugLog) {

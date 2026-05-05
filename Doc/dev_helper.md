@@ -58,7 +58,48 @@ Notes:
 - `groupMaxTokens` is computed from per-item budget and count, capped at 8192.
 - `groupTimeoutMs` is computed as base timeout + per-item scaling, capped at 180000 ms.
 
-## 4) Similharity Plugin Speedup (Simultaneous Embedding Requests)
+## 4) Collection Active State — Two Separate Controls
+
+There are **two independent toggles** for collection activity. They store data in different fields and must be checked separately.
+
+### A) Card Pause/Resume Button (`enabled` flag)
+- **UI:** Play/pause icon button on each collection card in the Database Browser
+- **Writes:** `setCollectionEnabled(registryKey, false)` → stores `{ enabled: false }` under `extension_settings.vecthareplus.collections[registryKey]`
+- **Key format:** `collection.registryKey || collection.id` — for EventBase collections registered via `eventbase-store.js`, this is the **plain collection ID** (no `backend:source:` prefix) because `registerCollection(collectionId)` is called with the raw ID
+- **Read:** `isCollectionEnabled(collectionId)` in `core/collection-metadata.js` line 318
+- **Default:** `true` (enabled) when no metadata exists
+
+### B) "Active for current chat" Checkbox (lock system)
+- **UI:** Checkbox in the Collection Settings panel (gear icon → "Active for current chat")
+- **Writes:** `setCollectionLock(collectionId, chatId)` / `removeCollectionLock(collectionId, chatId)` → stores chat IDs in `{ lockedToChatIds: [...] }` under the **plain collection ID** entry in metadata
+- **Key format:** Plain collection ID (`state.collectionId` which is `collection.id`, not `collection.registryKey`)
+- **Read:** `isCollectionLockedToChat(collectionId, chatId)` in `core/collection-metadata.js` line 626
+- **Gating logic:** Only applies when `lockedToChatIds` exists as an own property in stored metadata (meaning the user has saved the settings panel at least once). If the key is absent, the collection is unrestricted by default.
+
+### Where EventBase Retrieval Checks Both
+File: `core/eventbase-workflow.js`, function `runEventBaseRetrieval`
+
+```javascript
+// Gate A: card pause toggle
+const disabledKey = candidateKeys.find(key => key && !isCollectionEnabled(key));
+if (disabledKey) return;
+
+// Gate B: "Active for current chat" checkbox
+const storedMeta = extension_settings?.vecthareplus?.collections?.[collectionId];
+if (storedMeta && Object.prototype.hasOwnProperty.call(storedMeta, 'lockedToChatIds')) {
+    if (!isCollectionLockedToChat(collectionId, currentChatId)) return;
+}
+```
+
+### Key files
+- `core/collection-metadata.js` — `isCollectionEnabled`, `setCollectionEnabled`, `isCollectionLockedToChat`, `setCollectionLock`, `removeCollectionLock`, `getCollectionLocks`
+- `ui/database-browser.js` line ~1055 — card toggle handler (`vecthare-action-toggle`)
+- `ui/database-browser.js` function `saveActivation` — "Active for current chat" save handler
+- `ui/database-browser.js` function `openActivationEditor` — reads lock state to populate checkbox
+
+---
+
+## 5) Similharity Plugin Speedup (Simultaneous Embedding Requests)
 Plugin file changed: `../similharity/index.js`
 
 What we changed:
