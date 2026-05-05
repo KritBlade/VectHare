@@ -43,6 +43,12 @@ let activeVectorizeAbortController = null;
 let isVectorizing = false;
 let startFromMessage = 1;
 
+function syncStartFromMessageFromUI() {
+    const raw = parseInt($('#vecthare_cv_startfrom').val(), 10);
+    startFromMessage = Number.isFinite(raw) && raw >= 1 ? raw : 1;
+    $('#vecthare_cv_startfrom').val(startFromMessage);
+}
+
 function updateVectorizeButtonState(running) {
     const btn = $('#vecthare_cv_vectorize');
     const cancelBtn = $('#vecthare_cv_cancel');
@@ -2549,6 +2555,8 @@ function getSourceData() {
 async function startContinueVectorization() {
     if (isVectorizing) return;
 
+    syncStartFromMessageFromUI();
+
     const source = getSourceData();
     if (!source) {
         toastr.warning('Please select or enter content first');
@@ -2615,6 +2623,8 @@ async function startContinueVectorization() {
  */
 async function _runEventBaseBackfill() {
     if (isVectorizing) return;
+
+    syncStartFromMessageFromUI();
 
     console.log('[EventBase] _runEventBaseBackfill: starting...');
 
@@ -2724,6 +2734,8 @@ async function _runEventBaseBackfill() {
  */
 async function startVectorization() {
     if (isVectorizing) return;
+
+    syncStartFromMessageFromUI();
 
     const type = getContentType(currentContentType);
     const source = getSourceData();
