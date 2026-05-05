@@ -175,8 +175,6 @@ const defaultSettings = {
     eventbase_retrieval_top_k: 8,                 // Events to retrieve per generation
     eventbase_retrieval_min_importance: 1,        // Minimum importance for retrieval
     eventbase_retrieval_filters_enabled: true,
-    eventbase_inject_format: 'json',              // 'json' | 'bullet'
-    eventbase_inject_max_chars: 4000,
     eventbase_debug_logging: false,
     debug_vectorizing_log: false,                // Verbose vectorization progress logs in console
     eventbase_custom_prompt: '',                  // Custom extraction prompt (empty = use built-in default)

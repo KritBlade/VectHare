@@ -1030,23 +1030,6 @@ export function renderSettings(containerId, settings, callbacks) {
 
                             <hr style="margin: 16px 0; opacity:0.2;" />
 
-                            <!-- Injection settings -->
-                            <p class="vecthare-section-label"><strong>Injection</strong></p>
-
-                            <div class="vecthare-form-group">
-                                <label class="vecthare-label">Injection Format</label>
-                                <select id="vecthare_eventbase_inject_format" class="vecthare-select" style="width:auto;">
-                                    <option value="json">JSON array (full structured data)</option>
-                                    <option value="bullet">Bullet points (compact)</option>
-                                </select>
-                            </div>
-
-                            <div class="vecthare-form-group">
-                                <label class="vecthare-label">Max Injection Characters</label>
-                                <input type="number" id="vecthare_eventbase_inject_max_chars" class="vecthare-input" min="500" max="32000" step="100" style="width:130px;" />
-                                <small class="vecthare_hint">Lowest-scoring events are dropped first to fit within budget.</small>
-                            </div>
-
                             <hr style="margin: 16px 0; opacity:0.2;" />
 
                             <!-- Extraction Prompt -->
@@ -3208,16 +3191,6 @@ function bindSettingsEvents(settings, callbacks) {
         saveSettingsDebounced();
         toastr.success('Re-rank weights reset to defaults');
     });
-
-    $('#vecthare_eventbase_inject_format')
-        .val(settings.eventbase_inject_format || 'json')
-        .on('change', function() {
-            settings.eventbase_inject_format = String($(this).val());
-            Object.assign(extension_settings.vecthareplus, settings);
-            saveSettingsDebounced();
-        });
-
-    _bindEventBaseNumber('inject_max_chars', 'eventbase_inject_max_chars');
 
     // Custom extraction prompt textarea — pre-fill with default if nothing saved
     (async () => {

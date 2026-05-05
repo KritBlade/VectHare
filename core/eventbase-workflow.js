@@ -18,7 +18,7 @@ import { EventBaseFatalError, EventBaseExtractionError } from './eventbase-schem
 import { extractEvents } from './eventbase-extractor.js';
 import { insertEvents, isWindowAlreadyExtracted } from './eventbase-store.js';
 import { retrieveEvents } from './eventbase-retrieval.js';
-import { formatEventsForInjection } from './eventbase-injection.js';
+import { formatEventsForInjectionDetailed } from './eventbase-injection.js';
 import { progressTracker } from '../ui/progress-tracker.js';
 
 /** Extension prompt tag for EventBase (distinct from legacy chunks tag) */
@@ -269,7 +269,9 @@ export async function runEventBaseRetrieval({ chat, searchText, settings, chatUU
         return;
     }
 
-    let injectionText = formatEventsForInjection(events, settings);
+    const injectionResult = formatEventsForInjectionDetailed(events, settings);
+    const injectionText = injectionResult.text;
+    const injectedCount = injectionResult.includedCount;
     if (!injectionText) {
         if (debugLog) console.log('[EventBase] Injection text empty after formatting');
         return;
@@ -288,7 +290,7 @@ export async function runEventBaseRetrieval({ chat, searchText, settings, chatUU
     setExtensionPrompt(EVENTBASE_PROMPT_TAG, injectionText, settings.position, settings.depth, false);
 
     if (debugLog) {
-        console.log(`[EventBase] Injected ${events.length} event(s), text length: ${injectionText.length}`);
+        console.log(`[EventBase] Injected ${injectedCount} event(s) (requested ${events.length}), text length: ${injectionText.length}`);
         console.log(`[EventBase] setExtensionPrompt tag="${EVENTBASE_PROMPT_TAG}" position=${settings.position} depth=${settings.depth}`);
         // Verify the slot is actually populated
         const slotContent = extension_prompts[EVENTBASE_PROMPT_TAG];
@@ -298,7 +300,7 @@ export async function runEventBaseRetrieval({ chat, searchText, settings, chatUU
     }
 
     if (settings.retrieval_popup_on_result) {
-        toastr.success(`EventBase: injected ${events.length} event(s)`, 'VectHarePlus Retrieval');
+        toastr.success(`EventBase: injected ${injectedCount} event(s)`, 'VectHarePlus Retrieval');
     }
 }
 

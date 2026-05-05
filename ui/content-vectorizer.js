@@ -2685,6 +2685,9 @@ async function _runEventBaseBackfill() {
         });
 
         console.log('[EventBase] Ingestion result:', result);
+        // Force-complete progress so the chunk counter doesn't show "1 left" when
+        // the last partial window was intentionally skipped by the window size guard.
+        progressTracker.complete(true, `EventBase: extracted ${result.eventsExtracted} events from ${result.windowsProcessed} windows`);
         toastr.success(
             `EventBase: extracted ${result.eventsExtracted} events across ${result.windowsProcessed} windows`,
             'VectHare'
