@@ -1,0 +1,568 @@
+Generate entered
+index.js:19 [QR2] calling {args: Array(3), functionToCall: ƒ}
+chat-vectorization.js:1823 🐰 VectHare: rearrangeChat called (type: normal, chat length: 2118)
+chat-vectorization.js:1886 VectHare: Will query 4 collections: (4) ['vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0', 'vectra:transformers:test', 'vectra:transformers:vecthare_diag', 'vectra:transformers:__vecthare_health_check__']
+chat-vectorization.js:1905 VectHare: Extracted 8 keywords from query: (8) ['lia', 'current', 'critblade', 'mayla', 'initial', 'kashier', 'evaluating', 'master']
+collection-metadata.js:951 [VectHare Activation Filter] Collection vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0: hasTriggers=false, hasConditions=false
+collection-metadata.js:982 [VectHare Activation Filter] Collection vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0: ✓ NO_TRIGGERS_OR_CONDITIONS (auto-activate)
+collection-metadata.js:951 [VectHare Activation Filter] Collection vectra:transformers:test: hasTriggers=false, hasConditions=false
+collection-metadata.js:982 [VectHare Activation Filter] Collection vectra:transformers:test: ✓ NO_TRIGGERS_OR_CONDITIONS (auto-activate)
+collection-metadata.js:951 [VectHare Activation Filter] Collection vectra:transformers:vecthare_diag: hasTriggers=false, hasConditions=false
+collection-metadata.js:982 [VectHare Activation Filter] Collection vectra:transformers:vecthare_diag: ✓ NO_TRIGGERS_OR_CONDITIONS (auto-activate)
+collection-metadata.js:951 [VectHare Activation Filter] Collection vectra:transformers:__vecthare_health_check__: hasTriggers=false, hasConditions=false
+collection-metadata.js:982 [VectHare Activation Filter] Collection vectra:transformers:__vecthare_health_check__: ✓ NO_TRIGGERS_OR_CONDITIONS (auto-activate)
+collection-metadata.js:1002 [VectHare Activation Filter] Summary: 4 collections → 4 active
+collection-metadata.js:1004 [VectHare Activation Filter] Active collections: (4) ['vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0', 'vectra:transformers:test', 'vectra:transformers:vecthare_diag', 'vectra:transformers:__vecthare_health_check__']
+chat-vectorization.js:1929 ✅ VectHare: 4 collections passed activation filters: (4) ['vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0', 'vectra:transformers:test', 'vectra:transformers:vecthare_diag', 'vectra:transformers:__vecthare_health_check__']
+core-vector-api.js:863 [VectHare] Hybrid search enabled, dispatching to hybrid search module
+hybrid-search.js:47 [HybridSearch] Using native hybrid search (QdrantBackend)
+qdrant.js:776 [EventBase] Native hybrid request payload: backend=qdrant, collection=vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0, source=openrouter, model=qwen/qwen3-embedding-8b, topK=7, threshold=0, vectorWeight=0.5, textWeight=0.5, fusion=rrf, rrfK=60, searchTextLen=7047, searchTextPreview="我摸一下Mayla 的頭, 望過向再另一張床的 Lia 説 "你還記得你當時完全不敢去精靈之森? 因為你怕給人排斥, 你記得最後我是怎樣幫你搞定的? 你告訴我" Current time is 20:15. Narrative suggests only a few minutes of conversation have passed. No significant time skip. 2. OBSERVABLE DATA: Critblade hugs Mayla. Critblade states: "I assure you, everyone"
+qdrant.js:789 [Qdrant] Native hybrid search returned 7 results
+core-vector-api.js:873 [EventBase] Hybrid search (RRF) response: 7 result(s) in 2305ms, scores=[0.0163, 0.0123, 0.0120, 0.0113, 0.0106, 0.0082, 0.0079]
+chat-vectorization.js:846 VectHare: Retrieved 7 chunks from vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+core-vector-api.js:863 [VectHare] Hybrid search enabled, dispatching to hybrid search module
+hybrid-search.js:47 [HybridSearch] Using native hybrid search (QdrantBackend)
+qdrant.js:776 [EventBase] Native hybrid request payload: backend=qdrant, collection=test, source=openrouter, model=qwen/qwen3-embedding-8b, topK=7, threshold=0, vectorWeight=0.5, textWeight=0.5, fusion=rrf, rrfK=60, searchTextLen=7047, searchTextPreview="我摸一下Mayla 的頭, 望過向再另一張床的 Lia 説 "你還記得你當時完全不敢去精靈之森? 因為你怕給人排斥, 你記得最後我是怎樣幫你搞定的? 你告訴我" Current time is 20:15. Narrative suggests only a few minutes of conversation have passed. No significant time skip. 2. OBSERVABLE DATA: Critblade hugs Mayla. Critblade states: "I assure you, everyone"
+qdrant.js:789 [Qdrant] Native hybrid search returned 0 results
+core-vector-api.js:873 [EventBase] Hybrid search (RRF) response: 0 result(s) in 873ms, scores=[]
+chat-vectorization.js:846 VectHare: Retrieved 0 chunks from vectra:transformers:test
+core-vector-api.js:863 [VectHare] Hybrid search enabled, dispatching to hybrid search module
+hybrid-search.js:47 [HybridSearch] Using native hybrid search (QdrantBackend)
+qdrant.js:776 [EventBase] Native hybrid request payload: backend=qdrant, collection=vecthare_diag, source=openrouter, model=qwen/qwen3-embedding-8b, topK=7, threshold=0, vectorWeight=0.5, textWeight=0.5, fusion=rrf, rrfK=60, searchTextLen=7047, searchTextPreview="我摸一下Mayla 的頭, 望過向再另一張床的 Lia 説 "你還記得你當時完全不敢去精靈之森? 因為你怕給人排斥, 你記得最後我是怎樣幫你搞定的? 你告訴我" Current time is 20:15. Narrative suggests only a few minutes of conversation have passed. No significant time skip. 2. OBSERVABLE DATA: Critblade hugs Mayla. Critblade states: "I assure you, everyone"
+qdrant.js:789 [Qdrant] Native hybrid search returned 0 results
+core-vector-api.js:873 [EventBase] Hybrid search (RRF) response: 0 result(s) in 922ms, scores=[]
+chat-vectorization.js:846 VectHare: Retrieved 0 chunks from vectra:transformers:vecthare_diag
+core-vector-api.js:863 [VectHare] Hybrid search enabled, dispatching to hybrid search module
+hybrid-search.js:47 [HybridSearch] Using native hybrid search (QdrantBackend)
+qdrant.js:776 [EventBase] Native hybrid request payload: backend=qdrant, collection=__vecthare_health_check__, source=openrouter, model=qwen/qwen3-embedding-8b, topK=7, threshold=0, vectorWeight=0.5, textWeight=0.5, fusion=rrf, rrfK=60, searchTextLen=7047, searchTextPreview="我摸一下Mayla 的頭, 望過向再另一張床的 Lia 説 "你還記得你當時完全不敢去精靈之森? 因為你怕給人排斥, 你記得最後我是怎樣幫你搞定的? 你告訴我" Current time is 20:15. Narrative suggests only a few minutes of conversation have passed. No significant time skip. 2. OBSERVABLE DATA: Critblade hugs Mayla. Critblade states: "I assure you, everyone"
+world-info.js:5159 [WI] Hypothetically adding 58 entries to prompt (58) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+script.js:4606 skipWIAN not active, adding WIAN
+openai.js:3449 Message role not set, defaulting to 'system' for identifier 'personaDescription'
+MacroDiagnostics.js:198 [Macro] Warning: Lexing errors detected {phase: 'lexing', count: 4, issues: Array(4), input: '<Skill_and_Spell_System>\nv1.1\nPurpose\nAI generates…e it using add at the correct level.\n</COT_Guide>'}
+logMacroSyntaxWarning @ MacroDiagnostics.js:198
+evaluate @ MacroEngine.js:129
+substituteParams @ script.js:2954
+getExtensionPrompt @ script.js:3267
+await in getExtensionPrompt
+populationInjectionPrompts @ openai.js:847
+populateChatCompletion @ openai.js:1325
+await in populateChatCompletion
+prepareOpenAIMessages @ openai.js:1578
+await in prepareOpenAIMessages
+Generate @ script.js:5226
+await in Generate
+promptManager.tryGenerate @ openai.js:700
+(anonymous) @ PromptManager.js:872Understand this warning
+MacroDiagnostics.js:198 [Macro] Warning: Lexing errors detected {phase: 'lexing', count: 4, issues: Array(4), input: '<Skill_and_Spell_System>\nv1.1\nPurpose\nAI generates…e it using add at the correct level.\n</COT_Guide>'}
+logMacroSyntaxWarning @ MacroDiagnostics.js:198
+evaluate @ MacroEngine.js:129
+substituteParams @ script.js:2954
+preparePrompt @ PromptManager.js:1286
+populateChatHistory @ openai.js:946
+await in populateChatHistory
+populateChatCompletion @ openai.js:1332Understand this warning
+qdrant.js:789 [Qdrant] Native hybrid search returned 0 results
+core-vector-api.js:873 [EventBase] Hybrid search (RRF) response: 0 result(s) in 783ms, scores=[]
+chat-vectorization.js:846 VectHare: Retrieved 0 chunks from vectra:transformers:__vecthare_health_check__
+chat-vectorization.js:1998 VectHare: Boosted 7/7 chunks with matching keywords to 100% score
+chat-vectorization.js:2049 VectHare: Retrieved 7 total chunks from 4 collections
+chat-vectorization.js:2102 VectHare: Stored 7 chunks for visualizer
+chat-vectorization.js:2105 [VectHare Deduplication] Starting with 7 chunks before deduplication
+chat-vectorization.js:2106 [VectHare Deduplication] Current chat has 2118 messages
+chat-vectorization.js:1475 [VectHare Dedup] Building hash set from 50 recent messages (depth: 50)
+chat-vectorization.js:1476 [VectHare Dedup] Total chat length: 2118, checking duplicates in last 50 messages
+chat-vectorization.js:1502 [VectHare Dedup] Built hash set with 10 unique message hashes from recent context
+chat-vectorization.js:1540 [VectHare Dedup] FINAL: 7 will inject, 0 skipped as duplicates
+chat-vectorization.js:2110 [VectHare Deduplication] After deduplication: 7 to inject, 0 skipped
+chat-vectorization.js:2133 [VectHare Deduplication] ✅ 7 chunks will proceed to injection
+chat-vectorization.js:2138 
+✅ VectHare: Successfully injected 7 chunk(s) into prompt
+chat-vectorization.js:2139    Verification: ✓ PASSED
+chat-vectorization.js:2140    Total characters injected: 4080
+
+search-debug.js:148 VectHare Debug: Stored search debug data {query: '我摸一下Mayla 的頭, 望過向再另一張床的 Lia 説 "你還記得你當時完全不敢去精靈之森? 因...', stages: {…}, historyCount: 2}
+chat-vectorization.js:2166 VectHare: ✅ Injected 7 chunks (0 skipped - already in context)
+script.js:4547 Core/all messages: 2118/2118
+world-info.js:623 [WI] Processing sticky entry ArtificRealm創世域.42 {hash: 8791093959160997, start: 2118, end: 2119, protected: false}
+world-info.js:627 [WI] Removing sticky entry ArtificRealm創世域.42 from timedWorldInfo: chat not advanced {hash: 8791093959160997, start: 2118, end: 2119, protected: false}
+MacroDiagnostics.js:198 [Macro] Warning: Lexing errors detected {phase: 'lexing', count: 4, issues: Array(4), input: '<Reply_Request>\n# v2.5.29\n# ======================…= new? If not, STOP and add it.\n</Reply_Request>\n'}
+logMacroSyntaxWarning @ MacroDiagnostics.js:198
+evaluate @ MacroEngine.js:129
+substituteParams @ script.js:2954
+checkWorldInfo @ world-info.js:4939
+await in checkWorldInfo
+getWorldInfoPrompt @ world-info.js:895
+Generate @ script.js:4576Understand this warning
+world-info.js:722 [WI] Adding sticky entry ArtificRealm創世域.42: start=2118, end=2119, protected=false
+world-info.js:5159 [WI] Adding 58 entries to prompt (58) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index.js:19 [QR2] calling {args: Array(1), functionToCall: ƒ}
+script.js:4606 skipWIAN not active, adding WIAN
+openai.js:3449 Message role not set, defaulting to 'system' for identifier 'personaDescription'
+MacroDiagnostics.js:198 [Macro] Warning: Lexing errors detected {phase: 'lexing', count: 4, issues: Array(4), input: '<Skill_and_Spell_System>\nv1.1\nPurpose\nAI generates…e it using add at the correct level.\n</COT_Guide>'}
+logMacroSyntaxWarning @ MacroDiagnostics.js:198
+evaluate @ MacroEngine.js:129
+substituteParams @ script.js:2954
+getExtensionPrompt @ script.js:3267
+await in getExtensionPrompt
+populationInjectionPrompts @ openai.js:847
+populateChatCompletion @ openai.js:1325
+await in populateChatCompletion
+prepareOpenAIMessages @ openai.js:1578
+await in prepareOpenAIMessages
+Generate @ script.js:5226Understand this warning
+MacroDiagnostics.js:198 [Macro] Warning: Lexing errors detected {phase: 'lexing', count: 4, issues: Array(4), input: '<Skill_and_Spell_System>\nv1.1\nPurpose\nAI generates…e it using add at the correct level.\n</COT_Guide>'}
+logMacroSyntaxWarning @ MacroDiagnostics.js:198
+evaluate @ MacroEngine.js:129
+substituteParams @ script.js:2954
+preparePrompt @ PromptManager.js:1286
+populateChatHistory @ openai.js:946
+await in populateChatHistory
+populateChatCompletion @ openai.js:1332Understand this warning
+MacroDiagnostics.js:198 [Macro] Warning: Lexing errors detected {phase: 'lexing', count: 4, issues: Array(4), input: '<VectHareMemory>\n在20:15晚上，新大陸.流沙之國.扎赫拉巴德.星月綠洲頂層皇家套… create JSONPatch to add her.\n\n</encounter_guide>'}
+logMacroSyntaxWarning @ MacroDiagnostics.js:198
+evaluate @ MacroEngine.js:129
+substituteParams @ script.js:2954
+getAllExtensionPrompts @ script.js:3190
+finishGenerating @ script.js:5285
+Generate @ script.js:5394Understand this warning
+handler.ts:225 [Prompt Template] start generate after 25 messages
+handler.ts:395 [Prompt Template] processing 25 messages in 14ms
+script.js:5538 AbortError: signal is aborted without reason
+    at StreamingProcessor.onStopStreaming (script.js:3789:30)
+    at stopGeneration (script.js:5551:28)
+    at S (PromptViewer.vue:273:5)
+    at EventEmitter.<anonymous> (PromptViewer.vue:367:3)
+    at EventEmitter.emit (eventemitter.js:146:36)
+    at async sendOpenAIRequest (openai.js:3052:5)
+    at async sendStreamingRequest (script.js:6095:20)
+    at async finishGenerating (script.js:5334:44)
+script.js:3789 Uncaught (in promise) AbortError: signal is aborted without reason
+    at StreamingProcessor.onStopStreaming (script.js:3789:30)
+    at stopGeneration (script.js:5551:28)
+    at S (PromptViewer.vue:273:5)
+    at EventEmitter.<anonymous> (PromptViewer.vue:367:3)
+    at EventEmitter.emit (eventemitter.js:146:36)
+    at async sendOpenAIRequest (openai.js:3052:5)
+    at async sendStreamingRequest (script.js:6095:20)
+    at async finishGenerating (script.js:5334:44)
+onStopStreaming @ script.js:3789
+stopGeneration @ script.js:5551
+collectPrompts @ PromptViewer.vue:273
+(anonymous) @ PromptViewer.vue:367
+EventEmitter.emit @ eventemitter.js:146
+await in EventEmitter.emit
+sendOpenAIRequest @ openai.js:3052
+await in sendOpenAIRequest
+sendStreamingRequest @ script.js:6095
+finishGenerating @ script.js:5334
+await in finishGenerating
+Generate @ script.js:5394Understand this error
+prompts.ts:72 [Prompt Template] processing send result: 162780 tokens and 320300 chars
+collection-loader.js:618 VectHare: Using plugin for collection discovery
+collection-loader.js:354 ✅ VectHare: Plugin found 10 collections across all sources
+collection-loader.js:474    Final registry size: 10
+
+collection-loader.js:761 VectHare: Loading collection: test (backend: vectra, source: transformers)
+collection-loader.js:773 VectHare:   Type: unknown, Scope: unknown (parsed from ID)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 0 chunks (backend: vectra, source: transformers, models: 1)
+collection-loader.js:761 VectHare: Loading collection: vecthare_diag (backend: vectra, source: transformers)
+collection-loader.js:773 VectHare:   Type: unknown, Scope: unknown (parsed from ID)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 0 chunks (backend: vectra, source: transformers, models: 2)
+collection-loader.js:761 VectHare: Loading collection: __vecthare_health_check__ (backend: vectra, source: transformers)
+collection-loader.js:773 VectHare:   Type: unknown, Scope: unknown (parsed from ID)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 0 chunks (backend: vectra, source: transformers, models: 1)
+collection-loader.js:761 VectHare: Loading collection: vecthare_chat_critblade_your_wives_a5c606bc-589b-471f-b475-955382ea7267 (backend: vectra, source: openrouter)
+collection-loader.js:773 VectHare:   Type: chat, Scope: unknown (parsed from ID)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 0 chunks (backend: vectra, source: openrouter, models: 2)
+collection-loader.js:761 VectHare: Loading collection: vecthare_chat_Fuka Shikuzaki - 2026-04-29@20h19m23s769ms (backend: vectra, source: openrouter)
+collection-loader.js:773 VectHare:   Type: chat, Scope: unknown (parsed from ID)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 0 chunks (backend: vectra, source: openrouter, models: 1)
+collection-loader.js:761 VectHare: Loading collection: vecthare_chat_critblade_fuka_shikuzaki_724a3115-0a69-440b-91a1-2e426475b415 (backend: vectra, source: openrouter)
+collection-loader.js:773 VectHare:   Type: chat, Scope: unknown (parsed from ID)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 0 chunks (backend: vectra, source: openrouter, models: 2)
+collection-loader.js:761 VectHare: Loading collection: vecthare_eventbase_critblade_fuka_shikuzaki_724a3115-0a69-440b-91a1-2e426475b415 (backend: vectra, source: openrouter)
+collection-loader.js:773 VectHare:   Type: unknown, Scope: unknown (parsed from ID)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 0 chunks (backend: vectra, source: openrouter, models: 1)
+collection-loader.js:761 VectHare: Loading collection: vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0 (backend: vectra, source: openrouter)
+collection-loader.js:773 VectHare:   Type: chat, Scope: global (from stored meta)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 0 chunks (backend: vectra, source: openrouter, models: 2)
+collection-loader.js:761 VectHare: Loading collection: vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0 (backend: qdrant, source: openrouter)
+collection-loader.js:773 VectHare:   Type: chat, Scope: global (from stored meta)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 1058 chunks (backend: qdrant, source: openrouter, models: 0)
+collection-loader.js:846 VectHare:   Display name: 💬 Chat: critblade_artificrealm
+collection-metadata.js:758 VectHare: Created metadata for new collection qdrant:openrouter:vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0 (type: global)
+collection-loader.js:867 VectHare:   ✓ Added to collections list
+collection-loader.js:761 VectHare: Loading collection: vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0 (backend: qdrant, source: openrouter)
+collection-loader.js:773 VectHare:   Type: unknown, Scope: unknown (parsed from ID)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 1090 chunks (backend: qdrant, source: openrouter, models: 0)
+collection-loader.js:846 VectHare:   Display name: vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+collection-metadata.js:758 VectHare: Created metadata for new collection qdrant:openrouter:vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0 (type: unknown)
+collection-loader.js:867 VectHare:   ✓ Added to collections list
+collection-loader.js:876 
+✅ VectHare: Loaded 2 non-empty collections for Database Browser
+collection-metadata.js:502 VectHare: Removed orphaned metadata for qdrant:openrouter:vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+collection-metadata.js:502 VectHare: Removed orphaned metadata for qdrant:openrouter:vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+collection-metadata.js:507 VectHare: Cleaned up 2 orphaned metadata entries
+database-browser.js:665 VectHare: Cleaned up 2 orphaned metadata entries
+database-browser.js:172 VectHare Database Browser: Opened
+database-browser.js:1747 [VectHare DB Browser] Active-for-current-chat resolution for vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0: resolved=false, chatScopedActive=false, currentChatId=ArtificRealm創世域 - 2026-04-30@18h55m16s844ms imported
+database-browser.js:1747 [VectHare DB Browser] Active-for-current-chat resolution for vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0: resolved=false, chatScopedActive=false, currentChatId=ArtificRealm創世域 - 2026-04-30@18h55m16s844ms imported
+collection-metadata.js:272 VectHare: Updated metadata for collection vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+collection-metadata.js:579 VectHare: Removed chat ArtificRealm創世域 - 2026-04-30@18h55m16s844ms imported from collection vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0 locks
+collection-metadata.js:272 VectHare: Updated metadata for collection vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+collection-metadata.js:272 VectHare: Updated metadata for collection vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+collection-loader.js:618 VectHare: Using plugin for collection discovery
+collection-loader.js:354 ✅ VectHare: Plugin found 10 collections across all sources
+collection-loader.js:474    Final registry size: 10
+
+collection-loader.js:761 VectHare: Loading collection: test (backend: vectra, source: transformers)
+collection-loader.js:773 VectHare:   Type: unknown, Scope: unknown (parsed from ID)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 0 chunks (backend: vectra, source: transformers, models: 1)
+collection-loader.js:761 VectHare: Loading collection: vecthare_diag (backend: vectra, source: transformers)
+collection-loader.js:773 VectHare:   Type: unknown, Scope: unknown (parsed from ID)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 0 chunks (backend: vectra, source: transformers, models: 2)
+collection-loader.js:761 VectHare: Loading collection: __vecthare_health_check__ (backend: vectra, source: transformers)
+collection-loader.js:773 VectHare:   Type: unknown, Scope: unknown (parsed from ID)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 0 chunks (backend: vectra, source: transformers, models: 1)
+collection-loader.js:761 VectHare: Loading collection: vecthare_chat_critblade_your_wives_a5c606bc-589b-471f-b475-955382ea7267 (backend: vectra, source: openrouter)
+collection-loader.js:773 VectHare:   Type: chat, Scope: unknown (parsed from ID)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 0 chunks (backend: vectra, source: openrouter, models: 2)
+collection-loader.js:761 VectHare: Loading collection: vecthare_chat_Fuka Shikuzaki - 2026-04-29@20h19m23s769ms (backend: vectra, source: openrouter)
+collection-loader.js:773 VectHare:   Type: chat, Scope: unknown (parsed from ID)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 0 chunks (backend: vectra, source: openrouter, models: 1)
+collection-loader.js:761 VectHare: Loading collection: vecthare_chat_critblade_fuka_shikuzaki_724a3115-0a69-440b-91a1-2e426475b415 (backend: vectra, source: openrouter)
+collection-loader.js:773 VectHare:   Type: chat, Scope: unknown (parsed from ID)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 0 chunks (backend: vectra, source: openrouter, models: 2)
+collection-loader.js:761 VectHare: Loading collection: vecthare_eventbase_critblade_fuka_shikuzaki_724a3115-0a69-440b-91a1-2e426475b415 (backend: vectra, source: openrouter)
+collection-loader.js:773 VectHare:   Type: unknown, Scope: unknown (parsed from ID)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 0 chunks (backend: vectra, source: openrouter, models: 1)
+collection-loader.js:761 VectHare: Loading collection: vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0 (backend: vectra, source: openrouter)
+collection-loader.js:773 VectHare:   Type: chat, Scope: global (from stored meta)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 0 chunks (backend: vectra, source: openrouter, models: 2)
+collection-loader.js:761 VectHare: Loading collection: vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0 (backend: qdrant, source: openrouter)
+collection-loader.js:773 VectHare:   Type: chat, Scope: global (from stored meta)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 1058 chunks (backend: qdrant, source: openrouter, models: 0)
+collection-loader.js:846 VectHare:   Display name: 💬 Chat: critblade_artificrealm
+collection-metadata.js:758 VectHare: Created metadata for new collection qdrant:openrouter:vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0 (type: global)
+collection-loader.js:867 VectHare:   ✓ Added to collections list
+collection-loader.js:761 VectHare: Loading collection: vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0 (backend: qdrant, source: openrouter)
+collection-loader.js:773 VectHare:   Type: unknown, Scope: unknown (parsed from ID)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 1090 chunks (backend: qdrant, source: openrouter, models: 0)
+collection-loader.js:846 VectHare:   Display name: vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+collection-metadata.js:758 VectHare: Created metadata for new collection qdrant:openrouter:vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0 (type: unknown)
+collection-loader.js:867 VectHare:   ✓ Added to collections list
+collection-loader.js:876 
+✅ VectHare: Loaded 2 non-empty collections for Database Browser
+collection-metadata.js:502 VectHare: Removed orphaned metadata for qdrant:openrouter:vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+collection-metadata.js:502 VectHare: Removed orphaned metadata for qdrant:openrouter:vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+collection-metadata.js:507 VectHare: Cleaned up 2 orphaned metadata entries
+database-browser.js:665 VectHare: Cleaned up 2 orphaned metadata entries
+database-browser.js:1747 [VectHare DB Browser] Active-for-current-chat resolution for vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0: resolved=false, chatScopedActive=false, currentChatId=ArtificRealm創世域 - 2026-04-30@18h55m16s844ms imported
+collection-metadata.js:272 VectHare: Updated metadata for collection vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+collection-metadata.js:579 VectHare: Removed chat ArtificRealm創世域 - 2026-04-30@18h55m16s844ms imported from collection vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0 locks
+collection-metadata.js:272 VectHare: Updated metadata for collection vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+collection-metadata.js:272 VectHare: Updated metadata for collection vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+collection-loader.js:618 VectHare: Using plugin for collection discovery
+collection-loader.js:354 ✅ VectHare: Plugin found 10 collections across all sources
+collection-loader.js:474    Final registry size: 10
+
+collection-loader.js:761 VectHare: Loading collection: test (backend: vectra, source: transformers)
+collection-loader.js:773 VectHare:   Type: unknown, Scope: unknown (parsed from ID)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 0 chunks (backend: vectra, source: transformers, models: 1)
+collection-loader.js:761 VectHare: Loading collection: vecthare_diag (backend: vectra, source: transformers)
+collection-loader.js:773 VectHare:   Type: unknown, Scope: unknown (parsed from ID)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 0 chunks (backend: vectra, source: transformers, models: 2)
+collection-loader.js:761 VectHare: Loading collection: __vecthare_health_check__ (backend: vectra, source: transformers)
+collection-loader.js:773 VectHare:   Type: unknown, Scope: unknown (parsed from ID)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 0 chunks (backend: vectra, source: transformers, models: 1)
+collection-loader.js:761 VectHare: Loading collection: vecthare_chat_critblade_your_wives_a5c606bc-589b-471f-b475-955382ea7267 (backend: vectra, source: openrouter)
+collection-loader.js:773 VectHare:   Type: chat, Scope: unknown (parsed from ID)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 0 chunks (backend: vectra, source: openrouter, models: 2)
+collection-loader.js:761 VectHare: Loading collection: vecthare_chat_Fuka Shikuzaki - 2026-04-29@20h19m23s769ms (backend: vectra, source: openrouter)
+collection-loader.js:773 VectHare:   Type: chat, Scope: unknown (parsed from ID)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 0 chunks (backend: vectra, source: openrouter, models: 1)
+collection-loader.js:761 VectHare: Loading collection: vecthare_chat_critblade_fuka_shikuzaki_724a3115-0a69-440b-91a1-2e426475b415 (backend: vectra, source: openrouter)
+collection-loader.js:773 VectHare:   Type: chat, Scope: unknown (parsed from ID)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 0 chunks (backend: vectra, source: openrouter, models: 2)
+collection-loader.js:761 VectHare: Loading collection: vecthare_eventbase_critblade_fuka_shikuzaki_724a3115-0a69-440b-91a1-2e426475b415 (backend: vectra, source: openrouter)
+collection-loader.js:773 VectHare:   Type: unknown, Scope: unknown (parsed from ID)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 0 chunks (backend: vectra, source: openrouter, models: 1)
+collection-loader.js:761 VectHare: Loading collection: vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0 (backend: vectra, source: openrouter)
+collection-loader.js:773 VectHare:   Type: chat, Scope: global (from stored meta)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 0 chunks (backend: vectra, source: openrouter, models: 2)
+collection-loader.js:761 VectHare: Loading collection: vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0 (backend: qdrant, source: openrouter)
+collection-loader.js:773 VectHare:   Type: chat, Scope: global (from stored meta)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 1058 chunks (backend: qdrant, source: openrouter, models: 0)
+collection-loader.js:846 VectHare:   Display name: 💬 Chat: critblade_artificrealm
+collection-metadata.js:758 VectHare: Created metadata for new collection qdrant:openrouter:vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0 (type: global)
+collection-loader.js:867 VectHare:   ✓ Added to collections list
+collection-loader.js:761 VectHare: Loading collection: vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0 (backend: qdrant, source: openrouter)
+collection-loader.js:773 VectHare:   Type: unknown, Scope: unknown (parsed from ID)
+collection-loader.js:786 VectHare:   Using plugin mode - getting data from cache
+collection-loader.js:808 VectHare:   Plugin reported 1090 chunks (backend: qdrant, source: openrouter, models: 0)
+collection-loader.js:846 VectHare:   Display name: vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+collection-metadata.js:758 VectHare: Created metadata for new collection qdrant:openrouter:vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0 (type: unknown)
+collection-loader.js:867 VectHare:   ✓ Added to collections list
+collection-loader.js:876 
+✅ VectHare: Loaded 2 non-empty collections for Database Browser
+collection-metadata.js:502 VectHare: Removed orphaned metadata for qdrant:openrouter:vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+collection-metadata.js:502 VectHare: Removed orphaned metadata for qdrant:openrouter:vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+collection-metadata.js:507 VectHare: Cleaned up 2 orphaned metadata entries
+database-browser.js:665 VectHare: Cleaned up 2 orphaned metadata entries
+database-browser.js:195 VectHare Database Browser: Closed
+script.js:4232 Generate entered
+index.js:19 [QR2] calling {args: Array(3), functionToCall: ƒ}
+chat-vectorization.js:1823 🐰 VectHare: rearrangeChat called (type: normal, chat length: 2118)
+chat-vectorization.js:1886 VectHare: Will query 4 collections: (4) ['vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0', 'vectra:transformers:test', 'vectra:transformers:vecthare_diag', 'vectra:transformers:__vecthare_health_check__']
+chat-vectorization.js:1905 VectHare: Extracted 8 keywords from query: (8) ['lia', 'current', 'critblade', 'mayla', 'initial', 'kashier', 'evaluating', 'master']
+collection-metadata.js:951 [VectHare Activation Filter] Collection vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0: hasTriggers=false, hasConditions=false
+collection-metadata.js:982 [VectHare Activation Filter] Collection vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0: ✓ NO_TRIGGERS_OR_CONDITIONS (auto-activate)
+collection-metadata.js:951 [VectHare Activation Filter] Collection vectra:transformers:test: hasTriggers=false, hasConditions=false
+collection-metadata.js:982 [VectHare Activation Filter] Collection vectra:transformers:test: ✓ NO_TRIGGERS_OR_CONDITIONS (auto-activate)
+collection-metadata.js:951 [VectHare Activation Filter] Collection vectra:transformers:vecthare_diag: hasTriggers=false, hasConditions=false
+collection-metadata.js:982 [VectHare Activation Filter] Collection vectra:transformers:vecthare_diag: ✓ NO_TRIGGERS_OR_CONDITIONS (auto-activate)
+collection-metadata.js:951 [VectHare Activation Filter] Collection vectra:transformers:__vecthare_health_check__: hasTriggers=false, hasConditions=false
+collection-metadata.js:982 [VectHare Activation Filter] Collection vectra:transformers:__vecthare_health_check__: ✓ NO_TRIGGERS_OR_CONDITIONS (auto-activate)
+collection-metadata.js:1002 [VectHare Activation Filter] Summary: 4 collections → 4 active
+collection-metadata.js:1004 [VectHare Activation Filter] Active collections: (4) ['vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0', 'vectra:transformers:test', 'vectra:transformers:vecthare_diag', 'vectra:transformers:__vecthare_health_check__']
+chat-vectorization.js:1929 ✅ VectHare: 4 collections passed activation filters: (4) ['vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0', 'vectra:transformers:test', 'vectra:transformers:vecthare_diag', 'vectra:transformers:__vecthare_health_check__']
+backend-manager.js:278 VectHare: Health cache stale for qdrant, re-verifying...
+core-vector-api.js:863 [VectHare] Hybrid search enabled, dispatching to hybrid search module
+hybrid-search.js:47 [HybridSearch] Using native hybrid search (QdrantBackend)
+qdrant.js:776 [EventBase] Native hybrid request payload: backend=qdrant, collection=vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0, source=openrouter, model=qwen/qwen3-embedding-8b, topK=7, threshold=0, vectorWeight=0.5, textWeight=0.5, fusion=rrf, rrfK=60, searchTextLen=7047, searchTextPreview="我摸一下Mayla 的頭, 望過向再另一張床的 Lia 説 "你還記得你當時完全不敢去精靈之森? 因為你怕給人排斥, 你記得最後我是怎樣幫你搞定的? 你告訴我" Current time is 20:15. Narrative suggests only a few minutes of conversation have passed. No significant time skip. 2. OBSERVABLE DATA: Critblade hugs Mayla. Critblade states: "I assure you, everyone"
+qdrant.js:789 [Qdrant] Native hybrid search returned 7 results
+core-vector-api.js:873 [EventBase] Hybrid search (RRF) response: 7 result(s) in 1119ms, scores=[0.0163, 0.0123, 0.0120, 0.0113, 0.0106, 0.0082, 0.0079]
+chat-vectorization.js:846 VectHare: Retrieved 7 chunks from vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+core-vector-api.js:863 [VectHare] Hybrid search enabled, dispatching to hybrid search module
+hybrid-search.js:47 [HybridSearch] Using native hybrid search (QdrantBackend)
+qdrant.js:776 [EventBase] Native hybrid request payload: backend=qdrant, collection=test, source=openrouter, model=qwen/qwen3-embedding-8b, topK=7, threshold=0, vectorWeight=0.5, textWeight=0.5, fusion=rrf, rrfK=60, searchTextLen=7047, searchTextPreview="我摸一下Mayla 的頭, 望過向再另一張床的 Lia 説 "你還記得你當時完全不敢去精靈之森? 因為你怕給人排斥, 你記得最後我是怎樣幫你搞定的? 你告訴我" Current time is 20:15. Narrative suggests only a few minutes of conversation have passed. No significant time skip. 2. OBSERVABLE DATA: Critblade hugs Mayla. Critblade states: "I assure you, everyone"
+qdrant.js:789 [Qdrant] Native hybrid search returned 0 results
+core-vector-api.js:873 [EventBase] Hybrid search (RRF) response: 0 result(s) in 1006ms, scores=[]
+chat-vectorization.js:846 VectHare: Retrieved 0 chunks from vectra:transformers:test
+core-vector-api.js:863 [VectHare] Hybrid search enabled, dispatching to hybrid search module
+hybrid-search.js:47 [HybridSearch] Using native hybrid search (QdrantBackend)
+qdrant.js:776 [EventBase] Native hybrid request payload: backend=qdrant, collection=vecthare_diag, source=openrouter, model=qwen/qwen3-embedding-8b, topK=7, threshold=0, vectorWeight=0.5, textWeight=0.5, fusion=rrf, rrfK=60, searchTextLen=7047, searchTextPreview="我摸一下Mayla 的頭, 望過向再另一張床的 Lia 説 "你還記得你當時完全不敢去精靈之森? 因為你怕給人排斥, 你記得最後我是怎樣幫你搞定的? 你告訴我" Current time is 20:15. Narrative suggests only a few minutes of conversation have passed. No significant time skip. 2. OBSERVABLE DATA: Critblade hugs Mayla. Critblade states: "I assure you, everyone"
+qdrant.js:789 [Qdrant] Native hybrid search returned 0 results
+core-vector-api.js:873 [EventBase] Hybrid search (RRF) response: 0 result(s) in 1099ms, scores=[]
+chat-vectorization.js:846 VectHare: Retrieved 0 chunks from vectra:transformers:vecthare_diag
+core-vector-api.js:863 [VectHare] Hybrid search enabled, dispatching to hybrid search module
+hybrid-search.js:47 [HybridSearch] Using native hybrid search (QdrantBackend)
+qdrant.js:776 [EventBase] Native hybrid request payload: backend=qdrant, collection=__vecthare_health_check__, source=openrouter, model=qwen/qwen3-embedding-8b, topK=7, threshold=0, vectorWeight=0.5, textWeight=0.5, fusion=rrf, rrfK=60, searchTextLen=7047, searchTextPreview="我摸一下Mayla 的頭, 望過向再另一張床的 Lia 説 "你還記得你當時完全不敢去精靈之森? 因為你怕給人排斥, 你記得最後我是怎樣幫你搞定的? 你告訴我" Current time is 20:15. Narrative suggests only a few minutes of conversation have passed. No significant time skip. 2. OBSERVABLE DATA: Critblade hugs Mayla. Critblade states: "I assure you, everyone"
+qdrant.js:789 [Qdrant] Native hybrid search returned 0 results
+core-vector-api.js:873 [EventBase] Hybrid search (RRF) response: 0 result(s) in 1057ms, scores=[]
+chat-vectorization.js:846 VectHare: Retrieved 0 chunks from vectra:transformers:__vecthare_health_check__
+chat-vectorization.js:1998 VectHare: Boosted 7/7 chunks with matching keywords to 100% score
+chat-vectorization.js:2049 VectHare: Retrieved 7 total chunks from 4 collections
+chat-vectorization.js:2102 VectHare: Stored 7 chunks for visualizer
+chat-vectorization.js:2105 [VectHare Deduplication] Starting with 7 chunks before deduplication
+chat-vectorization.js:2106 [VectHare Deduplication] Current chat has 2118 messages
+chat-vectorization.js:1475 [VectHare Dedup] Building hash set from 50 recent messages (depth: 50)
+chat-vectorization.js:1476 [VectHare Dedup] Total chat length: 2118, checking duplicates in last 50 messages
+chat-vectorization.js:1502 [VectHare Dedup] Built hash set with 10 unique message hashes from recent context
+chat-vectorization.js:1540 [VectHare Dedup] FINAL: 7 will inject, 0 skipped as duplicates
+chat-vectorization.js:2110 [VectHare Deduplication] After deduplication: 7 to inject, 0 skipped
+chat-vectorization.js:2133 [VectHare Deduplication] ✅ 7 chunks will proceed to injection
+chat-vectorization.js:2138 
+✅ VectHare: Successfully injected 7 chunk(s) into prompt
+chat-vectorization.js:2139    Verification: ✓ PASSED
+chat-vectorization.js:2140    Total characters injected: 4080
+
+search-debug.js:148 VectHare Debug: Stored search debug data {query: '我摸一下Mayla 的頭, 望過向再另一張床的 Lia 説 "你還記得你當時完全不敢去精靈之森? 因...', stages: {…}, historyCount: 3}
+chat-vectorization.js:2166 VectHare: ✅ Injected 7 chunks (0 skipped - already in context)
+script.js:4547 Core/all messages: 2118/2118
+world-info.js:623 [WI] Processing sticky entry ArtificRealm創世域.42 {hash: 8791093959160997, start: 2118, end: 2119, protected: false}
+world-info.js:627 [WI] Removing sticky entry ArtificRealm創世域.42 from timedWorldInfo: chat not advanced {hash: 8791093959160997, start: 2118, end: 2119, protected: false}
+MacroDiagnostics.js:198 [Macro] Warning: Lexing errors detected {phase: 'lexing', count: 4, issues: Array(4), input: '<Reply_Request>\n# v2.5.29\n# ======================…= new? If not, STOP and add it.\n</Reply_Request>\n'}
+logMacroSyntaxWarning @ MacroDiagnostics.js:198
+evaluate @ MacroEngine.js:129
+substituteParams @ script.js:2954
+checkWorldInfo @ world-info.js:4939
+await in checkWorldInfo
+getWorldInfoPrompt @ world-info.js:895
+Generate @ script.js:4576
+await in Generate
+triggerRefresh @ PromptViewer.vue:268
+(anonymous) @ PromptViewer.vue:250
+callWithErrorHandling @ runtime-core.esm-bundler.js:199
+(anonymous) @ runtime-core.esm-bundler.js:8133
+(anonymous) @ runtime-core.esm-bundler.js:8095
+(anonymous) @ runtime-core.esm-bundler.js:6018
+(anonymous) @ runtime-core.esm-bundler.js:5984
+(anonymous) @ runtime-core.esm-bundler.js:5483
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:5914
+(anonymous) @ runtime-core.esm-bundler.js:5457
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:5650
+(anonymous) @ runtime-core.esm-bundler.js:5605
+(anonymous) @ runtime-core.esm-bundler.js:5471
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:5650
+(anonymous) @ runtime-core.esm-bundler.js:5605
+(anonymous) @ runtime-core.esm-bundler.js:5471
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:5650
+(anonymous) @ runtime-core.esm-bundler.js:5605
+(anonymous) @ runtime-core.esm-bundler.js:5471
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:1000
+(anonymous) @ runtime-core.esm-bundler.js:1026
+process @ runtime-core.esm-bundler.js:1060
+(anonymous) @ runtime-core.esm-bundler.js:5495
+(anonymous) @ runtime-core.esm-bundler.js:6132
+run @ reactivity.esm-bundler.js:250
+(anonymous) @ runtime-core.esm-bundler.js:6260
+(anonymous) @ runtime-core.esm-bundler.js:6032
+(anonymous) @ runtime-core.esm-bundler.js:5984
+(anonymous) @ runtime-core.esm-bundler.js:5483
+(anonymous) @ runtime-core.esm-bundler.js:5856
+(anonymous) @ runtime-core.esm-bundler.js:5932
+(anonymous) @ runtime-core.esm-bundler.js:5457
+(anonymous) @ runtime-core.esm-bundler.js:6212
+run @ reactivity.esm-bundler.js:250
+runIfDirty @ reactivity.esm-bundler.js:288
+callWithErrorHandling @ runtime-core.esm-bundler.js:199
+flushJobs @ runtime-core.esm-bundler.js:408
+Promise.then
+queueFlush @ runtime-core.esm-bundler.js:322
+queueJob @ runtime-core.esm-bundler.js:317
+(anonymous) @ runtime-core.esm-bundler.js:6254
+trigger @ reactivity.esm-bundler.js:278
+endBatch @ reactivity.esm-bundler.js:336
+notify @ reactivity.esm-bundler.js:627
+trigger @ reactivity.esm-bundler.js:601
+value @ reactivity.esm-bundler.js:1540
+(anonymous) @ reactivity.esm-bundler.js:1570
+(anonymous) @ Toolbox.vue:36
+callWithErrorHandling @ runtime-core.esm-bundler.js:199
+callWithAsyncErrorHandling @ runtime-core.esm-bundler.js:206
+(anonymous) @ runtime-dom.esm-bundler.js:745Understand this warning
+world-info.js:722 [WI] Adding sticky entry ArtificRealm創世域.42: start=2118, end=2119, protected=false
+world-info.js:5159 [WI] Adding 58 entries to prompt (58) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index.js:19 [QR2] calling {args: Array(1), functionToCall: ƒ}
+script.js:4606 skipWIAN not active, adding WIAN
+openai.js:3449 Message role not set, defaulting to 'system' for identifier 'personaDescription'
+MacroDiagnostics.js:198 [Macro] Warning: Lexing errors detected {phase: 'lexing', count: 4, issues: Array(4), input: '<Skill_and_Spell_System>\nv1.1\nPurpose\nAI generates…e it using add at the correct level.\n</COT_Guide>'}
+logMacroSyntaxWarning @ MacroDiagnostics.js:198
+evaluate @ MacroEngine.js:129
+substituteParams @ script.js:2954
+getExtensionPrompt @ script.js:3267
+await in getExtensionPrompt
+populationInjectionPrompts @ openai.js:847
+populateChatCompletion @ openai.js:1325
+await in populateChatCompletion
+prepareOpenAIMessages @ openai.js:1578
+await in prepareOpenAIMessages
+Generate @ script.js:5226
+await in Generate
+triggerRefresh @ PromptViewer.vue:268
+(anonymous) @ PromptViewer.vue:250
+callWithErrorHandling @ runtime-core.esm-bundler.js:199
+(anonymous) @ runtime-core.esm-bundler.js:8133
+(anonymous) @ runtime-core.esm-bundler.js:8095
+(anonymous) @ runtime-core.esm-bundler.js:6018
+(anonymous) @ runtime-core.esm-bundler.js:5984
+(anonymous) @ runtime-core.esm-bundler.js:5483
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:5914
+(anonymous) @ runtime-core.esm-bundler.js:5457
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:5650
+(anonymous) @ runtime-core.esm-bundler.js:5605
+(anonymous) @ runtime-core.esm-bundler.js:5471
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:5650
+(anonymous) @ runtime-core.esm-bundler.js:5605
+(anonymous) @ runtime-core.esm-bundler.js:5471
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:5650
+(anonymous) @ runtime-core.esm-bundler.js:5605
+(anonymous) @ runtime-core.esm-bundler.js:5471
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:1000
+(anonymous) @ runtime-core.esm-bundler.js:1026
+process @ runtime-core.esm-bundler.js:1060
+(anonymous) @ runtime-core.esm-bundler.js:5495
+(anonymous) @ runtime-core.esm-bundler.js:6132
+run @ reactivity.esm-bundler.js:250
+(anonymous) @ runtime-core.esm-bundler.js:6260
+(anonymous) @ runtime-core.esm-bundler.js:6032
+(anonymous) @ runtime-core.esm-bundler.js:5984
+(anonymous) @ runtime-core.esm-bundler.js:5483
+(anonymous) @ runtime-core.esm-bundler.js:5856
+(anonymous) @ runtime-core.esm-bundler.js:5932
+(anonymous) @ runtime-core.esm-bundler.js:5457
+(anonymous) @ runtime-core.esm-bundler.js:6212
+run @ reactivity.esm-bundler.js:250
+runIfDirty @ reactivity.esm-bundler.js:288
+callWithErrorHandling @ runtime-core.esm-bundler.js:199
+flushJobs @ runtime-core.esm-bundler.js:408
+Promise.then
+queueFlush @ runtime-core.esm-bundler.js:322
+queueJob @ runtime-core.esm-bundler.js:317
+(anonymous) @ runtime-core.esm-bundler.js:6254
+trigger @ reactivity.esm-bundler.js:278
+endBatch @ reactivity.esm-bundler.js:336
+notify @ reactivity.esm-bundler.js:627
+trigger @ reactivity.esm-bundler.js:601
+value @ reactivity.esm-bundler.js:1540
+(anonymous) @ reactivity.esm-bundler.js:1570
+(anonymous) @ Toolbox.vue:36
+callWithErrorHandling @ runtime-core.esm-bundler.js:199
+callWithAsyncErrorHandling @ runtime-core.esm-bundler.js:206
+(anonymous) @ runtime-dom.esm-bundler.js:745Understand this warning
+MacroDiagnostics.js:198 [Macro] Warning: Lexing errors detected {phase: 'lexing', count: 4, issues: Array(4), input: '<Skill_and_Spell_System>\nv1.1\nPurpose\nAI generates…e it using add at the correct level.\n</COT_Guide>'}
+logMacroSyntaxWarning @ MacroDiagnostics.js:198
+evaluate @ MacroEngine.js:129
+substituteParams @ script.js:2954
+preparePrompt @ PromptManager.js:1286
+populateChatHistory @ openai.js:946
+await in populateChatHistory
+populateChatCompletion @ openai.js:1332Understand this warning
+MacroDiagnostics.js:198 [Macro] Warning: Lexing errors detected {phase: 'lexing', count: 4, issues: Array(4), input: '<VectHareMemory>\n在20:15晚上，新大陸.流沙之國.扎赫拉巴德.星月綠洲頂層皇家套… create JSONPatch to add her.\n\n</encounter_guide>'}
+logMacroSyntaxWarning @ MacroDiagnostics.js:198
+evaluate @ MacroEngine.js:129
+substituteParams @ script.js:2954
+getAllExtensionPrompts @ script.js:3190
+finishGenerating @ script.js:5285
+Generate @ script.js:5394Understand this warning
+handler.ts:225 [Prompt Template] start generate after 25 messages
+handler.ts:395 [Prompt Template] processing 25 messages in 14ms
+script.js:5538 AbortError: signal is aborted without reason
+    at StreamingProcessor.onStopStreaming (script.js:3789:30)
+    at stopGeneration (script.js:5551:28)
+    at S (PromptViewer.vue:273:5)
+    at EventEmitter.<anonymous> (PromptViewer.vue:367:3)
+    at EventEmitter.emit (eventemitter.js:146:36)
+    at async sendOpenAIRequest (openai.js:3052:5)
+    at async sendStreamingRequest (script.js:6095:20)
+    at async finishGenerating (script.js:5334:44)

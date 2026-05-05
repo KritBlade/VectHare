@@ -16,6 +16,7 @@ import { getRequestHeaders } from '../../../../../script.js';
 import { VectorBackend } from './backend-interface.js';
 import { getModelField } from '../core/providers.js';
 import { VECTOR_LIST_LIMIT } from '../core/constants.js';
+import { INTERNAL_COLLECTION_IDS } from '../core/collection-ids.js';
 import { extension_settings } from '../../../../extensions.js';
 import { textgen_types, textgenerationwebui_settings } from '../../../../textgen-settings.js';
 import { oai_settings } from '../../../../openai.js';
@@ -138,7 +139,7 @@ export class StandardBackend extends VectorBackend {
                 method: 'POST',
                 headers: getRequestHeaders(),
                 body: JSON.stringify({
-                    collectionId: '__vecthare_health_check__',
+                    collectionId: INTERNAL_COLLECTION_IDS[0],
                     source: 'transformers'
                 }),
             });

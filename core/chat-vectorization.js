@@ -50,6 +50,7 @@ import {
     buildLegacyChatCollectionId,
     getAllChatCollectionIds,
     COLLECTION_PREFIXES,
+    INTERNAL_COLLECTION_IDS,
     parseCollectionId,
     parseRegistryKey,
 } from './collection-ids.js';
@@ -773,6 +774,11 @@ function gatherCollectionsToQuery(settings) {
         // and only the current chat's collection is eligible (added in the first block).
         // When EventBase is ON this is already covered by the filter above.
         if (collectionId?.startsWith(COLLECTION_PREFIXES.VECTHARE_CHAT)) {
+            continue;
+        }
+
+        // Skip internal system collections (e.g. health check) — never query them for retrieval
+        if (INTERNAL_COLLECTION_IDS.includes(collectionId)) {
             continue;
         }
 

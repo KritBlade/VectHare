@@ -948,6 +948,9 @@ export function buildSearchContext(chat, contextWindow = 10, activeChunks = [], 
         activeLorebookEntries: metadata.activeLorebookEntries || [], // Active lorebook entries
         isGroupChat: metadata.isGroupChat || false,                  // Whether this is a group chat
         currentCharacter: metadata.currentCharacter || null,         // Current character name (for expressions extension)
+        currentChatId: metadata.currentChatId || null,               // Current chat ID (for lock checks)
+        currentChatCollectionId: metadata.currentChatCollectionId || null, // Current chat collection ID
+        currentCharacterId: metadata.currentCharacterId || null,     // Current character ID (for character locks)
 
         // Context for chunk-only conditionals (set per-chunk during evaluation)
         currentChunkScore: metadata.currentChunkScore || 0,          // For similarity condition

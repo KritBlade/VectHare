@@ -2395,7 +2395,7 @@ function saveActivation() {
   setCollectionConditions(state.collectionId, conditions);
 
   closeActivationEditor();
-  refreshCollections();
+  renderCollections(); // metadata-only change, no need to re-discover collections
   toastr.success("Collection settings saved", "VectHarePlus");
 }
 

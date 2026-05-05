@@ -21,6 +21,11 @@ import { getCurrentChatId, chat_metadata } from '../../../../../script.js';
 /** Prefix for new VectHare format (not currently used for chats, but available) */
 export const VH_PREFIX = 'vh';
 
+/** Internal system collection IDs that must never participate in retrieval */
+export const INTERNAL_COLLECTION_IDS = Object.freeze([
+    '__vecthare_health_check__',
+]);
+
 /** All known collection prefixes for backwards compatibility */
 export const COLLECTION_PREFIXES = {
     // VectHare formats
