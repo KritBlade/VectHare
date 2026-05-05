@@ -60,11 +60,17 @@ export async function runEventBaseIngestion({ messages, chatUUID, settings, abor
 
     if (!messages?.length) return { eventsExtracted: 0, windowsProcessed: 0, windowsSkipped: 0 };
 
-    // Build list of windows
+    // Build list of windows — skip tail windows that haven't accumulated a full
+    // windowSize of messages yet. This prevents the same partial tail from being
+    // re-extracted (and potentially duplicating events) on every auto-sync fire.
+    // A tail window becomes eligible once it reaches windowSize messages, at which
+    // point the next step boundary also produces a fresh overlap window correctly.
     const windows = [];
     for (let start = 0; start < messages.length; start += step) {
         const end = Math.min(start + windowSize - 1, messages.length - 1);
-        windows.push({ start, end, msgs: messages.slice(start, end + 1) });
+        const msgs = messages.slice(start, end + 1);
+        if (msgs.length < windowSize) break; // tail is incomplete — wait for more messages
+        windows.push({ start, end, msgs });
     }
 
     if (debugLog) {

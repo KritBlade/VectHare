@@ -41,7 +41,7 @@ import { getStringHash } from '../../../../utils.js';
  * @param {AbortSignal} [params.abortSignal] - Optional abort signal to stop vectorization
  * @returns {Promise<{success: boolean, chunkCount: number, collectionId: string}>}
  */
-export async function vectorizeContent({ contentType, source, settings, abortSignal = null, continueMode = false }) {
+export async function vectorizeContent({ contentType, source, settings, abortSignal = null, continueMode = false, startFromMessage = 1 }) {
     // EventBase workflow only handles chat messages; non-chat content vectorization
     // continues with the legacy path regardless of eventbase_enabled.
     // (Future phases may add EventBase handling for lorebooks/characters here.)
@@ -73,7 +73,7 @@ export async function vectorizeContent({ contentType, source, settings, abortSig
 
         // Step 2: Prepare and chunk
         progressTracker.updateProgress(2, 'Chunking content...');
-        const preparedContent = await prepareContent(contentType, rawContent, settings);
+        const preparedContent = await prepareContent(contentType, rawContent, settings, startFromMessage);
         throwIfAborted();
         const chunks = await chunkText(preparedContent.text || preparedContent, {
             strategy: settings.strategy || type.defaultStrategy,
@@ -512,7 +512,7 @@ async function loadCharacterContent(characterId, context) {
 /**
  * Prepares content for chunking based on content type
  */
-async function prepareContent(contentType, rawContent, settings) {
+async function prepareContent(contentType, rawContent, settings, startFromMessage = 1) {
     switch (contentType) {
         case 'lorebook':
             return prepareLorebookContent(rawContent, settings);
@@ -521,7 +521,7 @@ async function prepareContent(contentType, rawContent, settings) {
             return prepareCharacterContent(rawContent, settings);
 
         case 'chat':
-            return prepareChatContent(rawContent, settings);
+            return prepareChatContent(rawContent, settings, startFromMessage);
 
         case 'url':
             return prepareUrlContent(rawContent, settings);
@@ -632,7 +632,7 @@ function prepareCharacterContent(rawContent, settings) {
  * Prepares chat content for chunking
  * Maps to the unified chunking strategies in chunking.js
  */
-function prepareChatContent(rawContent, settings) {
+function prepareChatContent(rawContent, settings, startFromMessage = 1) {
     const messages = rawContent.messages || rawContent.content;
 
     if (!Array.isArray(messages)) {
@@ -640,7 +640,14 @@ function prepareChatContent(rawContent, settings) {
     }
 
     // Filter out system messages and empty messages
-    const validMessages = messages.filter(m => m.mes && !m.is_system);
+    let validMessages = messages.filter(m => m.mes && !m.is_system);
+
+    // Apply start-from slice (1-based: startFromMessage=1 means all, =2000 means skip first 1999)
+    if (startFromMessage > 1) {
+        const sliceIdx = Math.min(startFromMessage - 1, validMessages.length);
+        console.log(`VectHare: Start-from message ${startFromMessage} — skipping first ${sliceIdx} messages, ${validMessages.length - sliceIdx} remaining`);
+        validMessages = validMessages.slice(sliceIdx);
+    }
 
     // Apply text cleaning to messages
     const cleanedMessages = cleanMessages(validMessages);

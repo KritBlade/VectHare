@@ -41,6 +41,7 @@ let currentSettings = {};
 let sourceData = null;
 let activeVectorizeAbortController = null;
 let isVectorizing = false;
+let startFromMessage = 1;
 
 function updateVectorizeButtonState(running) {
     const btn = $('#vecthare_cv_vectorize');
@@ -144,6 +145,21 @@ function createModal() {
                             <span class="vecthare-cv-type-hint" id="vecthare_cv_type_hint">
                                 Select a content type to continue
                             </span>
+                        </div>
+                    </div>
+
+                    <!-- Step 1: Backfill Range (chat only) -->
+                    <div class="vecthare-cv-section vecthare-cv-startfrom-section vecthare-cv-subsequent" id="vecthare_cv_startfrom_section" style="display:none;">
+                        <div class="vecthare-cv-section-header">
+                            <span class="vecthare-cv-step-number">1</span>
+                            <span class="vecthare-cv-section-title">Backfill Range</span>
+                        </div>
+                        <div class="vecthare-cv-section-body">
+                            <div class="vecthare-cv-startfrom-row">
+                                <label for="vecthare_cv_startfrom">Start From Message</label>
+                                <input type="number" id="vecthare_cv_startfrom" class="vecthare-input" min="1" step="1" value="1" style="width:100px;">
+                            </div>
+                            <span class="vecthare-cv-type-hint">Default 1 = entire chat. Enter e.g. 2000 to start from message 2000 onward.</span>
                         </div>
                     </div>
 
@@ -300,6 +316,9 @@ function updateUIForContentType() {
     // Show Continue button only for chat type (backfills missing chunks via hash dedup)
     const isChatType = currentContentType === 'chat';
     $('#vecthare_cv_continue').toggle(isChatType);
+    // Show Start From section only for chat
+    $('#vecthare_cv_startfrom_section').toggle(isChatType);
+    if (!isChatType) startFromMessage = 1;
 }
 
 /**
@@ -1191,6 +1210,13 @@ function bindEvents() {
         // Show subsequent sections and update UI
         $('.vecthare-cv-subsequent').slideDown(200);
         updateUIForContentType();
+    });
+
+    // Start From Message input
+    $(document).on('change input', '#vecthare_cv_startfrom', function() {
+        const v = parseInt($(this).val(), 10);
+        startFromMessage = Number.isFinite(v) && v >= 1 ? v : 1;
+        $(this).val(startFromMessage);
     });
 
     // Collapse toggles
@@ -2559,6 +2585,7 @@ async function startContinueVectorization() {
             settings: currentSettings,
             abortSignal: activeVectorizeAbortController.signal,
             continueMode: true,
+            startFromMessage,
         });
         if (result.chunkCount === 0) {
             // Already up to date — message shown by vectorizeContent
@@ -2745,6 +2772,7 @@ async function startVectorization() {
             source: source,
             settings: currentSettings,
             abortSignal: activeVectorizeAbortController.signal,
+            startFromMessage,
         });
 
         toastr.success(`Vectorized ${result.chunkCount} chunks`, 'VectHare');
