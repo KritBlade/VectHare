@@ -15,8 +15,8 @@ import {
     getAdditionalArgs,
     getSavedHashes,
 } from './core-vector-api.js';
-import { getCurrentChatId, chat_metadata } from '../../../../../script.js';
-import { extension_settings, saveSettingsDebounced } from '../../../../extensions.js';
+import { getCurrentChatId, chat_metadata, saveSettingsDebounced } from '../../../../../script.js';
+import { extension_settings } from '../../../../extensions.js';
 import { getChatUUID, buildEventBaseCollectionId } from './collection-ids.js';
 import { registerCollection } from './collection-loader.js';
 import { buildEmbedText } from './eventbase-schema.js';
