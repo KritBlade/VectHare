@@ -844,6 +844,9 @@ export async function queryCollection(collectionId, searchText, topK, settings) 
             // additionalArgs.embeddings is a Record<string, number[]> where keys are original text
             if (additionalArgs.embeddings && additionalArgs.embeddings[searchText]) {
                 queryVector = additionalArgs.embeddings[searchText];
+                if (settings.eventbase_debug_logging) {
+                    console.log(`[EventBase] Embedding model (${settings.source}) returned vector: dim=${queryVector.length}, first5=[${queryVector.slice(0, 5).map(v => v.toFixed(4)).join(', ')}], last5=[${queryVector.slice(-5).map(v => v.toFixed(4)).join(', ')}], model=${additionalArgs.model || 'n/a'}`);
+                }
             } else {
                 // VEC-35: Fallback to server-side embedding instead of failing completely
                 console.warn(`[VectHare] Client-side embedding generation returned empty result for ${settings.source}, falling back to server-side embedding`);
@@ -862,6 +865,11 @@ export async function queryCollection(collectionId, searchText, topK, settings) 
             const result = await hybridSearch(collectionId, searchText, topK, settings, { queryVector });
             const queryLatency = Date.now() - queryStart;
             recordQuery(settings?.vector_backend || 'standard', queryLatency);
+            if (settings.eventbase_debug_logging) {
+                const scores = (result.metadata || []).map(m => (m.score ?? 0).toFixed(4));
+                const fusionMethod = (settings.hybrid_fusion_method || 'rrf').toUpperCase();
+                console.log(`[EventBase] Hybrid search (${fusionMethod}) response: ${result.hashes?.length ?? 0} result(s) in ${queryLatency}ms, scores=[${scores.join(', ')}]`);
+            }
             return result;
         } catch (error) {
             // VEC-18: Record query error
@@ -880,6 +888,10 @@ export async function queryCollection(collectionId, searchText, topK, settings) 
         rawResults = await backend.queryCollection(collectionId, searchText, overfetchAmount, settings, queryVector);
         const queryLatency = Date.now() - queryStart;
         recordQuery(settings?.vector_backend || 'standard', queryLatency);
+        if (settings.eventbase_debug_logging) {
+            const scores = (rawResults.metadata || []).map(m => (m.score ?? 0).toFixed(4));
+            console.log(`[EventBase] Embedding search response: ${rawResults.hashes?.length ?? 0} result(s) in ${queryLatency}ms, scores=[${scores.join(', ')}]`);
+        }
     } catch (error) {
         // VEC-18: Record query error
         recordError(settings?.vector_backend || 'standard', error);
@@ -895,6 +907,14 @@ export async function queryCollection(collectionId, searchText, topK, settings) 
     }));
 
     let finalResults = scoreResults(resultsForBoost, searchText, topK, settings, overfetchAmount);
+
+    if (settings.eventbase_debug_logging) {
+        const method = settings.keyword_scoring_method || 'keyword';
+        finalResults.forEach((r, i) => {
+            const keywords = r.matchedKeywords?.length ? r.matchedKeywords.join(', ') : 'none';
+            console.log(`[EventBase] #${i + 1} final=${r.score?.toFixed(4)} vector=${r.vectorScore?.toFixed(4) ?? 'n/a'} bm25=${r.bm25Score?.toFixed(4) ?? 'n/a'} boost=${r.keywordBoost?.toFixed(4) ?? 'n/a'} boosted=${r.keywordBoosted ? 'yes' : 'no'} keywords=[${keywords}] method=${method}`);
+        });
+    }
 
     // Convert back to expected format
     return {
