@@ -245,8 +245,18 @@ export async function runEventBaseRetrieval({ chat, searchText, settings, chatUU
 
     // Respect the "Active for current chat" toggle in Collection Settings.
     const collectionId = buildEventBaseCollectionId(uuid, settings?.vector_backend);
-    if (!isCollectionEnabled(collectionId)) {
-        if (debugLog) console.log(`[EventBase] Collection "${collectionId}" is disabled — skipping retrieval`);
+    const backend = settings?.vector_backend || 'standard';
+    const source = settings?.source || 'transformers';
+    const candidateKeys = [
+        collectionId,
+        `${source}:${collectionId}`,
+        `${backend}:${source}:${collectionId}`,
+    ];
+    const disabledKey = candidateKeys.find(key => key && !isCollectionEnabled(key));
+    if (disabledKey) {
+        if (debugLog) {
+            console.log(`[EventBase] Collection disabled (key="${disabledKey}") — skipping retrieval`);
+        }
         return;
     }
 
