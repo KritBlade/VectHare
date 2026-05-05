@@ -49,6 +49,7 @@ import {
     buildChatCollectionId,
     buildLegacyChatCollectionId,
     getAllChatCollectionIds,
+    COLLECTION_PREFIXES,
     parseCollectionId,
     parseRegistryKey,
 } from './collection-ids.js';
@@ -721,19 +722,42 @@ export async function synchronizeChat(settings, batchSize = 5) {
 function gatherCollectionsToQuery(settings) {
     const chatCollectionId = getChatCollectionId();
     const collectionsToQuery = [];
+    const registry = getCollectionRegistry();
+
+    // UI pause/resume is typically saved on registry keys (backend:source:collectionId),
+    // so resolve the chat collection to registry key first when possible.
+    let chatCollectionRegistryKey = null;
+    if (chatCollectionId) {
+        for (const registryKey of registry) {
+            const parsed = parseRegistryKey(registryKey);
+            if (parsed.collectionId === chatCollectionId) {
+                chatCollectionRegistryKey = registryKey;
+                break;
+            }
+        }
+    }
 
     // Include chat collection if it's enabled AND we have a valid collection ID
     // Uses per-collection enabled state, not global enabled_chats
-    if (chatCollectionId && isCollectionEnabled(chatCollectionId)) {
-        collectionsToQuery.push(chatCollectionId);
+    if (chatCollectionId) {
+        const chatKeyToCheck = chatCollectionRegistryKey || chatCollectionId;
+        if (isCollectionEnabled(chatKeyToCheck)) {
+            collectionsToQuery.push(chatKeyToCheck);
+        }
     }
 
     // Get all other registered collections that are enabled
-    const registry = getCollectionRegistry();
     for (const registryKey of registry) {
         // Use proper registry key parser to extract collection ID
         const parsedKey = parseRegistryKey(registryKey);
         const collectionId = parsedKey.collectionId;
+
+        // Keep EventBase retrieval isolated to its dedicated workflow.
+        // When EventBase workflow is OFF, do not query EventBase collections
+        // through chunk-based retrieval.
+        if (!settings?.eventbase_enabled && collectionId?.startsWith(COLLECTION_PREFIXES.VECTHARE_EVENTBASE)) {
+            continue;
+        }
 
         // Skip if this is the current chat collection (already handled above)
         if (collectionId === chatCollectionId) {
@@ -1881,14 +1905,6 @@ export async function rearrangeChat(chat, settings, type) {
                 currentCharacterId: getContext().characterId || null
             });
             activeCollections = await filterActiveCollections(collectionsToQuery, searchContext);
-
-            // Backward-compat safety: always allow current chat collection when enabled.
-            // Some legacy metadata may not have locks/triggers yet, which can block retrieval.
-            const chatCollectionId = getChatCollectionId();
-            if (chatCollectionId && collectionsToQuery.includes(chatCollectionId) && !activeCollections.includes(chatCollectionId)) {
-                activeCollections.unshift(chatCollectionId);
-                console.log(`VectHare: Forced activation fallback for current chat collection: ${chatCollectionId}`);
-            }
         }
 
         // Allow WI-only mode even if no regular collections pass filters
