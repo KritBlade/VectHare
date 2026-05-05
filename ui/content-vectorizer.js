@@ -2639,7 +2639,15 @@ async function _runEventBaseBackfill() {
             return;
         }
 
-        const messages = context.chat.filter(m => !m.is_system);
+        const allMessages = context.chat.filter(m => !m.is_system);
+
+        // Apply start-from slice (1-based, same logic as prepareChatContent)
+        let messages = allMessages;
+        if (startFromMessage > 1) {
+            const sliceIdx = Math.min(startFromMessage - 1, allMessages.length);
+            console.log(`[EventBase] Start-from message ${startFromMessage} — skipping first ${sliceIdx} messages, ${allMessages.length - sliceIdx} remaining`);
+            messages = allMessages.slice(sliceIdx);
+        }
         const legacyStrategy = currentSettings.strategy || 'per_message';
         const legacyBatchSize = Number(currentSettings.batchSize) || 4;
         const legacyGroupBatchSize = Number(currentSettings.groupBatchSize) || 10;
