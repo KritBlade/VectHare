@@ -313,8 +313,22 @@ export async function runEventBaseRetrieval({ chat, searchText, settings, chatUU
         toastr.info('Retrieving context from EventBase...', 'VectHarePlus Retrieval');
     }
 
+    // Extract the user's most recent message for focused keyword extraction.
+    // The full searchText (last N messages joined) is still used for vector search
+    // so semantic context is preserved — but keywords come from the user's actual
+    // intent, not from the dominant AI response text that follows it in the blob.
+    const lastUserMessage = [...(chat || [])]
+        .reverse()
+        .find(m => !m.is_system && m.is_user);
+    const keywordQuery = lastUserMessage?.mes?.trim() || null;
+
+    if (debugLog && keywordQuery) {
+        console.log(`[EventBase] Keyword query (user last message, ${keywordQuery.length} chars):`, keywordQuery.slice(0, 120));
+    }
+
     const { events, debug } = await retrieveEvents({
         searchText,
+        keywordQuery,
         chatLength: chat?.length || 0,
         settings,
         chatUUID: uuid,

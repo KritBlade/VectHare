@@ -5,7 +5,7 @@
  * Retrieves and re-ranks EventRecord objects from Qdrant for prompt injection.
  *
  * Pipeline:
- *  1. Query EventBase collection with search text (vector similarity)
+ *  1. Dual vector query — user's last message + full context (Promise.all); merge by max score
  *  2. Filter by minimum importance
  *  3. Re-rank using weighted formula: cosine + importance + persist + recency
  *  4. Suppress near-duplicate events (same type + high character overlap)
@@ -88,49 +88,92 @@ function _normalizeWeights(w) {
  * Query and re-rank EventBase records for injection.
  *
  * @param {object} params
- * @param {string} params.searchText  - Recent chat messages joined (from buildSearchQuery)
- * @param {number} params.chatLength  - Current total chat message count (for recency)
- * @param {object} params.settings    - VectHare settings
- * @param {string} [params.chatUUID]  - Override chat UUID
+ * @param {string} params.searchText    - Recent chat messages joined (from buildSearchQuery)
+ * @param {string} [params.keywordQuery] - User's last message; used for keyword extraction and
+ *                                         a second parallel vector query (dual-query mode).
+ *                                         Falls back to searchText when absent or identical.
+ * @param {number} params.chatLength    - Current total chat message count (for recency)
+ * @param {object} params.settings      - VectHare settings
+ * @param {string} [params.chatUUID]    - Override chat UUID
  * @returns {Promise<{ events: object[], debug: object }>}
  */
-export async function retrieveEvents({ searchText, chatLength, settings, chatUUID }) {
+export async function retrieveEvents({ searchText, keywordQuery, chatLength, settings, chatUUID }) {
     const debugLog = settings.eventbase_debug_logging;
     const uuid = chatUUID || getChatUUID();
 
     const topK = (settings.eventbase_retrieval_top_k || 8) * 2; // overfetch for re-rank
     const minImportance = settings.eventbase_retrieval_min_importance || 1;
 
+    // keywordQuery: focused text for keyword extraction (user's last message).
+    // Falls back to full searchText if not provided.
+    const effectiveKeywordQuery = keywordQuery || searchText;
+
     if (debugLog) {
         console.log(`[EventBase] Retrieval start — topK overfetch=${topK}, minImportance=${minImportance}`);
     }
 
-    // 1. Vector query
+    // 1. Dual vector query — fire both in parallel (each is an independent HTTP fetch).
+    //    userQuery  → user's last message: high-precision, intent-focused
+    //    searchText → full multi-message context: broad narrative coverage
+    //    When both strings are identical (no user message extracted) fall back to a
+    //    single query to avoid paying double cost for the same embedding.
     let rawCandidates;
-    try {
-        rawCandidates = await queryEvents(searchText, topK, settings, uuid);
-    } catch (err) {
-        console.error('[EventBase] Query failed:', err);
-        return { events: [], debug: { error: err.message } };
-    }
+    const dualQuery = keywordQuery && keywordQuery !== searchText;
 
-    if (debugLog) {
-        console.log(`[EventBase] Query returned ${rawCandidates.length} raw candidates`);
+    if (dualQuery) {
+        const [userResults, contextResults] = await Promise.all([
+            queryEvents(keywordQuery, topK, settings, uuid).catch(err => {
+                console.error('[EventBase] User-query failed:', err);
+                return [];
+            }),
+            queryEvents(searchText, topK, settings, uuid).catch(err => {
+                console.error('[EventBase] Context-query failed:', err);
+                return [];
+            }),
+        ]);
+
+        // Merge by event_id — keep the copy with the higher cosine score so the
+        // re-ranker receives the best available similarity signal for each event.
+        const mergedMap = new Map();
+        for (const event of [...userResults, ...contextResults]) {
+            const key = event.event_id ?? event.hash ?? JSON.stringify(event);
+            const existing = mergedMap.get(key);
+            if (!existing || event.score > existing.score) {
+                mergedMap.set(key, event);
+            }
+        }
+        rawCandidates = [...mergedMap.values()];
+
+        if (debugLog) {
+            console.log(`[EventBase] Dual-query: user=${userResults.length} + context=${contextResults.length} → merged=${rawCandidates.length} unique events`);
+        }
+    } else {
+        try {
+            rawCandidates = await queryEvents(searchText, topK, settings, uuid);
+        } catch (err) {
+            console.error('[EventBase] Query failed:', err);
+            return { events: [], debug: { error: err.message } };
+        }
+
+        if (debugLog) {
+            console.log(`[EventBase] Query returned ${rawCandidates.length} raw candidates`);
+        }
     }
 
     // 2. Keyword boost — honour the same Core-tab settings as the legacy pipeline.
-    //    Extracts keywords from searchText and multiplies the cosine score of events
-    //    whose stored keywords overlap with the query keywords.
-    //    Runs before re-rank so the boosted score feeds into the 4-weight formula.
+    //    Keywords are extracted from effectiveKeywordQuery (the user's last message when
+    //    provided) rather than the full searchText, so the user's intent dominates over
+    //    the much longer AI response that typically follows it in the query blob.
+    //    The vector search above still uses the full searchText for richer semantic context.
     const extractionLevel = settings.keyword_extraction_level || 'balanced';
     const baseWeight = settings.keyword_boost_base_weight || 1.5;
-    const queryKeywords = extractChatKeywords(searchText, { level: extractionLevel, baseWeight });
+    const queryKeywords = extractChatKeywords(effectiveKeywordQuery, { level: extractionLevel, baseWeight });
     let boostedCandidates = rawCandidates;
     if (queryKeywords.length > 0) {
-        boostedCandidates = applyKeywordBoost(rawCandidates, searchText, { diminishingReturns: true, perKeywordCap: true });
+        boostedCandidates = applyKeywordBoost(rawCandidates, effectiveKeywordQuery, { diminishingReturns: true, perKeywordCap: true });
         if (debugLog) {
             const boostedCount = boostedCandidates.filter(c => c.keywordBoosted).length;
-            console.log(`[EventBase] Keyword boost: ${queryKeywords.length} query keywords, ${boostedCount}/${boostedCandidates.length} events boosted`);
+            console.log(`[EventBase] Keyword boost: ${queryKeywords.length} keyword(s) from "${effectiveKeywordQuery.slice(0, 60)}...", ${boostedCount}/${boostedCandidates.length} events boosted`);
         }
     }
 
@@ -220,6 +263,7 @@ export async function retrieveEvents({ searchText, chatLength, settings, chatUUI
     return {
         events: finalEvents,
         debug: {
+            dualQuery,
             rawCount: rawCandidates.length,
             keywordsBoosted: boostedCandidates.filter(c => c.keywordBoosted).length,
             queryKeywords: queryKeywords.map(k => k.text),
