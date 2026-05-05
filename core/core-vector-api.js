@@ -869,6 +869,10 @@ export async function queryCollection(collectionId, searchText, topK, settings) 
                 const scores = (result.metadata || []).map(m => (m.score ?? 0).toFixed(4));
                 const fusionMethod = (settings.hybrid_fusion_method || 'rrf').toUpperCase();
                 console.log(`[EventBase] Hybrid search (${fusionMethod}) response: ${result.hashes?.length ?? 0} result(s) in ${queryLatency}ms, scores=[${scores.join(', ')}]`);
+                (result.metadata || []).forEach((m, i) => {
+                    const keywords = m.matchedKeywords?.length ? m.matchedKeywords.join(', ') : 'none';
+                    console.log(`[EventBase] Hybrid #${i + 1} fused=${(m.score ?? 0).toFixed(4)} vector=${m.vectorScore != null ? Number(m.vectorScore).toFixed(4) : 'n/a'} text=${m.textScore != null ? Number(m.textScore).toFixed(4) : 'n/a'} keywords=[${keywords}]`);
+                });
             }
             return result;
         } catch (error) {
