@@ -17,7 +17,8 @@ import { getChatUUID } from './collection-ids.js';
 import { EXTENSION_PROMPT_TAG } from './constants.js';
 import { EventBaseFatalError, EventBaseExtractionError } from './eventbase-schema.js';
 import { extractEvents } from './eventbase-extractor.js';
-import { insertEvents, isWindowAlreadyExtracted, markWindowExtracted, buildEventBaseCollectionId } from './eventbase-store.js';
+import { insertEvents, isWindowAlreadyExtracted, markWindowExtracted, clearWindowCacheForChat, buildEventBaseCollectionId } from './eventbase-store.js';
+import { getSavedHashes } from './core-vector-api.js';
 import { retrieveEvents } from './eventbase-retrieval.js';
 import { formatEventsForInjectionDetailed } from './eventbase-injection.js';
 import { isCollectionEnabled, isCollectionLockedToChat } from './collection-metadata.js';
@@ -61,6 +62,22 @@ export async function runEventBaseIngestion({ messages, chatUUID, settings, abor
     const CONCURRENCY = 3;
 
     if (!messages?.length) return { eventsExtracted: 0, windowsProcessed: 0, windowsSkipped: 0 };
+
+    // If the fingerprint cache says windows were extracted but Qdrant has no data
+    // (e.g. collection was deleted externally), reset the cache so we start fresh.
+    const cacheEntries = extension_settings?.vecthareplus?.eventbase_extracted_windows?.[uuid];
+    if (Array.isArray(cacheEntries) && cacheEntries.length > 0) {
+        try {
+            const collectionId = buildEventBaseCollectionId(uuid, settings?.vector_backend);
+            const existingHashes = collectionId ? await getSavedHashes(collectionId, settings) : [];
+            if (!existingHashes?.length) {
+                if (debugLog) console.log('[EventBase] Collection is empty but cache has entries — resetting window cache');
+                clearWindowCacheForChat(uuid);
+            }
+        } catch {
+            // Non-fatal — proceed without resetting.
+        }
+    }
 
     // Build list of windows — skip tail windows that haven't accumulated a full
     // windowSize of messages yet. This prevents the same partial tail from being

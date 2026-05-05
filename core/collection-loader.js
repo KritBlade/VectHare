@@ -144,6 +144,18 @@ export async function deleteCollection(collectionId, settings, registryKey = nul
         console.warn(`VectHare: ✗ Failed to delete metadata for ${collectionId}:`, error.message);
     }
 
+    // Step 4: Clear EventBase window fingerprint cache if this is an EventBase collection.
+    // The UUID is always the last underscore-separated segment of the collection ID.
+    if (collectionId.startsWith(COLLECTION_PREFIXES.VECTHARE_EVENTBASE)) {
+        try {
+            const { clearWindowCacheForChat } = await import('./eventbase-store.js');
+            const chatUUID = collectionId.split('_').pop();
+            if (chatUUID) clearWindowCacheForChat(chatUUID);
+        } catch {
+            // Best-effort — don't fail the whole delete if this breaks.
+        }
+    }
+
     const success = vectorsDeleted && registryDeleted && metadataDeleted;
 
     if (success) {

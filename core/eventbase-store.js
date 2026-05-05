@@ -223,6 +223,21 @@ export function markWindowExtracted(sourceHashes, chatUUID) {
 }
 
 /**
+ * Clears the extraction cache for a specific chat.
+ * Call this whenever an EventBase collection is deleted so that
+ * the next vectorization run starts fresh.
+ * @param {string} [chatUUID]
+ */
+export function clearWindowCacheForChat(chatUUID) {
+    const uuid = chatUUID || getChatUUID();
+    if (!uuid) return;
+    const store = extension_settings?.vecthareplus;
+    if (!store?.eventbase_extracted_windows) return;
+    delete store.eventbase_extracted_windows[uuid];
+    saveSettingsDebounced();
+}
+
+/**
  * Checks whether a window has already been extracted (O(1), no DB query).
  *
  * @param {number[]} sourceHashes
