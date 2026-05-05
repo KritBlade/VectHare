@@ -17,7 +17,7 @@ import { getChatUUID } from './collection-ids.js';
 import { EXTENSION_PROMPT_TAG } from './constants.js';
 import { EventBaseFatalError, EventBaseExtractionError } from './eventbase-schema.js';
 import { extractEvents } from './eventbase-extractor.js';
-import { insertEvents, isWindowAlreadyExtracted, buildEventBaseCollectionId } from './eventbase-store.js';
+import { insertEvents, isWindowAlreadyExtracted, markWindowExtracted, buildEventBaseCollectionId } from './eventbase-store.js';
 import { retrieveEvents } from './eventbase-retrieval.js';
 import { formatEventsForInjectionDetailed } from './eventbase-injection.js';
 import { isCollectionEnabled, isCollectionLockedToChat } from './collection-metadata.js';
@@ -168,6 +168,10 @@ export async function runEventBaseIngestion({ messages, chatUUID, settings, abor
                 if (toStore.length > 0) {
                     await insertEvents(toStore, settings, abortSignal);
                 }
+
+                // Mark window as done in the chat_metadata fingerprint cache
+                // so future runs skip it instantly without querying the DB.
+                markWindowExtracted(sourceHashes);
 
                 return { skipped: false, events: toStore };
             }),

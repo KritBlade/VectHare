@@ -2685,6 +2685,15 @@ async function _runEventBaseBackfill() {
         });
 
         console.log('[EventBase] Ingestion result:', result);
+
+        // If the user hit Stop, the abort signal will be set even though
+        // runEventBaseIngestion returned normally (it catches AbortError internally).
+        if (activeVectorizeAbortController?.signal?.aborted) {
+            progressTracker.complete(false, `Stopped — saved ${result.eventsExtracted} events from ${result.windowsProcessed} windows so far`);
+            toastr.info('EventBase ingestion stopped', 'VectHare');
+            return;
+        }
+
         // Force-complete progress so the chunk counter doesn't show "1 left" when
         // the last partial window was intentionally skipped by the window size guard.
         progressTracker.complete(true, `EventBase: extracted ${result.eventsExtracted} events from ${result.windowsProcessed} windows`);

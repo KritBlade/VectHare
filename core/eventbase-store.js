@@ -15,6 +15,7 @@ import {
     getAdditionalArgs,
     getSavedHashes,
 } from './core-vector-api.js';
+import { getCurrentChatId, chat_metadata } from '../../../../../script.js';
 import { getChatUUID, buildEventBaseCollectionId } from './collection-ids.js';
 import { registerCollection } from './collection-loader.js';
 import { buildEmbedText } from './eventbase-schema.js';
@@ -184,37 +185,54 @@ export async function deleteEventByHash(hash, settings, chatUUID) {
  * @param {string}   [chatUUID]
  * @returns {Promise<boolean>}  true if this exact window is fully covered
  */
+// ---------------------------------------------------------------------------
+// Window fingerprint cache (stored in chat_metadata — no DB query needed)
+// ---------------------------------------------------------------------------
+
+/** Key used inside chat_metadata to store extracted window fingerprints */
+const EXTRACTED_WINDOWS_KEY = 'vecthare_eventbase_extracted_windows';
+
+/**
+ * Returns a stable string fingerprint for a window from its source hashes.
+ * @param {number[]} sourceHashes
+ * @returns {string}
+ */
+function _windowFingerprint(sourceHashes) {
+    return [...sourceHashes].map(String).sort().join(',');
+}
+
+/**
+ * Marks a window as extracted in the chat_metadata cache.
+ * Call this after a window has been successfully inserted.
+ * @param {number[]} sourceHashes
+ */
+export function markWindowExtracted(sourceHashes) {
+    if (!sourceHashes?.length) return;
+    if (!chat_metadata) return;
+    if (!chat_metadata[EXTRACTED_WINDOWS_KEY]) {
+        chat_metadata[EXTRACTED_WINDOWS_KEY] = [];
+    }
+    const fp = _windowFingerprint(sourceHashes);
+    if (!chat_metadata[EXTRACTED_WINDOWS_KEY].includes(fp)) {
+        chat_metadata[EXTRACTED_WINDOWS_KEY].push(fp);
+    }
+}
+
+/**
+ * Checks whether a window has already been extracted, using the
+ * chat_metadata fingerprint cache (O(1), no DB query).
+ *
+ * @param {number[]} sourceHashes   - Hashes of messages in the candidate window
+ * @param {number[]} messageIds     - 0-based message indices in the window (unused, kept for API compat)
+ * @param {object}   settings       - unused, kept for API compat
+ * @param {string}   [chatUUID]     - unused, kept for API compat
+ * @returns {Promise<boolean>}
+ */
 export async function isWindowAlreadyExtracted(sourceHashes, messageIds, settings, chatUUID) {
     if (!sourceHashes?.length) return false;
-
-    try {
-        const uuid = chatUUID || getChatUUID();
-        const collectionId = await _resolveEventBaseCollectionIdForRead(settings, uuid);
-        if (!collectionId) return false;
-
-        // Query with a broad overfetch to find candidate events from this window
-        // Use a dummy non-empty search text to avoid hybrid search errors when collection is empty
-        const { metadata } = await queryCollection(collectionId, 'event', 50, settings);
-        if (!metadata?.length) return false;
-
-        const windowHashSet = new Set(sourceHashes.map(String));
-
-        for (const meta of metadata) {
-            const stored = meta.source_message_hashes;
-            if (!Array.isArray(stored) || stored.length !== sourceHashes.length) continue;
-
-            const storedSet = new Set(stored.map(String));
-            let fullMatch = true;
-            for (const h of windowHashSet) {
-                if (!storedSet.has(h)) { fullMatch = false; break; }
-            }
-            if (fullMatch) return true;
-        }
-    } catch {
-        // Dedup check is best-effort; don't abort ingestion on failure
-    }
-
-    return false;
+    if (!chat_metadata?.[EXTRACTED_WINDOWS_KEY]) return false;
+    const fp = _windowFingerprint(sourceHashes);
+    return chat_metadata[EXTRACTED_WINDOWS_KEY].includes(fp);
 }
 
 /**

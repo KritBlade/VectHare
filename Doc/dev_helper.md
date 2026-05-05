@@ -99,7 +99,42 @@ if (storedMeta && Object.prototype.hasOwnProperty.call(storedMeta, 'lockedToChat
 
 ---
 
-## 5) Similharity Plugin Speedup (Simultaneous Embedding Requests)
+## 5) EventBase Window Dedup — chat_metadata Fingerprint Cache
+
+### Problem with old approach
+`isWindowAlreadyExtracted` used a semantic DB query (`queryCollection(..., 50, ...)`) to check if a window was already extracted. This was:
+- Capped at 50 results → missed already-extracted windows if >50 events in DB
+- Slow — requires embedding a dummy query + ANN search on every window
+
+### Current approach (O(1), no DB query)
+Window fingerprints are stored in `chat_metadata.vecthare_eventbase_extracted_windows` as a flat string array.
+
+- **Fingerprint format:** sorted source hashes joined by comma, e.g. `"123,456,789"`
+- **On extraction:** `markWindowExtracted(sourceHashes)` appends the fingerprint (called in `eventbase-workflow.js` after successful insert)
+- **On dedup check:** `isWindowAlreadyExtracted(sourceHashes, ...)` does `array.includes(fingerprint)` — synchronous, instant
+- **Persistence:** `chat_metadata` is the ST per-chat key-value store; survives page reloads, saved with the chat file automatically
+
+### Key files
+- `core/eventbase-store.js` — `isWindowAlreadyExtracted`, `markWindowExtracted`, `EXTRACTED_WINDOWS_KEY`
+- `core/eventbase-workflow.js` — calls `markWindowExtracted(sourceHashes)` after `insertEvents` succeeds
+
+### Migration note
+Windows extracted before this fix have no fingerprint in cache. First run after update will attempt to re-insert them — Qdrant silently overwrites same hash-keyed points (no duplicates). All future runs use the cache correctly.
+
+---
+
+## 6) GUI Settings — EventBase Relevance
+
+Two settings in the VectHare settings panel that look similar to EventBase internals:
+
+| Setting | EventBase relevant? | What it actually does |
+|---|---|---|
+| **Insert Batch Size** (default 50) | **No** | Controls chunks-per-API-call during chunk vectorization. EventBase inserts tiny batches (2–10 events per window) so this has no meaningful effect on EventBase. |
+| **Dedup Depth** (default 50 messages) | **Yes** | Used in `eventbase-retrieval.js` as `settings.deduplication_depth`. Filters out retrieved events whose source window falls within the last N messages of the current chat — avoids injecting content already visible in context. 0 = disabled. |
+
+---
+
+## 7) Similharity Plugin Speedup (Simultaneous Embedding Requests)
 Plugin file changed: `../similharity/index.js`
 
 What we changed:
