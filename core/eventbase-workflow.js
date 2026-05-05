@@ -270,7 +270,7 @@ export async function runEventBaseRetrieval({ chat, searchText, settings, chatUU
     }
 
     const injectionResult = formatEventsForInjectionDetailed(events, settings);
-    const injectionText = injectionResult.text;
+    let injectionText = injectionResult.text;
     const injectedCount = injectionResult.includedCount;
     if (!injectionText) {
         if (debugLog) console.log('[EventBase] Injection text empty after formatting');
