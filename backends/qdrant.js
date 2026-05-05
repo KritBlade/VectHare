@@ -771,6 +771,11 @@ export class QdrantBackend extends VectorBackend {
             };
         }
 
+        if (settings.eventbase_debug_logging) {
+            const preview = String(searchText || '').replace(/\s+/g, ' ').slice(0, 280);
+            console.log(`[EventBase] Native hybrid request payload: backend=${body.backend}, collection=${body.collectionId}, source=${body.source}, model=${body.model || 'n/a'}, topK=${body.topK}, threshold=${body.threshold}, vectorWeight=${vectorWeight}, textWeight=${textWeight}, fusion=${fusionMethod}, rrfK=${rrfK}, searchTextLen=${String(searchText || '').length}, searchTextPreview="${preview}"`);
+        }
+
         try {
             // Try the hybrid endpoint first
             const response = await fetch('/api/plugins/similharity/chunks/hybrid-query', {
