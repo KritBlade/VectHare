@@ -169,9 +169,9 @@ export async function runEventBaseIngestion({ messages, chatUUID, settings, abor
                     await insertEvents(toStore, settings, abortSignal);
                 }
 
-                // Mark window as done in the chat_metadata fingerprint cache
-                // so future runs skip it instantly without querying the DB.
-                markWindowExtracted(sourceHashes);
+                // Mark window as done in the extension_settings fingerprint cache
+                // so future runs (including after page reload) skip it instantly.
+                markWindowExtracted(sourceHashes, uuid);
 
                 return { skipped: false, events: toStore };
             }),

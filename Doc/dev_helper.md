@@ -107,12 +107,12 @@ if (storedMeta && Object.prototype.hasOwnProperty.call(storedMeta, 'lockedToChat
 - Slow — requires embedding a dummy query + ANN search on every window
 
 ### Current approach (O(1), no DB query)
-Window fingerprints are stored in `chat_metadata.vecthare_eventbase_extracted_windows` as a flat string array.
+Window fingerprints are stored in `extension_settings.vecthareplus.eventbase_extracted_windows[chatUUID]` as a flat string array. Using `extension_settings` (not `chat_metadata`) ensures they survive page reloads — `saveSettingsDebounced()` is called after each window so the cache is immediately persisted.
 
 - **Fingerprint format:** sorted source hashes joined by comma, e.g. `"123,456,789"`
-- **On extraction:** `markWindowExtracted(sourceHashes)` appends the fingerprint (called in `eventbase-workflow.js` after successful insert)
+- **On extraction:** `markWindowExtracted(sourceHashes, uuid)` appends the fingerprint (called in `eventbase-workflow.js` after successful insert)
 - **On dedup check:** `isWindowAlreadyExtracted(sourceHashes, ...)` does `array.includes(fingerprint)` — synchronous, instant
-- **Persistence:** `chat_metadata` is the ST per-chat key-value store; survives page reloads, saved with the chat file automatically
+- **Why NOT chat_metadata:** `chat_metadata` is only saved to disk when ST saves the chat (e.g. when a message is generated). Stopping mid-vectorization and reloading Chrome would lose all fingerprints written during that run.
 
 ### Key files
 - `core/eventbase-store.js` — `isWindowAlreadyExtracted`, `markWindowExtracted`, `EXTRACTED_WINDOWS_KEY`

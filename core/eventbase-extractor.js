@@ -531,7 +531,7 @@ export async function extractEvents({ messages, windowStart, windowEnd, settings
         }
 
         // Attach ingestion metadata (event_id, source info, timestamps)
-        const eventId = `eb_${now}_${windowIndex}_${i}_${Math.random().toString(36).slice(2, 8)}`;
+        const eventId = `eb_${Date.now()}_${windowStart}_${i}_${Math.random().toString(36).slice(2, 7)}`;
         const sourceHashes = messages.map(m => {
             // Use the message's hash if stored, otherwise hash the text
             const text = (m.mes || '').trim();

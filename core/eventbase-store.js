@@ -16,6 +16,7 @@ import {
     getSavedHashes,
 } from './core-vector-api.js';
 import { getCurrentChatId, chat_metadata } from '../../../../../script.js';
+import { extension_settings, saveSettingsDebounced } from '../../../../extensions.js';
 import { getChatUUID, buildEventBaseCollectionId } from './collection-ids.js';
 import { registerCollection } from './collection-loader.js';
 import { buildEmbedText } from './eventbase-schema.js';
@@ -186,11 +187,8 @@ export async function deleteEventByHash(hash, settings, chatUUID) {
  * @returns {Promise<boolean>}  true if this exact window is fully covered
  */
 // ---------------------------------------------------------------------------
-// Window fingerprint cache (stored in chat_metadata — no DB query needed)
+// Window fingerprint cache (stored in extension_settings, keyed by chatUUID)
 // ---------------------------------------------------------------------------
-
-/** Key used inside chat_metadata to store extracted window fingerprints */
-const EXTRACTED_WINDOWS_KEY = 'vecthare_eventbase_extracted_windows';
 
 /**
  * Returns a stable string fingerprint for a window from its source hashes.
@@ -202,37 +200,47 @@ function _windowFingerprint(sourceHashes) {
 }
 
 /**
- * Marks a window as extracted in the chat_metadata cache.
- * Call this after a window has been successfully inserted.
+ * Marks a window as extracted. Stored in extension_settings so it survives
+ * page reloads without requiring a chat save.
  * @param {number[]} sourceHashes
+ * @param {string} [chatUUID]
  */
-export function markWindowExtracted(sourceHashes) {
+export function markWindowExtracted(sourceHashes, chatUUID) {
     if (!sourceHashes?.length) return;
-    if (!chat_metadata) return;
-    if (!chat_metadata[EXTRACTED_WINDOWS_KEY]) {
-        chat_metadata[EXTRACTED_WINDOWS_KEY] = [];
-    }
+    const uuid = chatUUID || getChatUUID();
+    if (!uuid) return;
+
+    const store = extension_settings.vecthareplus;
+    if (!store) return;
+    if (!store.eventbase_extracted_windows) store.eventbase_extracted_windows = {};
+    if (!store.eventbase_extracted_windows[uuid]) store.eventbase_extracted_windows[uuid] = [];
+
     const fp = _windowFingerprint(sourceHashes);
-    if (!chat_metadata[EXTRACTED_WINDOWS_KEY].includes(fp)) {
-        chat_metadata[EXTRACTED_WINDOWS_KEY].push(fp);
+    if (!store.eventbase_extracted_windows[uuid].includes(fp)) {
+        store.eventbase_extracted_windows[uuid].push(fp);
+        saveSettingsDebounced();
     }
 }
 
 /**
- * Checks whether a window has already been extracted, using the
- * chat_metadata fingerprint cache (O(1), no DB query).
+ * Checks whether a window has already been extracted (O(1), no DB query).
  *
- * @param {number[]} sourceHashes   - Hashes of messages in the candidate window
- * @param {number[]} messageIds     - 0-based message indices in the window (unused, kept for API compat)
+ * @param {number[]} sourceHashes
+ * @param {number[]} messageIds     - unused, kept for API compat
  * @param {object}   settings       - unused, kept for API compat
- * @param {string}   [chatUUID]     - unused, kept for API compat
+ * @param {string}   [chatUUID]
  * @returns {Promise<boolean>}
  */
 export async function isWindowAlreadyExtracted(sourceHashes, messageIds, settings, chatUUID) {
     if (!sourceHashes?.length) return false;
-    if (!chat_metadata?.[EXTRACTED_WINDOWS_KEY]) return false;
+    const uuid = chatUUID || getChatUUID();
+    if (!uuid) return false;
+
+    const cache = extension_settings?.vecthareplus?.eventbase_extracted_windows?.[uuid];
+    if (!Array.isArray(cache)) return false;
+
     const fp = _windowFingerprint(sourceHashes);
-    return chat_metadata[EXTRACTED_WINDOWS_KEY].includes(fp);
+    return cache.includes(fp);
 }
 
 /**
