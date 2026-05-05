@@ -16,9 +16,10 @@ import { getChatUUID } from './collection-ids.js';
 import { EXTENSION_PROMPT_TAG } from './constants.js';
 import { EventBaseFatalError, EventBaseExtractionError } from './eventbase-schema.js';
 import { extractEvents } from './eventbase-extractor.js';
-import { insertEvents, isWindowAlreadyExtracted } from './eventbase-store.js';
+import { insertEvents, isWindowAlreadyExtracted, buildEventBaseCollectionId } from './eventbase-store.js';
 import { retrieveEvents } from './eventbase-retrieval.js';
 import { formatEventsForInjectionDetailed } from './eventbase-injection.js';
+import { isCollectionEnabled } from './collection-metadata.js';
 import { progressTracker } from '../ui/progress-tracker.js';
 
 /** Extension prompt tag for EventBase (distinct from legacy chunks tag) */
@@ -241,6 +242,13 @@ export async function runEventBaseIngestion({ messages, chatUUID, settings, abor
 export async function runEventBaseRetrieval({ chat, searchText, settings, chatUUID }) {
     const debugLog = settings.eventbase_debug_logging;
     const uuid = chatUUID || getChatUUID();
+
+    // Respect the "Active for current chat" toggle in Collection Settings.
+    const collectionId = buildEventBaseCollectionId(uuid, settings?.vector_backend);
+    if (!isCollectionEnabled(collectionId)) {
+        if (debugLog) console.log(`[EventBase] Collection "${collectionId}" is disabled — skipping retrieval`);
+        return;
+    }
 
     if (debugLog) {
         console.log('[EventBase] Retrieval start, searchText length:', searchText?.length);
