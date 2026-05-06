@@ -753,7 +753,7 @@ class QdrantBackend {
                                 hash: point.payload.hash,
                                 text: point.payload.text,
                                 keywordScore: keywordScore,
-                                matchedKeywords: weightedMatchScore,
+                                matchedKeywordWeight: weightedMatchScore,
                                 matchedKeywordList,
                                 metadata: point.payload,
                             });
@@ -830,7 +830,7 @@ class QdrantBackend {
                 const existing = resultsMap.get(result.hash);
                 existing.keywordScore = result.keywordScore;
                 existing.keywordRank = index + 1;
-                existing.matchedKeywords = result.matchedKeywords;
+                existing.matchedKeywordWeight = result.matchedKeywordWeight;
                 existing.matchedKeywordList = result.matchedKeywordList || [];
             } else {
                 resultsMap.set(result.hash, {
@@ -868,7 +868,7 @@ class QdrantBackend {
                     keywordScore: result.keywordScore,
                     vectorRank: result.vectorRank,
                     keywordRank: result.keywordRank,
-                    matchedKeywords: result.matchedKeywords || 0,
+                    matchedKeywordWeight: result.matchedKeywordWeight || 0,
                     matchedKeywordList: result.matchedKeywordList || [],
                     fusionMethod: method,
                 },

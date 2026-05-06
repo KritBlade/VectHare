@@ -1012,14 +1012,6 @@ async function getVectorsForSource(source, texts, model, directories, req) {
 }
 
 /**
- * Wrapper for single embedding (backwards compatibility)
- */
-async function getEmbeddingForSource(source, text, model, directories, req) {
-    const vectors = await getVectorsForSource(source, [text], model, directories, req);
-    return vectors[0];
-}
-
-/**
  * Helper function for KoboldCpp embedding generation
  * @param {string} text - Text to embed
  * @param {string} model - Model name
