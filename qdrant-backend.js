@@ -548,7 +548,7 @@ class QdrantBackend {
      * @param {number} topK - Number of results to return
      * @param {object} options - Query options
      *   - vectorWeight: Weight for vector similarity (0-1, default: 0.5)
-     *   - keywordWeight: Weight for keyword matching (0-1, default: 0.5)
+     *   - keywordWeight / textWeight: Weight for keyword matching (0-1, default: 0.5)
      *   - fusionMethod: 'rrf' or 'weighted' (default: 'rrf')
      *   - rrfK: RRF constant (default: 60)
      *   - keywordBoost: Multiplier for keyword matches (default: 1.5)
@@ -565,7 +565,7 @@ class QdrantBackend {
 
         // Default options
         const vectorWeight = options.vectorWeight ?? 0.5;
-        const keywordWeight = options.keywordWeight ?? 0.5;
+        const keywordWeight = options.keywordWeight ?? options.textWeight ?? 0.5;
         const fusionMethod = options.fusionMethod || 'rrf';
         const rrfK = options.rrfK || 60;
         const keywordBoost = options.keywordBoost || 1.5;
@@ -726,29 +726,34 @@ class QdrantBackend {
                             typeof k === 'string' ? k.toLowerCase() : (k.text || '').toLowerCase()
                         );
 
-                        let matchCount = 0;
+                        // Weighted scoring: payload keyword hits are higher-quality
+                        // signals than raw substring matches in the full text.
+                        const TEXT_HIT_WEIGHT = 0.5;
+                        const PAYLOAD_HIT_WEIGHT = 1.0;
+
+                        let weightedMatchScore = 0;
                         const matchedKeywordList = [];
                         for (const keyword of keywords) {
                             const kw = keyword.toLowerCase();
-                            // Check text content
+                            // Raw text substring match (lower confidence)
                             if (text.includes(kw)) {
-                                matchCount++;
+                                weightedMatchScore += TEXT_HIT_WEIGHT;
                                 matchedKeywordList.push(`${keyword}:text`);
                             }
-                            // Check stored keywords
+                            // Stored payload keyword match (higher confidence)
                             if (storedKeywords.some(sk => sk.includes(kw) || kw.includes(sk))) {
-                                matchCount++;
+                                weightedMatchScore += PAYLOAD_HIT_WEIGHT;
                                 matchedKeywordList.push(`${keyword}:payload`);
                             }
                         }
 
-                        if (matchCount > 0) {
-                            const keywordScore = Math.min(1.0, (matchCount / keywords.length) * keywordBoost);
+                        if (weightedMatchScore > 0) {
+                            const keywordScore = Math.min(1.0, (weightedMatchScore / keywords.length) * keywordBoost);
                             keywordResults.push({
                                 hash: point.payload.hash,
                                 text: point.payload.text,
                                 keywordScore: keywordScore,
-                                matchedKeywords: matchCount,
+                                matchedKeywords: weightedMatchScore,
                                 matchedKeywordList,
                                 metadata: point.payload,
                             });
