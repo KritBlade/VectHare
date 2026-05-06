@@ -128,10 +128,13 @@ const _CJK_SPAN_RE = /[\u3400-\u9fff\uf900-\ufaff\u3040-\u30ff\uac00-\ud7af]+/g;
  * Extract search keywords from a mixed Latin/CJK query string.
  *
  * Strategy:
- *  1. Latin tokens — simple regex word extraction (min 3 chars, no stopwords).
- *  2. CJK spans   — Intl.Segmenter word granularity when available and producing
- *                   real multi-char words; otherwise bigram fallback.
- *  3. Dedup, strip stopwords, cap to maxKeywords.
+ *  1. CJK spans   — Intl.Segmenter word granularity when available and producing
+ *                   real multi-char words; otherwise bigram fallback. Extracted first
+ *                   to prioritize story language (Chinese/Japanese/Korean) over names.
+ *  2. Latin tokens — simple regex word extraction (min 3 chars, no stopwords).
+ *                   Secondary priority allows English character names to fill remaining budget.
+ *                   If CJK fills all 20 slots, allow +10 extra slots for English names/locations.
+ *  3. Dedup, strip stopwords, cap to maxKeywords (or maxKeywords+10 if fullCJK).
  *
  * @param {string} searchText
  * @param {number} [maxKeywords=20]
@@ -140,14 +143,11 @@ const _CJK_SPAN_RE = /[\u3400-\u9fff\uf900-\ufaff\u3040-\u30ff\uac00-\ud7af]+/g;
 function extractQueryKeywords(searchText, maxKeywords = 20) {
     const text = searchText.toLowerCase();
     const tokens = new Set();
+    let fullCJK = false;
 
-    // ── Latin words (a-z, length ≥ 3, not in stopwords) ────────────────────
-    const latinMatches = text.match(/[a-z][a-z0-9'_-]{2,}/g) || [];
-    for (const tok of latinMatches) {
-        if (!_STOP_WORDS.has(tok)) tokens.add(tok);
-    }
-
-    // ── CJK spans ──────────────────────────────────────────────────────────
+    // ── CJK spans (FIRST PRIORITY) ─────────────────────────────────────────
+    // For Chinese/Japanese/Korean-heavy stories, prioritize CJK tokens over English.
+    // This ensures story language keywords fill the budget before English names.
     const spans = text.match(_CJK_SPAN_RE) || [];
     for (const span of spans) {
         let usedSegmenter = false;
@@ -178,7 +178,52 @@ function extractQueryKeywords(searchText, maxKeywords = 20) {
         }
     }
 
-    return Array.from(tokens).slice(0, maxKeywords);
+    // If CJK filled the primary budget (20 slots), allow English names as overflow
+    if (tokens.size >= maxKeywords) {
+        fullCJK = true;
+    }
+
+    // ── Latin words (SECONDARY PRIORITY) ───────────────────────────────────
+    // After CJK extraction, add English character names and keywords.
+    // For English-only stories, CJK pass yields nothing, so Latin fills all slots.
+    // For Chinese stories, Latin tokens fill remaining budget for character names/locations.
+    // If CJK is full, allow +10 extra slots for English names/locations (up to 30 total).
+    const latinMaxKeywords = fullCJK ? (maxKeywords + 10) : maxKeywords;
+
+    if (tokens.size < latinMaxKeywords) {
+        const latinMatches = text.match(/[a-z][a-z0-9'_-]{2,}/g) || [];
+        for (const tok of latinMatches) {
+            if (!_STOP_WORDS.has(tok)) tokens.add(tok);
+            if (tokens.size >= latinMaxKeywords) break;
+        }
+    }
+
+    // Reset flag after use
+    fullCJK = false;
+
+    return Array.from(tokens).slice(0, latinMaxKeywords);
+}
+
+/**
+ * Build a readable debug preview of submitted search text.
+ * Uses ~100 whitespace-delimited words when available; otherwise falls back
+ * to a character slice so CJK-heavy text without spaces is still visible.
+ *
+ * @param {string} searchText
+ * @param {number} [maxWords=100]
+ * @param {number} [maxChars=500]
+ * @returns {string}
+ */
+function getSearchTextDebugSnippet(searchText, maxWords = 200, maxChars = 1000) {
+    const normalized = String(searchText || '').replace(/\s+/g, ' ').trim();
+    if (!normalized) return '';
+
+    const words = normalized.split(' ');
+    if (words.length >= 20) {
+        return words.slice(0, maxWords).join(' ');
+    }
+
+    return normalized.slice(0, maxChars);
 }
 
 /**
@@ -1487,6 +1532,14 @@ async function _getLegacySingleEmbedding(source, text, model, directories, req) 
             // Extract keywords if not provided
             let extractedKeywords = keywords;
             if (!extractedKeywords && searchText) {
+                if (hybridOptions.eventbaseDebug) {
+                    const snippet = getSearchTextDebugSnippet(searchText, 100, 500);
+                    const whitespaceWordCount = String(searchText || '').trim()
+                        ? String(searchText).trim().split(/\s+/).length
+                        : 0;
+                    console.log(`[Qdrant] hybrid searchText snippet (~100 words, ${String(searchText || '').length} chars, ${whitespaceWordCount} whitespace words): ${snippet}`);
+                }
+
                 extractedKeywords = extractQueryKeywords(searchText, 20);
                 if (hybridOptions.eventbaseDebug) {
                     console.log(`[Qdrant] extractQueryKeywords → ${extractedKeywords.length} tokens: ${extractedKeywords.join(', ')}`);
