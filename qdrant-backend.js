@@ -782,6 +782,7 @@ class QdrantBackend {
                 keywordWeight,
                 rrfK,
                 topK,
+                debugLog,
             });
 
             console.log(`[Qdrant] Hybrid query: ${vectorResults.length} vector + ${keywordResults.length} keyword = ${fusedResults.length} fused results`);
@@ -802,7 +803,7 @@ class QdrantBackend {
      * @returns {Array} Fused results sorted by combined score
      */
     _fuseResults(vectorResults, keywordResults, options) {
-        const { method, vectorWeight, keywordWeight, rrfK, topK } = options;
+        const { method, vectorWeight, keywordWeight, rrfK, topK, debugLog = false } = options;
 
         // Create hash map for merging results
         const resultsMap = new Map();
