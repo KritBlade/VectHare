@@ -143,7 +143,8 @@ const _CJK_SPAN_RE = /[\u3400-\u9fff\uf900-\ufaff\u3040-\u30ff\uac00-\ud7af]+/g;
 function extractQueryKeywords(searchText, maxKeywords = 20) {
     const text = searchText.toLowerCase();
     const tokens = new Set();
-    let fullCJK = false;
+    const cjkDebugTokens = [];
+    const latinDebugTokens = [];
 
     // ── CJK spans (FIRST PRIORITY) ─────────────────────────────────────────
     // For Chinese/Japanese/Korean-heavy stories, prioritize CJK tokens over English.
@@ -162,7 +163,10 @@ function extractQueryKeywords(searchText, maxKeywords = 20) {
                 const multiChar = segs.filter(s => s.isWordLike && s.segment.length >= 2);
                 if (multiChar.length > 0) {
                     for (const { segment } of multiChar) {
-                        if (!_STOP_WORDS.has(segment)) tokens.add(segment);
+                        if (!_STOP_WORDS.has(segment)) {
+                            tokens.add(segment);
+                            cjkDebugTokens.push(segment);
+                        }
                     }
                     usedSegmenter = true;
                 }
@@ -173,35 +177,33 @@ function extractQueryKeywords(searchText, maxKeywords = 20) {
             // Bigram fallback — reliable across all ICU configurations.
             for (let i = 0; i + 1 < span.length; i++) {
                 const bigram = span.slice(i, i + 2);
-                if (!_STOP_WORDS.has(bigram)) tokens.add(bigram);
+                if (!_STOP_WORDS.has(bigram)) {
+                    tokens.add(bigram);
+                    cjkDebugTokens.push(bigram);
+                }
             }
         }
-    }
-
-    // If CJK filled the primary budget (20 slots), allow English names as overflow
-    if (tokens.size >= maxKeywords) {
-        fullCJK = true;
     }
 
     // ── Latin words (SECONDARY PRIORITY) ───────────────────────────────────
     // After CJK extraction, add English character names and keywords.
     // For English-only stories, CJK pass yields nothing, so Latin fills all slots.
-    // For Chinese stories, Latin tokens fill remaining budget for character names/locations.
-    // If CJK is full, allow +10 extra slots for English names/locations (up to 30 total).
-    const latinMaxKeywords = fullCJK ? (maxKeywords + 10) : maxKeywords;
-
-    if (tokens.size < latinMaxKeywords) {
-        const latinMatches = text.match(/[a-z][a-z0-9'_-]{2,}/g) || [];
-        for (const tok of latinMatches) {
-            if (!_STOP_WORDS.has(tok)) tokens.add(tok);
-            if (tokens.size >= latinMaxKeywords) break;
+    // For Chinese stories, Latin tokens are appended after story-language tokens.
+    const latinMatches = text.match(/[a-z][a-z0-9'_-]{2,}/g) || [];
+    for (const tok of latinMatches) {
+        if (!_STOP_WORDS.has(tok)) {
+            tokens.add(tok);
+            latinDebugTokens.push(tok);
         }
     }
 
-    // Reset flag after use
-    fullCJK = false;
+    console.log(`[Qdrant] extractQueryKeywords CJK pass → ${cjkDebugTokens.length} tokens: ${cjkDebugTokens.join(', ') || '(none)'}`);
+    console.log(`[Qdrant] extractQueryKeywords Latin pass → ${latinDebugTokens.length} tokens: ${latinDebugTokens.join(', ') || '(none)'}`);
 
-    return Array.from(tokens).slice(0, latinMaxKeywords);
+    cjkDebugTokens.length = 0;
+    latinDebugTokens.length = 0;
+
+    return Array.from(tokens);
 }
 
 /**
