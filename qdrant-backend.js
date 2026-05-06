@@ -569,8 +569,12 @@ class QdrantBackend {
         const fusionMethod = options.fusionMethod || 'rrf';
         const rrfK = options.rrfK || 60;
         const keywordBoost = options.keywordBoost || 1.5;
+        const debugLog = options.eventbaseDebug === true;
 
         console.log(`[Qdrant] Hybrid options: vectorWeight=${vectorWeight}, keywordWeight=${keywordWeight}, fusion=${fusionMethod}`);
+        if (debugLog) {
+            console.log(`[Hdrant-backend] Hybrid query keywords (${keywords.length}): ${keywords.length ? keywords.join(', ') : '(none)'}`);
+        }
 
         try {
             // Check if collection exists
@@ -723,12 +727,19 @@ class QdrantBackend {
                         );
 
                         let matchCount = 0;
+                        const matchedKeywordList = [];
                         for (const keyword of keywords) {
                             const kw = keyword.toLowerCase();
                             // Check text content
-                            if (text.includes(kw)) matchCount++;
+                            if (text.includes(kw)) {
+                                matchCount++;
+                                matchedKeywordList.push(`${keyword}:text`);
+                            }
                             // Check stored keywords
-                            if (storedKeywords.some(sk => sk.includes(kw) || kw.includes(sk))) matchCount++;
+                            if (storedKeywords.some(sk => sk.includes(kw) || kw.includes(sk))) {
+                                matchCount++;
+                                matchedKeywordList.push(`${keyword}:payload`);
+                            }
                         }
 
                         if (matchCount > 0) {
@@ -738,6 +749,7 @@ class QdrantBackend {
                                 text: point.payload.text,
                                 keywordScore: keywordScore,
                                 matchedKeywords: matchCount,
+                                matchedKeywordList,
                                 metadata: point.payload,
                             });
                         }
@@ -813,6 +825,7 @@ class QdrantBackend {
                 existing.keywordScore = result.keywordScore;
                 existing.keywordRank = index + 1;
                 existing.matchedKeywords = result.matchedKeywords;
+                existing.matchedKeywordList = result.matchedKeywordList || [];
             } else {
                 resultsMap.set(result.hash, {
                     ...result,
@@ -820,6 +833,7 @@ class QdrantBackend {
                     vectorRank: Infinity,
                     keywordScore: result.keywordScore,
                     keywordRank: index + 1,
+                    matchedKeywordList: result.matchedKeywordList || [],
                 });
             }
         });
@@ -849,10 +863,27 @@ class QdrantBackend {
                     vectorRank: result.vectorRank,
                     keywordRank: result.keywordRank,
                     matchedKeywords: result.matchedKeywords || 0,
+                    matchedKeywordList: result.matchedKeywordList || [],
                     fusionMethod: method,
                 },
             };
         });
+
+        if (debugLog) {
+            const previewResults = fusedResults
+                .sort((a, b) => b.score - a.score)
+                .slice(0, Math.min(topK, 10));
+            previewResults.forEach((result, index) => {
+                console.log(
+                    `[Hdrant-backend] [${index}] finalScore=${Number(result.score || 0).toFixed(6)}, ` +
+                    `vectorScore=${Number(result.debug?.vectorScore || 0).toFixed(6)}, ` +
+                    `keywordScore=${Number(result.debug?.keywordScore || 0).toFixed(6)}, ` +
+                    `vectorRank=${result.debug?.vectorRank ?? 'n/a'}, ` +
+                    `keywordRank=${result.debug?.keywordRank ?? 'n/a'}, ` +
+                    `matchedKeywordList=${(result.debug?.matchedKeywordList || []).join(', ') || '(none)'}`
+                );
+            });
+        }
 
         // Sort by fused score and return top K
         return fusedResults
