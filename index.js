@@ -129,12 +129,16 @@ const _CJK_SPAN_RE = /[\u3400-\u9fff\uf900-\ufaff\u3040-\u30ff\uac00-\ud7af]+/g;
  *
  * Strategy:
  *  1. CJK spans   — Intl.Segmenter word granularity when available and producing
- *                   real multi-char words; otherwise bigram fallback. Extracted first
- *                   to prioritize story language (Chinese/Japanese/Korean) over names.
+ *                   real multi-char words; otherwise bigram fallback.
  *  2. Latin tokens — simple regex word extraction (min 3 chars, no stopwords).
- *                   Secondary priority allows English character names to fill remaining budget.
- *                   If CJK fills all 20 slots, allow +10 extra slots for English names/locations.
- *  3. Dedup, strip stopwords, cap to maxKeywords (or maxKeywords+10 if fullCJK).
+ *  3. ALL tokens are tallied into a frequency Map (token → count) instead of a Set.
+ *     Sorting by frequency before capping ensures high-signal tokens (character names,
+ *     locations, repeated plot terms) survive the budget limit regardless of their
+ *     position in the source text. This fixes the "important events at the end get cut"
+ *     problem caused by first-occurrence ordering.
+ *  4. CJK tokens take priority over Latin tokens of equal frequency.
+ *     If CJK fills the primary budget (maxKeywords), allow +10 overflow slots for
+ *     English names/locations (fullCJK mode).
  *
  * @param {string} searchText
  * @param {number} [maxKeywords=20]
@@ -142,20 +146,17 @@ const _CJK_SPAN_RE = /[\u3400-\u9fff\uf900-\ufaff\u3040-\u30ff\uac00-\ud7af]+/g;
  */
 function extractQueryKeywords(searchText, maxKeywords = 20) {
     const text = searchText.toLowerCase();
-    const tokens = new Set();
-    const cjkDebugTokens = [];
-    const latinDebugTokens = [];
+
+    // Use a frequency Map instead of a Set — tokens appearing multiple times
+    // score higher and survive the cap regardless of position in source text.
+    const cjkFreq = new Map();   // token → count (CJK)
+    const latinFreq = new Map(); // token → count (Latin)
 
     // ── CJK spans (FIRST PRIORITY) ─────────────────────────────────────────
-    // For Chinese/Japanese/Korean-heavy stories, prioritize CJK tokens over English.
-    // This ensures story language keywords fill the budget before English names.
     const spans = text.match(_CJK_SPAN_RE) || [];
     for (const span of spans) {
         let usedSegmenter = false;
 
-        // Try Intl.Segmenter (Node 16+ with full ICU data).
-        // Only trust it when it produces at least one genuine multi-char word;
-        // single-char-only output means ICU lacks dictionary data → fall back.
         if (typeof Intl !== 'undefined' && Intl.Segmenter) {
             try {
                 const seg = new Intl.Segmenter('zh', { granularity: 'word' });
@@ -164,8 +165,7 @@ function extractQueryKeywords(searchText, maxKeywords = 20) {
                 if (multiChar.length > 0) {
                     for (const { segment } of multiChar) {
                         if (!_STOP_WORDS.has(segment)) {
-                            tokens.add(segment);
-                            cjkDebugTokens.push(segment);
+                            cjkFreq.set(segment, (cjkFreq.get(segment) || 0) + 1);
                         }
                     }
                     usedSegmenter = true;
@@ -174,36 +174,45 @@ function extractQueryKeywords(searchText, maxKeywords = 20) {
         }
 
         if (!usedSegmenter) {
-            // Bigram fallback — reliable across all ICU configurations.
+            // Bigram fallback
             for (let i = 0; i + 1 < span.length; i++) {
                 const bigram = span.slice(i, i + 2);
                 if (!_STOP_WORDS.has(bigram)) {
-                    tokens.add(bigram);
-                    cjkDebugTokens.push(bigram);
+                    cjkFreq.set(bigram, (cjkFreq.get(bigram) || 0) + 1);
                 }
             }
         }
     }
 
     // ── Latin words (SECONDARY PRIORITY) ───────────────────────────────────
-    // After CJK extraction, add English character names and keywords.
-    // For English-only stories, CJK pass yields nothing, so Latin fills all slots.
-    // For Chinese stories, Latin tokens are appended after story-language tokens.
     const latinMatches = text.match(/[a-z][a-z0-9'_-]{2,}/g) || [];
     for (const tok of latinMatches) {
         if (!_STOP_WORDS.has(tok)) {
-            tokens.add(tok);
-            latinDebugTokens.push(tok);
+            latinFreq.set(tok, (latinFreq.get(tok) || 0) + 1);
         }
     }
 
-    console.log(`[Qdrant] extractQueryKeywords CJK pass → ${cjkDebugTokens.length} tokens: ${cjkDebugTokens.join(', ') || '(none)'}`);
-    console.log(`[Qdrant] extractQueryKeywords Latin pass → ${latinDebugTokens.length} tokens: ${latinDebugTokens.join(', ') || '(none)'}`);
+    // ── Rank by frequency, CJK first ───────────────────────────────────────
+    // Sort each group descending by count so most-mentioned tokens (character
+    // names, locations, key plot terms) always make it into the final list.
+    const sortedCJK = [...cjkFreq.entries()].sort((a, b) => b[1] - a[1]);
+    const sortedLatin = [...latinFreq.entries()].sort((a, b) => b[1] - a[1]);
 
-    cjkDebugTokens.length = 0;
-    latinDebugTokens.length = 0;
+    // Determine final cap: if CJK fills the primary budget, allow +10 overflow
+    // slots for English names/locations (characters/places in English stories
+    // mixed into Chinese narrative).
+    const cjkTokens = sortedCJK.slice(0, maxKeywords).map(([t]) => t);
+    const fullCJK = cjkTokens.length >= maxKeywords;
+    const latinBudget = fullCJK ? 10 : (maxKeywords - cjkTokens.length);
+    const latinTokens = sortedLatin.slice(0, latinBudget).map(([t]) => t);
 
-    return Array.from(tokens);
+    const result = [...cjkTokens, ...latinTokens];
+
+    console.log(`[Qdrant] extractQueryKeywords CJK pass → ${sortedCJK.length} unique tokens (showing top ${cjkTokens.length}): ${cjkTokens.join(', ') || '(none)'}`);
+    console.log(`[Qdrant] extractQueryKeywords Latin pass → ${sortedLatin.length} unique tokens (showing top ${latinTokens.length}): ${latinTokens.join(', ') || '(none)'}`);
+    console.log(`[Qdrant] extractQueryKeywords final → ${result.length} tokens (fullCJK=${fullCJK}): ${result.join(', ')}`);
+
+    return result;
 }
 
 /**
