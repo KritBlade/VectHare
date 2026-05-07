@@ -141,10 +141,10 @@ const _CJK_SPAN_RE = /[\u3400-\u9fff\uf900-\ufaff\u3040-\u30ff\uac00-\ud7af]+/g;
  *     English names/locations (fullCJK mode).
  *
  * @param {string} searchText
- * @param {number} [maxKeywords=20]
+ * @param {number} [maxKeywords=50]
  * @returns {string[]}
  */
-function extractQueryKeywords(searchText, maxKeywords = 20) {
+function extractQueryKeywords(searchText, maxKeywords = 50) {
     const text = searchText.toLowerCase();
 
     // Use a frequency Map instead of a Set — tokens appearing multiple times
@@ -1551,7 +1551,7 @@ async function _getLegacySingleEmbedding(source, text, model, directories, req) 
                     console.log(`[Qdrant] hybrid searchText snippet (~100 words, ${String(searchText || '').length} chars, ${whitespaceWordCount} whitespace words): ${snippet}`);
                 }
 
-                extractedKeywords = extractQueryKeywords(searchText, 20);
+                extractedKeywords = extractQueryKeywords(searchText, 50);
                 if (hybridOptions.eventbaseDebug) {
                     console.log(`[Qdrant] extractQueryKeywords → ${extractedKeywords.length} tokens: ${extractedKeywords.join(', ')}`);
                 }
