@@ -579,16 +579,16 @@ export function renderSettings(containerId, settings, callbacks) {
                                 <span class="vecthare-icon">
                                     <i class="fa-solid fa-clock"></i>
                                 </span>
-                                Temporal Weighting Defaults
+                                Temporal Weighting Defaults (Non-Chat Collections)
                             </h3>
-                            <p class="vecthare-card-subtitle">Default settings for new collections (can be overridden per-collection)</p>
+                            <p class="vecthare-card-subtitle">Default settings for newly created non-chat collections that still use chunk retrieval (can be overridden per-collection)</p>
                         </div>
                         <div class="vecthare-card-body">
 
                             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
                                 <input type="checkbox" id="vecthare_default_decay_enabled" />
                                 <label for="vecthare_default_decay_enabled" style="margin: 0;">
-                                    <small>Enable temporal weighting by default</small>
+                                    <small>Enable temporal weighting by default for non-chat collections</small>
                                 </label>
                             </div>
 
@@ -608,7 +608,7 @@ export function renderSettings(containerId, settings, callbacks) {
                                 </div>
                             </div>
 
-                            <small class="vecthare_hint">These defaults apply to newly created collections. Existing collections keep their settings.</small>
+                            <small class="vecthare_hint">These defaults apply only to newly created non-chat collections that use the chunk-based retrieval path. Chat history/EventBase retrieval does not use this setting. Existing collections keep their settings.</small>
 
                         </div>
                     </div>

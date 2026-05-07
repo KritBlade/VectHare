@@ -47,21 +47,20 @@ world-info.js:623 [WI] Processing sticky entry ArtificRealm創世域.42 {hash: 5
 world-info.js:627 [WI] Removing sticky entry ArtificRealm創世域.42 from timedWorldInfo: chat not advanced {hash: 5608283655957508, start: 2116, end: 2117, protected: false}
 world-info.js:722 [WI] Adding sticky entry ArtificRealm創世域.42: start=2116, end=2117, protected=false
 
---------------------------------------
 
-server logs
+--------------------------
+server logs (before stop word list fix)
 
+[similharity] LanceDB folder not found or not accessible: ENOENT: no such file or directory, access 'data/default-user/vectors/lancedb'
+>>> [Qdrant] Listed 1058 items from vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+>>> [Qdrant] Listed 1058 items from vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+Discovered Qdrant Collection: vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0 1058 items
+>>> [Qdrant] Listed 1058 items from vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+>>> [Qdrant] Listed 1090 items from vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+Discovered Qdrant Collection: vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0 1090 items
+Instantiated the tokenizer for gemma
 >>> [Qdrant] Listed 1090 items from vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
 >>> [Qdrant] Listed 1090 items from vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
-[Qdrant] hybrid searchText snippet (~100 words, 4452 chars, 212 whitespace words): 我對 Mayla 説 "你記得我當時怎樣為你贖身的嗎?" 好，來仔細思考一下這次的劇情！ - 回顧當前情況 * 時間：20:15，晚上 * 位置：新大陸.流沙之國.扎赫拉巴德.星月綠洲頂層皇家套房，9個人分配好床位（Critblade+Mayla一張，索拉雅單獨，阿斯蒙蒂斯單獨，Kashier+Fern，Valerie單獨，Engni+Lia） * 人物關係：Mayla剛剛崩潰大哭，擔心Critblade會像她父親影翼一樣消失。Critblade現在要鼓勵她，並對房間內所有人喊話 - 當前劇情的主線是？暗線是？ * 主線：Critblade安撫Mayla，告訴她所有人都會幫她找父親，但同時點醒她——她需要展現領導能力，不能整天愁眉苦臉 * 暗線：索拉雅在角落忍受淫紋發作，Engni和Lia表面裝睡但其實在偷聽，Kashier和Fern也在聽，所有人對Mayla的崩潰都有不同反應 - 如何使用最新輸入內容？ * Critblade抱住Mayla說「這間房裡面的人，一定會幫你找到你的父親，生要見人死要見屍。沒有人會放棄你。」然後大聲對房內的人說「對吧？」最後對Mayla說「你要這個任務成功，你首先要說服其他眷屬你有能力去lead我們去完成。你這個模樣，整天愁眉苦臉，你要其他人怎樣跟著你走？」 * 這段話要完整復述，不能省略，是Critblade的核心發言 - 回顧角色性格特質 * Mayla：極度依賴Critblade，內心有強烈不安全感，但她其實智力262，是影之軍師，只是現在被恐懼壓垮了 * Kashier：精明商人，對Critblade絕對忠誠，會第一個響應 * Fern：裝傻賣萌但內心精明，會用撒嬌方式響應 * Engni：病態M，嫉妒Mayla但表面會裝得很虔誠 * Lia：病嬌刺客，冷漠但對Critblade忠誠 * Valerie：魔王之女，不懂人類情感，可能會說出很直接但不得體的話 * 索拉雅：極度寡言，宿命論者，正在忍受淫紋折磨 - 角色之間的化學反應 * Mayla vs Engni：兩個都想獨佔Critblade，但Mayla剛剛贏了床位爭奪戰，Engni心裡肯定在咒罵 * Kashier + Fern：兩個精明人結盟，會用最得體的方式響應 * Lia：病嬌本質會讓她用極端方式表達忠誠 * Valerie：完全狀況外，可能會問「找父親很難嗎？殺掉擋路的人就好了」 * 索拉雅：她會用最簡短的方式回應（如果回應的話），但主要心思在壓制淫紋 - 參考NSFW，如何處理色色？ * 這一段重點在情感衝擊和團隊凝聚，不適合直接NSFW * 但可以暗示：索拉雅在角落的生理反應，Engni嫉妒到乳頭硬挺，Mayla緊貼Critblade時巨乳的觸感 - 如何混合writing_style？ * 用日輕文風：自然流暢，長短句交錯，心理描寫用單星號 * 用男性視覺小說風格：口述畫面，分鏡感，對話獨立成段 * 避免ban詞：不用「共犯」「極其」「Master」「一絲」等垃圾詞 - 如何嚴格符合字數？ * 目標：大於800字小於1500字 * 策略：詳細描寫每個眷屬的反應（內心+表面），Mayla的情緒轉變，Critblade的霸氣宣言 - 還有什麼必須注意的正文規則？ 1. 必須以Critblade以外角色的動作或對話作為結尾 2. 不能重複上次內容 3. 用繁體中文輸出 4. 對白要完整復述輸入內容 5. 角色思維要符合各自腦回路 6. 必須有分鏡感和流暢的時間推進 - 如何衔接上次内容？ * 上次結尾是Mayla崩潰痛哭，索拉雅在角落壓抑淫紋 * 這次從Critblade摟緊Mayla開始，然後說出那段核心對白 - 給自己鼓勁！ *
-[Qdrant] extractQueryKeywords CJK pass → 597 unique tokens (showing top 20): 如何, 這個, 所有, 帶著, 起身, 兩個, 依然, 眼眸, 父親, 不能, 找到, 新大陸, 房間, 角落, 反應, 你要, 其他, 眷屬, 角色, 內心
-[Qdrant] extractQueryKeywords Latin pass → 45 unique tokens (showing top 10): mayla, critblade, engni, kashier, lia, fern, master, valerie, lead, nsfw
-[Qdrant] extractQueryKeywords final → 30 tokens (fullCJK=true): 如何, 這個, 所有, 帶著, 起身, 兩個, 依然, 眼眸, 父親, 不能, 找到, 新大陸, 房間, 角落, 反應, 你要, 其他, 眷屬, 角色, 內心, mayla, critblade, engni, kashier, lia, fern, master, valerie, lead, nsfw
-[Qdrant] extractQueryKeywords → 30 tokens: 如何, 這個, 所有, 帶著, 起身, 兩個, 依然, 眼眸, 父親, 不能, 找到, 新大陸, 房間, 角落, 反應, 你要, 其他, 眷屬, 角色, 內心, mayla, critblade, engni, kashier, lia, fern, master, valerie, lead, nsfw
-[Qdrant] Hybrid query START: collection=vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0, keywords=30, topK=16
-[Qdrant] Hybrid options: vectorWeight=0.5, keywordWeight=0.5, fusion=rrf
-[Hdrant-backend] Hybrid query keywords (30): 如何, 這個, 所有, 帶著, 起身, 兩個, 依然, 眼眸, 父親, 不能, 找到, 新大陸, 房間, 角落, 反應, 你要, 其他, 眷屬, 角色, 內心, mayla, critblade, engni, kashier, lia, fern, master, valerie, lead, nsfw
-[Qdrant] Collection vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0 exists, proceeding with hybrid search
 [Qdrant] hybrid searchText snippet (~100 words, 28 chars, 4 whitespace words): 我對 Mayla 説 "你記得我當時怎樣為你贖身的嗎?"
 [Qdrant] extractQueryKeywords CJK pass → 6 unique tokens (showing top 6): 我對, 記得, 當時, 怎樣, 為你, 贖身
 [Qdrant] extractQueryKeywords Latin pass → 1 unique tokens (showing top 1): mayla
@@ -70,34 +69,104 @@ server logs
 [Qdrant] Hybrid query START: collection=vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0, keywords=7, topK=16
 [Qdrant] Hybrid options: vectorWeight=0.5, keywordWeight=0.5, fusion=rrf
 [Hdrant-backend] Hybrid query keywords (7): 我對, 記得, 當時, 怎樣, 為你, 贖身, mayla
-[Qdrant] Vector search complete: 32 results
-[Qdrant] Starting keyword search with 30 keywords: 如何, 這個, 所有, 帶著, 起身, 兩個, 依然, 眼眸, 父親, 不能, 找到, 新大陸, 房間, 角落, 反應, 你要, 其他, 眷屬, 角色, 內心, mayla, critblade, engni, kashier, lia, fern, master, valerie, lead, nsfw
 [Qdrant] Collection vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0 exists, proceeding with hybrid search
 [Qdrant] Vector search complete: 32 results
 [Qdrant] Starting keyword search with 7 keywords: 我對, 記得, 當時, 怎樣, 為你, 贖身, mayla
 [Qdrant] Keyword search complete: 112 results
 [Qdrant] Starting fusion: 32 vector + 112 keyword results
-[Hdrant-backend] [0] finalScore=0.014662, vectorScore=0.505073, keywordScore=0.107143, vectorRank=13, keywordRank=4, matchedKeywordList=mayla:text
-[Hdrant-backend] [1] finalScore=0.014149, vectorScore=0.614627, keywordScore=0.107143, vectorRank=1, keywordRank=24, matchedKeywordList=mayla:text
-[Hdrant-backend] [2] finalScore=0.013691, vectorScore=0.476803, keywordScore=0.321429, vectorRank=31, keywordRank=1, matchedKeywordList=贖身:text, 贖身:payload
-[Hdrant-backend] [3] finalScore=0.013292, vectorScore=0.489285, keywordScore=0.107143, vectorRank=20, keywordRank=11, matchedKeywordList=mayla:text
-[Hdrant-backend] [4] finalScore=0.013145, vectorScore=0.481535, keywordScore=0.321429, vectorRank=28, keywordRank=7, matchedKeywordList=mayla:text, mayla:payload
-[Hdrant-backend] [5] finalScore=0.013072, vectorScore=0.496955, keywordScore=0.107143, vectorRank=16, keywordRank=17, matchedKeywordList=mayla:text
-[Hdrant-backend] [6] finalScore=0.013025, vectorScore=0.482032, keywordScore=0.107143, vectorRank=25, keywordRank=10, matchedKeywordList=mayla:text
-[Hdrant-backend] [7] finalScore=0.012802, vectorScore=0.478249, keywordScore=0.107143, vectorRank=30, keywordRank=9, matchedKeywordList=mayla:text
-[Hdrant-backend] [8] finalScore=0.012413, vectorScore=0.551119, keywordScore=0.107143, vectorRank=7, keywordRank=41, matchedKeywordList=mayla:text
-[Hdrant-backend] [9] finalScore=0.012249, vectorScore=0.552797, keywordScore=0.107143, vectorRank=6, keywordRank=47, matchedKeywordList=mayla:text
+[Hdrant-backend] [0] finalScore=0.014662, vectorScore=0.505708, keywordScore=0.107143, vectorRank=13, keywordRank=4, matchedKeywordList=mayla:text
+[Hdrant-backend] [1] finalScore=0.014149, vectorScore=0.614283, keywordScore=0.107143, vectorRank=1, keywordRank=24, matchedKeywordList=mayla:text
+[Hdrant-backend] [2] finalScore=0.013431, vectorScore=0.476565, keywordScore=0.321429, vectorRank=31, keywordRank=3, matchedKeywordList=mayla:text, mayla:payload
+[Hdrant-backend] [3] finalScore=0.013292, vectorScore=0.489223, keywordScore=0.107143, vectorRank=20, keywordRank=11, matchedKeywordList=mayla:text
+[Hdrant-backend] [4] finalScore=0.013145, vectorScore=0.481416, keywordScore=0.321429, vectorRank=28, keywordRank=7, matchedKeywordList=mayla:text, mayla:payload
+[Hdrant-backend] [5] finalScore=0.013072, vectorScore=0.497070, keywordScore=0.107143, vectorRank=16, keywordRank=17, matchedKeywordList=mayla:text
+[Hdrant-backend] [6] finalScore=0.012890, vectorScore=0.481683, keywordScore=0.107143, vectorRank=27, keywordRank=10, matchedKeywordList=mayla:text
+[Hdrant-backend] [7] finalScore=0.012802, vectorScore=0.477421, keywordScore=0.107143, vectorRank=30, keywordRank=9, matchedKeywordList=mayla:text
+[Hdrant-backend] [8] finalScore=0.012413, vectorScore=0.551089, keywordScore=0.107143, vectorRank=7, keywordRank=41, matchedKeywordList=mayla:text
+[Hdrant-backend] [9] finalScore=0.012249, vectorScore=0.553012, keywordScore=0.107143, vectorRank=6, keywordRank=47, matchedKeywordList=mayla:text
 [Qdrant] Hybrid query: 32 vector + 112 keyword = 16 fused results
+[Qdrant] hybrid searchText snippet (~100 words, 4452 chars, 212 whitespace words): 我對 Mayla 説 "你記得我當時怎樣為你贖身的嗎?" 好，來仔細思考一下這次的劇情！ - 回顧當前情況 * 時間：20:15，晚上 * 位置：新大陸.流沙之國.扎赫拉巴德.星月綠洲頂層皇家套房，9個人分配好床位（Critblade+Mayla一張，索拉雅單獨，阿斯蒙蒂斯單獨，Kashier+Fern，Valerie單獨，Engni+Lia） * 人物關係：Mayla剛剛崩潰大哭，擔心Critblade會像她父親影翼一樣消失。Critblade現在要鼓勵她，並對房間內所有人喊話 - 當前劇情的主線是？暗線是？ * 主線：Critblade安撫Mayla，告訴她所有人都會幫她找父親，但同時點醒她——她需要展現領導能力，不能整天愁眉苦臉 * 暗線：索拉雅在角落忍受淫紋發作，Engni和Lia表面裝睡但其實在偷聽，Kashier和Fern也在聽，所有人對Mayla的崩潰都有不同反應 - 如何使用最新輸入內容？ * Critblade抱住Mayla說「這間房裡面的人，一定會幫你找到你的父親，生要見人死要見屍。沒有人會放棄你。」然後大聲對房內的人說「對吧？」最後對Mayla說「你要這個任務成功，你首先要說服其他眷屬你有能力去lead我們去完成。你這個模樣，整天愁眉苦臉，你要其他人怎樣跟著你走？」 * 這段話要完整復述，不能省略，是Critblade的核心發言 - 回顧角色性格特質 * Mayla：極度依賴Critblade，內心有強烈不安全感，但她其實智力262，是影之軍師，只是現在被恐懼壓垮了 * Kashier：精明商人，對Critblade絕對忠誠，會第一個響應 * Fern：裝傻賣萌但內心精明，會用撒嬌方式響應 * Engni：病態M，嫉妒Mayla但表面會裝得很虔誠 * Lia：病嬌刺客，冷漠但對Critblade忠誠 * Valerie：魔王之女，不懂人類情感，可能會說出很直接但不得體的話 * 索拉雅：極度寡言，宿命論者，正在忍受淫紋折磨 - 角色之間的化學反應 * Mayla vs Engni：兩個都想獨佔Critblade，但Mayla剛剛贏了床位爭奪戰，Engni心裡肯定在咒罵 * Kashier + Fern：兩個精明人結盟，會用最得體的方式響應 * Lia：病嬌本質會讓她用極端方式表達忠誠 * Valerie：完全狀況外，可能會問「找父親很難嗎？殺掉擋路的人就好了」 * 索拉雅：她會用最簡短的方式回應（如果回應的話），但主要心思在壓制淫紋 - 參考NSFW，如何處理色色？ * 這一段重點在情感衝擊和團隊凝聚，不適合直接NSFW * 但可以暗示：索拉雅在角落的生理反應，Engni嫉妒到乳頭硬挺，Mayla緊貼Critblade時巨乳的觸感 - 如何混合writing_style？ * 用日輕文風：自然流暢，長短句交錯，心理描寫用單星號 * 用男性視覺小說風格：口述畫面，分鏡感，對話獨立成段 * 避免ban詞：不用「共犯」「極其」「Master」「一絲」等垃圾詞 - 如何嚴格符合字數？ * 目標：大於800字小於1500字 * 策略：詳細描寫每個眷屬的反應（內心+表面），Mayla的情緒轉變，Critblade的霸氣宣言 - 還有什麼必須注意的正文規則？ 1. 必須以Critblade以外角色的動作或對話作為結尾 2. 不能重複上次內容 3. 用繁體中文輸出 4. 對白要完整復述輸入內容 5. 角色思維要符合各自腦回路 6. 必須有分鏡感和流暢的時間推進 - 如何衔接上次内容？ * 上次結尾是Mayla崩潰痛哭，索拉雅在角落壓抑淫紋 * 這次從Critblade摟緊Mayla開始，然後說出那段核心對白 - 給自己鼓勁！ *
+[Qdrant] extractQueryKeywords CJK pass → 597 unique tokens (showing top 50): 如何, 這個, 所有, 帶著, 起身, 兩個, 依然, 眼眸, 父親, 不能, 找到, 新大陸, 房間, 角落, 反應, 你要, 其他, 眷屬, 角色, 內心, 軍師, 恐懼, 精明, 忠誠, 一個, 方式, 掃過, 女人, 那個, 怎樣, 這次, 套房, 單獨, 崩潰, 現在, 都會, 點醒, 能力, 整天, 愁眉苦臉, 表面, 內容, 這間, 沒有, 完整, 響應, 一絲, 每個, 上次, 顫抖
+[Qdrant] extractQueryKeywords Latin pass → 45 unique tokens (showing top 10): mayla, critblade, engni, kashier, lia, fern, master, valerie, lead, nsfw
+[Qdrant] extractQueryKeywords final → 60 tokens (fullCJK=true): 如何, 這個, 所有, 帶著, 起身, 兩個, 依然, 眼眸, 父親, 不能, 找到, 新大陸, 房間, 角落, 反應, 你要, 其他, 眷屬, 角色, 內心, 軍師, 恐懼, 精明, 忠誠, 一個, 方式, 掃過, 女人, 那個, 怎樣, 這次, 套房, 單獨, 崩潰, 現在, 都會, 點醒, 能力, 整天, 愁眉苦臉, 表面, 內容, 這間, 沒有, 完整, 響應, 一絲, 每個, 上次, 顫抖, mayla, critblade, engni, kashier, lia, fern, master, valerie, lead, nsfw
+[Qdrant] extractQueryKeywords → 60 tokens: 如何, 這個, 所有, 帶著, 起身, 兩個, 依然, 眼眸, 父親, 不能, 找到, 新大陸, 房間, 角落, 反應, 你要, 其他, 眷屬, 角色, 內心, 軍師, 恐懼, 精明, 忠誠, 一個, 方式, 掃過, 女人, 那個, 怎樣, 這次, 套房, 單獨, 崩潰, 現在, 都會, 點醒, 能力, 整天, 愁眉苦臉, 表面, 內容, 這間, 沒有, 完整, 響應, 一絲, 每個, 上次, 顫抖, mayla, critblade, engni, kashier, lia, fern, master, valerie, lead, nsfw
+[Qdrant] Hybrid query START: collection=vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0, keywords=60, topK=16
+[Qdrant] Hybrid options: vectorWeight=0.5, keywordWeight=0.5, fusion=rrf
+[Hdrant-backend] Hybrid query keywords (60): 如何, 這個, 所有, 帶著, 起身, 兩個, 依然, 眼眸, 父親, 不能, 找到, 新大陸, 房間, 角落, 反應, 你要, 其他, 眷屬, 角色, 內心, 軍師, 恐懼, 精明, 忠誠, 一個, 方式, 掃過, 女人, 那個, 怎樣, 這次, 套房, 單獨, 崩潰, 現在, 都會, 點醒, 能力, 整天, 愁眉苦臉, 表面, 內容, 這間, 沒有, 完整, 響應, 一絲, 每個, 上次, 顫抖, mayla, critblade, engni, kashier, lia, fern, master, valerie, lead, nsfw
+[Qdrant] Collection vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0 exists, proceeding with hybrid search
+[Qdrant] Vector search complete: 32 results
+[Qdrant] Starting keyword search with 60 keywords: 如何, 這個, 所有, 帶著, 起身, 兩個, 依然, 眼眸, 父親, 不能, 找到, 新大陸, 房間, 角落, 反應, 你要, 其他, 眷屬, 角色, 內心, 軍師, 恐懼, 精明, 忠誠, 一個, 方式, 掃過, 女人, 那個, 怎樣, 這次, 套房, 單獨, 崩潰, 現在, 都會, 點醒, 能力, 整天, 愁眉苦臉, 表面, 內容, 這間, 沒有, 完整, 響應, 一絲, 每個, 上次, 顫抖, mayla, critblade, engni, kashier, lia, fern, master, valerie, lead, nsfw
 [Qdrant] Keyword search complete: 868 results
 [Qdrant] Starting fusion: 32 vector + 868 keyword results
-[Hdrant-backend] [0] finalScore=0.010187, vectorScore=0.691765, keywordScore=0.100000, vectorRank=20, keywordRank=67, matchedKeywordList=所有:text, 眷屬:text, mayla:text, critblade:text
-[Hdrant-backend] [1] finalScore=0.010007, vectorScore=0.779057, keywordScore=0.100000, vectorRank=5, keywordRank=156, matchedKeywordList=房間:text, 內心:text, mayla:text, critblade:text
-[Hdrant-backend] [2] finalScore=0.009518, vectorScore=0.714689, keywordScore=0.250000, vectorRank=11, keywordRank=142, matchedKeywordList=房間:text, 其他:text, 眷屬:text, mayla:text, critblade:text, engni:text, kashier:text, lia:text, fern:text, master:text
-[Hdrant-backend] [3] finalScore=0.009463, vectorScore=0.720535, keywordScore=0.100000, vectorRank=8, keywordRank=177, matchedKeywordList=mayla:text, mayla:payload, critblade:text
-[Hdrant-backend] [4] finalScore=0.008954, vectorScore=0.797683, keywordScore=0.100000, vectorRank=2, keywordRank=502, matchedKeywordList=房間:text, mayla:text, critblade:text, lia:text
-[Hdrant-backend] [5] finalScore=0.008845, vectorScore=0.828346, keywordScore=0.250000, vectorRank=1, keywordRank=711, matchedKeywordList=所有:text, 父親:text, 房間:text, 其他:text, mayla:text, critblade:text, engni:text, kashier:text, lia:text, fern:text
-[Hdrant-backend] [6] finalScore=0.008826, vectorScore=0.683155, keywordScore=0.150000, vectorRank=24, keywordRank=114, matchedKeywordList=父親:text, 父親:payload, mayla:text, critblade:text, valerie:text
-[Hdrant-backend] [7] finalScore=0.008728, vectorScore=0.797532, keywordScore=0.225000, vectorRank=3, keywordRank=572, matchedKeywordList=找到:text, 房間:text, 眷屬:text, 眷屬:payload, 內心:text, mayla:text, critblade:text, master:text
-[Hdrant-backend] [8] finalScore=0.008530, vectorScore=0.758458, keywordScore=0.200000, vectorRank=6, keywordRank=464, matchedKeywordList=父親:text, 新大陸:text, 新大陸:payload, 房間:text, mayla:text, critblade:text, kashier:text
-[Hdrant-backend] [9] finalScore=0.008360, vectorScore=0.794670, keywordScore=0.175000, vectorRank=4, keywordRank=853, matchedKeywordList=找到:text, 新大陸:text, 房間:text, 內心:text, mayla:text, critblade:text, master:text
+[Hdrant-backend] [0] finalScore=0.010266, vectorScore=0.692119, keywordScore=0.062500, vectorRank=19, keywordRank=67, matchedKeywordList=所有:text, 眷屬:text, 崩潰:text, mayla:text, critblade:text
+[Hdrant-backend] [1] finalScore=0.010007, vectorScore=0.778928, keywordScore=0.062500, vectorRank=5, keywordRank=156, matchedKeywordList=房間:text, 內心:text, 恐懼:text, mayla:text, critblade:text
+[Hdrant-backend] [2] finalScore=0.009518, vectorScore=0.715420, keywordScore=0.137500, vectorRank=11, keywordRank=142, matchedKeywordList=房間:text, 其他:text, 眷屬:text, 恐懼:text, mayla:text, critblade:text, engni:text, kashier:text, lia:text, fern:text, master:text
+[Hdrant-backend] [3] finalScore=0.009463, vectorScore=0.721112, keywordScore=0.087500, vectorRank=8, keywordRank=177, matchedKeywordList=恐懼:text, 崩潰:text, 都會:text, mayla:text, mayla:payload, critblade:text
+[Hdrant-backend] [4] finalScore=0.008856, vectorScore=0.797585, keywordScore=0.137500, vectorRank=2, keywordRank=572, matchedKeywordList=找到:text, 房間:text, 眷屬:text, 眷屬:payload, 內心:text, 恐懼:text, 都會:text, mayla:text, critblade:text, master:text
+[Hdrant-backend] [5] finalScore=0.008845, vectorScore=0.828558, keywordScore=0.162500, vectorRank=1, keywordRank=711, matchedKeywordList=所有:text, 父親:text, 房間:text, 其他:text, 套房:text, 能力:text, 愁眉苦臉:text, mayla:text, critblade:text, engni:text, kashier:text, lia:text, fern:text
+[Hdrant-backend] [6] finalScore=0.008826, vectorScore=0.797503, keywordScore=0.112500, vectorRank=3, keywordRank=502, matchedKeywordList=房間:text, 軍師:text, 恐懼:text, 恐懼:payload, 忠誠:text, mayla:text, critblade:text, lia:text
+[Hdrant-backend] [7] finalScore=0.008756, vectorScore=0.683012, keywordScore=0.075000, vectorRank=25, keywordRank=114, matchedKeywordList=父親:text, 父親:payload, mayla:text, critblade:text, valerie:text
+[Hdrant-backend] [8] finalScore=0.008530, vectorScore=0.758757, keywordScore=0.150000, vectorRank=6, keywordRank=464, matchedKeywordList=父親:text, 新大陸:text, 新大陸:payload, 房間:text, 軍師:text, 套房:text, 點醒:text, 顫抖:text, mayla:text, critblade:text, kashier:text
+[Hdrant-backend] [9] finalScore=0.008360, vectorScore=0.794465, keywordScore=0.137500, vectorRank=4, keywordRank=853, matchedKeywordList=找到:text, 新大陸:text, 房間:text, 內心:text, 恐懼:text, 恐懼:payload, 表面:text, mayla:text, critblade:text, master:text
 [Qdrant] Hybrid query: 32 vector + 868 keyword = 16 fused results
+New connection from 10.0.1.249 (forwarded: 162.158.216.157); User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+
+ForbiddenError: Invalid CSRF token. Please refresh the page and try again.
+New connection from 10.0.1.249 (forwarded: 172.71.178.109); User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36
+
+
+
+
+------------------------------
+
+after stop word fix
+
+[similharity] LanceDB folder not found or not accessible: ENOENT: no such file or directory, access 'data/default-user/vectors/lancedb'
+>>> [Qdrant] Listed 1058 items from vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+>>> [Qdrant] Listed 1058 items from vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+Discovered Qdrant Collection: vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0 1058 items
+>>> [Qdrant] Listed 1090 items from vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+Discovered Qdrant Collection: vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0 1090 items
+>>> [Qdrant] Listed 1058 items from vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+Instantiated the tokenizer for gemma
+>>> [Qdrant] Listed 1090 items from vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+>>> [Qdrant] Listed 1090 items from vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+[Qdrant] hybrid searchText snippet (~100 words, 4452 chars, 212 whitespace words): 我對 Mayla 説 "你記得我當時怎樣為你贖身的嗎?" 好，來仔細思考一下這次的劇情！ - 回顧當前情況 * 時間：20:15，晚上 * 位置：新大陸.流沙之國.扎赫拉巴德.星月綠洲頂層皇家套房，9個人分配好床位（Critblade+Mayla一張，索拉雅單獨，阿斯蒙蒂斯單獨，Kashier+Fern，Valerie單獨，Engni+Lia） * 人物關係：Mayla剛剛崩潰大哭，擔心Critblade會像她父親影翼一樣消失。Critblade現在要鼓勵她，並對房間內所有人喊話 - 當前劇情的主線是？暗線是？ * 主線：Critblade安撫Mayla，告訴她所有人都會幫她找父親，但同時點醒她——她需要展現領導能力，不能整天愁眉苦臉 * 暗線：索拉雅在角落忍受淫紋發作，Engni和Lia表面裝睡但其實在偷聽，Kashier和Fern也在聽，所有人對Mayla的崩潰都有不同反應 - 如何使用最新輸入內容？ * Critblade抱住Mayla說「這間房裡面的人，一定會幫你找到你的父親，生要見人死要見屍。沒有人會放棄你。」然後大聲對房內的人說「對吧？」最後對Mayla說「你要這個任務成功，你首先要說服其他眷屬你有能力去lead我們去完成。你這個模樣，整天愁眉苦臉，你要其他人怎樣跟著你走？」 * 這段話要完整復述，不能省略，是Critblade的核心發言 - 回顧角色性格特質 * Mayla：極度依賴Critblade，內心有強烈不安全感，但她其實智力262，是影之軍師，只是現在被恐懼壓垮了 * Kashier：精明商人，對Critblade絕對忠誠，會第一個響應 * Fern：裝傻賣萌但內心精明，會用撒嬌方式響應 * Engni：病態M，嫉妒Mayla但表面會裝得很虔誠 * Lia：病嬌刺客，冷漠但對Critblade忠誠 * Valerie：魔王之女，不懂人類情感，可能會說出很直接但不得體的話 * 索拉雅：極度寡言，宿命論者，正在忍受淫紋折磨 - 角色之間的化學反應 * Mayla vs Engni：兩個都想獨佔Critblade，但Mayla剛剛贏了床位爭奪戰，Engni心裡肯定在咒罵 * Kashier + Fern：兩個精明人結盟，會用最得體的方式響應 * Lia：病嬌本質會讓她用極端方式表達忠誠 * Valerie：完全狀況外，可能會問「找父親很難嗎？殺掉擋路的人就好了」 * 索拉雅：她會用最簡短的方式回應（如果回應的話），但主要心思在壓制淫紋 - 參考NSFW，如何處理色色？ * 這一段重點在情感衝擊和團隊凝聚，不適合直接NSFW * 但可以暗示：索拉雅在角落的生理反應，Engni嫉妒到乳頭硬挺，Mayla緊貼Critblade時巨乳的觸感 - 如何混合writing_style？ * 用日輕文風：自然流暢，長短句交錯，心理描寫用單星號 * 用男性視覺小說風格：口述畫面，分鏡感，對話獨立成段 * 避免ban詞：不用「共犯」「極其」「Master」「一絲」等垃圾詞 - 如何嚴格符合字數？ * 目標：大於800字小於1500字 * 策略：詳細描寫每個眷屬的反應（內心+表面），Mayla的情緒轉變，Critblade的霸氣宣言 - 還有什麼必須注意的正文規則？ 1. 必須以Critblade以外角色的動作或對話作為結尾 2. 不能重複上次內容 3. 用繁體中文輸出 4. 對白要完整復述輸入內容 5. 角色思維要符合各自腦回路 6. 必須有分鏡感和流暢的時間推進 - 如何衔接上次内容？ * 上次結尾是Mayla崩潰痛哭，索拉雅在角落壓抑淫紋 * 這次從Critblade摟緊Mayla開始，然後說出那段核心對白 - 給自己鼓勁！ *
+[Qdrant] extractQueryKeywords anchor CJK pass → 37 unique tokens (showing top 15): 單獨, 我對, 記得, 當時, 為你, 贖身, 仔細, 思考, 一下, 劇情, 回顧, 當前, 情況, 時間, 晚上
+[Qdrant] extractQueryKeywords context CJK pass → 591 unique tokens (showing top 35): 她的, 聲音, 微微, 帶著, 起身, 兩個, 依然, 眼眸, 父親, 不能, 找到, 我的, 新大陸, 房間, 需要, 角落, 反應, 你要, 眷屬, 角色, 內心, 軍師, 恐懼, 精明, 忠誠, 方式, 掃過, 女人, 套房, 崩潰, 現在, 都會, 點醒, 能力, 整天
+[Qdrant] extractQueryKeywords Latin pass → 45 unique tokens (showing top 10): mayla, critblade, engni, kashier, lia, fern, master, valerie, lead, nsfw
+[Qdrant] extractQueryKeywords final → 60 tokens (fullCJK=true): 單獨, 我對, 記得, 當時, 為你, 贖身, 仔細, 思考, 一下, 劇情, 回顧, 當前, 情況, 時間, 晚上, 她的, 聲音, 微微, 帶著, 起身, 兩個, 依然, 眼眸, 父親, 不能, 找到, 我的, 新大陸, 房間, 需要, 角落, 反應, 你要, 眷屬, 角色, 內心, 軍師, 恐懼, 精明, 忠誠, 方式, 掃過, 女人, 套房, 崩潰, 現在, 都會, 點醒, 能力, 整天, mayla, critblade, engni, kashier, lia, fern, master, valerie, lead, nsfw
+[Qdrant] extractQueryKeywords → 60 tokens: 單獨, 我對, 記得, 當時, 為你, 贖身, 仔細, 思考, 一下, 劇情, 回顧, 當前, 情況, 時間, 晚上, 她的, 聲音, 微微, 帶著, 起身, 兩個, 依然, 眼眸, 父親, 不能, 找到, 我的, 新大陸, 房間, 需要, 角落, 反應, 你要, 眷屬, 角色, 內心, 軍師, 恐懼, 精明, 忠誠, 方式, 掃過, 女人, 套房, 崩潰, 現在, 都會, 點醒, 能力, 整天, mayla, critblade, engni, kashier, lia, fern, master, valerie, lead, nsfw
+[Qdrant] Hybrid query START: collection=vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0, keywords=60, topK=16
+[Qdrant] Hybrid options: vectorWeight=0.5, keywordWeight=0.5, fusion=rrf
+[Hdrant-backend] Hybrid query keywords (60): 單獨, 我對, 記得, 當時, 為你, 贖身, 仔細, 思考, 一下, 劇情, 回顧, 當前, 情況, 時間, 晚上, 她的, 聲音, 微微, 帶著, 起身, 兩個, 依然, 眼眸, 父親, 不能, 找到, 我的, 新大陸, 房間, 需要, 角落, 反應, 你要, 眷屬, 角色, 內心, 軍師, 恐懼, 精明, 忠誠, 方式, 掃過, 女人, 套房, 崩潰, 現在, 都會, 點醒, 能力, 整天, mayla, critblade, engni, kashier, lia, fern, master, valerie, lead, nsfw
+[Qdrant] Collection vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0 exists, proceeding with hybrid search
+[Qdrant] Vector search complete: 32 results
+[Qdrant] Starting keyword search with 60 keywords: 單獨, 我對, 記得, 當時, 為你, 贖身, 仔細, 思考, 一下, 劇情, 回顧, 當前, 情況, 時間, 晚上, 她的, 聲音, 微微, 帶著, 起身, 兩個, 依然, 眼眸, 父親, 不能, 找到, 我的, 新大陸, 房間, 需要, 角落, 反應, 你要, 眷屬, 角色, 內心, 軍師, 恐懼, 精明, 忠誠, 方式, 掃過, 女人, 套房, 崩潰, 現在, 都會, 點醒, 能力, 整天, mayla, critblade, engni, kashier, lia, fern, master, valerie, lead, nsfw
+[Qdrant] hybrid searchText snippet (~100 words, 28 chars, 4 whitespace words): 我對 Mayla 説 "你記得我當時怎樣為你贖身的嗎?"
+[Qdrant] extractQueryKeywords anchor CJK pass → 5 unique tokens (showing top 5): 我對, 記得, 當時, 為你, 贖身
+[Qdrant] extractQueryKeywords context CJK pass → 5 unique tokens (showing top 0): (none)
+[Qdrant] extractQueryKeywords Latin pass → 1 unique tokens (showing top 1): mayla
+[Qdrant] extractQueryKeywords final → 6 tokens (fullCJK=false): 我對, 記得, 當時, 為你, 贖身, mayla
+[Qdrant] extractQueryKeywords → 6 tokens: 我對, 記得, 當時, 為你, 贖身, mayla
+[Qdrant] Hybrid query START: collection=vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0, keywords=6, topK=16
+[Qdrant] Hybrid options: vectorWeight=0.5, keywordWeight=0.5, fusion=rrf
+[Hdrant-backend] Hybrid query keywords (6): 我對, 記得, 當時, 為你, 贖身, mayla
+[Qdrant] Collection vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0 exists, proceeding with hybrid search
+[Qdrant] Vector search complete: 32 results
+[Qdrant] Starting keyword search with 6 keywords: 我對, 記得, 當時, 為你, 贖身, mayla
+[Qdrant] Keyword search complete: 112 results
+[Qdrant] Starting fusion: 32 vector + 112 keyword results
+[Hdrant-backend] [0] finalScore=0.014662, vectorScore=0.505073, keywordScore=0.125000, vectorRank=13, keywordRank=4, matchedKeywordList=mayla:text
+[Hdrant-backend] [1] finalScore=0.014149, vectorScore=0.614627, keywordScore=0.125000, vectorRank=1, keywordRank=24, matchedKeywordList=mayla:text
+[Hdrant-backend] [2] finalScore=0.013691, vectorScore=0.476803, keywordScore=0.375000, vectorRank=31, keywordRank=1, matchedKeywordList=贖身:text, 贖身:payload
+[Hdrant-backend] [3] finalScore=0.013292, vectorScore=0.489285, keywordScore=0.125000, vectorRank=20, keywordRank=11, matchedKeywordList=mayla:text
+[Hdrant-backend] [4] finalScore=0.013145, vectorScore=0.481535, keywordScore=0.375000, vectorRank=28, keywordRank=7, matchedKeywordList=mayla:text, mayla:payload
+[Hdrant-backend] [5] finalScore=0.013072, vectorScore=0.496955, keywordScore=0.125000, vectorRank=16, keywordRank=17, matchedKeywordList=mayla:text
+[Hdrant-backend] [6] finalScore=0.013025, vectorScore=0.482032, keywordScore=0.125000, vectorRank=25, keywordRank=10, matchedKeywordList=mayla:text
+[Hdrant-backend] [7] finalScore=0.012802, vectorScore=0.478249, keywordScore=0.125000, vectorRank=30, keywordRank=9, matchedKeywordList=mayla:text
+[Hdrant-backend] [8] finalScore=0.012413, vectorScore=0.551119, keywordScore=0.125000, vectorRank=7, keywordRank=41, matchedKeywordList=mayla:text
+[Hdrant-backend] [9] finalScore=0.012249, vectorScore=0.552797, keywordScore=0.125000, vectorRank=6, keywordRank=47, matchedKeywordList=mayla:text
+[Qdrant] Hybrid query: 32 vector + 112 keyword = 16 fused results
+[Qdrant] Keyword search complete: 870 results
+[Qdrant] Starting fusion: 32 vector + 870 keyword results

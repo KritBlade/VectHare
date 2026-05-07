@@ -11,7 +11,7 @@
  * ============================================================================
  */
 
-import { setExtensionPrompt, extension_prompts, getCurrentChatId } from '../../../../../script.js';
+import { setExtensionPrompt, extension_prompts, getCurrentChatId, substituteParams } from '../../../../../script.js';
 import { extension_settings } from '../../../../extensions.js';
 import { getChatUUID } from './collection-ids.js';
 import { EXTENSION_PROMPT_TAG } from './constants.js';
@@ -359,6 +359,12 @@ export async function runEventBaseRetrieval({ chat, searchText, settings, chatUU
         if (debugLog) console.log('[EventBase] Injection text empty after formatting');
         setExtensionPrompt(EVENTBASE_PROMPT_TAG, '', settings.position, settings.depth, false);
         return;
+    }
+
+    // Apply global RAG context if configured (same as legacy chunk path)
+    const globalContext = settings.rag_context ? substituteParams(settings.rag_context) : '';
+    if (globalContext) {
+        injectionText = `${globalContext}\n\n${injectionText}`;
     }
 
     // Wrap with XML tag if configured (same as legacy path)
