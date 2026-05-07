@@ -190,7 +190,7 @@ function createModal() {
                             </button>
                         </div>
                         <div class="vecthare-cv-collapsible" id="vecthare_cv_chunking_content">
-                            <div class="vecthare-cv-strategy-select">
+                            <div class="vecthare-cv-strategy-select" id="vecthare_cv_strategy_select_wrapper">
                                 <label>Strategy</label>
                                 <select id="vecthare_cv_strategy" class="vecthare-select">
                                     <!-- Populated dynamically -->
@@ -764,6 +764,7 @@ function updateChunkingSection(type) {
     const strategies = getChunkingStrategies(type.id);
     const defaults = getContentTypeDefaults(type.id);
     const selectedStrategyId = currentSettings.strategy || type.defaultStrategy;
+    const isChatType = type.id === 'chat';
 
     const strategySelect = $('#vecthare_cv_strategy');
     strategySelect.empty();
@@ -796,6 +797,16 @@ function updateChunkingSection(type) {
     $('#vecthare_cv_batch_size_val').text(batchSize);
     $('#vecthare_cv_group_batch_size').val(groupBatchSize);
     $('#vecthare_cv_group_batch_size_val').text(groupBatchSize);
+
+    // Chat history now follows EventBase extraction settings from the dedicated GUI,
+    // so keep the legacy strategy selector populated for internal compatibility but
+    // hide the visible controls only for chat. Other content types still use them.
+    $('#vecthare_cv_strategy_select_wrapper').toggle(!isChatType);
+    if (isChatType) {
+        $('#vecthare_cv_strategy_desc').text('');
+        $('#vecthare_cv_size_controls').hide();
+        return;
+    }
 
     // Show/hide size controls based on strategy type
     updateSizeControlsVisibility();
