@@ -69,17 +69,6 @@ export const CJK_STOP_WORDS = [
     ...SIMPLIFIED_CHINESE_STOP_WORDS,
 ];
 
-export const CJK_STOP_WORD_SET = new Set(CJK_STOP_WORDS);
-
-export function createCombinedStopWordSet(extraWords = []) {
-    return new Set([
-        ...ENGLISH_STOP_WORDS,
-        ...CJK_STOP_WORDS,
-        ...extraWords,
-    ]);
-}
-
-export const DEFAULT_STOP_WORD_SET = createCombinedStopWordSet();
 export const ENGLISH_STOP_WORDS = [
     'the', 'a', 'an', 'this', 'that', 'these', 'those', 'some', 'any', 'each',
     'every', 'both', 'either', 'neither', 'such', 'what', 'which', 'whose', 'i', 'me',
@@ -106,3 +95,15 @@ export const ENGLISH_STOP_WORDS = [
     'first', 'many', 'few', 'own', 'thing', 'things', 'way', 'ways', 'place', 'part',
     'case', 'point', 'fact', 'like', 'back', 'time', 'year', 'day', 'one', 'two', 'three',
 ];
+
+export const CJK_STOP_WORD_SET = new Set(CJK_STOP_WORDS);
+
+export function createCombinedStopWordSet(extraWords = []) {
+    return new Set([
+        ...ENGLISH_STOP_WORDS,
+        ...CJK_STOP_WORDS,
+        ...extraWords,
+    ]);
+}
+
+export const DEFAULT_STOP_WORD_SET = createCombinedStopWordSet();
