@@ -18,108 +18,14 @@ import vectra from 'vectra';
 import lancedbBackend from './lancedb-backend.js';
 import qdrantBackend from './qdrant-backend.js';
 import milvusBackend from './milvus-backend.js';
+import { DEFAULT_STOP_WORD_SET } from './stop-words.js';
 
 const pluginName = 'similharity';
 const pluginVersion = '3.2.0';
 
 // ─── CJK-aware query keyword extractor ───────────────────────────────────────
 
-// Full stopword list mirrored from VectHare/core/bm25-scorer.js (STOP_WORDS).
-// Must be kept in sync manually — similharity is a Node.js server plugin and
-// cannot import from the browser-side VectHare ESM bundle.
-const _STOP_WORDS = new Set([
-    // English stopwords
-    'the', 'a', 'an', 'this', 'that', 'these', 'those', 'some', 'any', 'each',
-    'every', 'both', 'either', 'neither', 'such', 'what', 'which', 'whose', 'i', 'me',
-    'my', 'mine', 'myself', 'you', 'your', 'yours', 'yourself', 'he', 'him', 'his',
-    'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 'itself', 'we', 'us',
-    'our', 'ours', 'ourselves', 'they', 'them', 'their', 'theirs', 'themselves', 'who', 'whom',
-    'whoever', 'someone', 'anyone', 'everyone', 'nobody', 'something', 'anything', 'everything', 'nothing', 'and',
-    'or', 'but', 'nor', 'so', 'yet', 'for', 'because', 'although', 'while', 'whereas',
-    'unless', 'until', 'since', 'when', 'whenever', 'where', 'wherever', 'whether', 'if', 'then',
-    'than', 'as', 'in', 'on', 'at', 'to', 'of', 'with', 'by', 'from',
-    'into', 'onto', 'upon', 'out', 'off', 'over', 'under', 'above', 'below', 'between',
-    'among', 'through', 'during', 'before', 'after', 'behind', 'beside', 'beyond', 'within', 'without',
-    'about', 'around', 'against', 'along', 'across', 'be', 'am', 'is', 'are', 'was',
-    'were', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did',
-    'doing', 'done', 'will', 'would', 'shall', 'should', 'may', 'might', 'must', 'can',
-    'could', 'get', 'got', 'go', 'went', 'gone', 'come', 'came', 'take', 'took',
-    'taken', 'make', 'made', 'say', 'said', 'know', 'knew', 'think', 'thought', 'see',
-    'saw', 'seen', 'want', 'use', 'find', 'found', 'give', 'gave', 'very', 'really',
-    'quite', 'just', 'only', 'even', 'also', 'still', 'already', 'always', 'never', 'ever',
-    'often', 'sometimes', 'usually', 'now', 'here', 'there', 'today', 'soon', 'again', 'much',
-    'more', 'most', 'less', 'well', 'however', 'therefore', 'thus', 'too', 'enough', 'good',
-    'great', 'best', 'better', 'bad', 'new', 'old', 'big', 'small', 'large', 'little',
-    'long', 'short', 'high', 'low', 'same', 'different', 'other', 'another', 'next', 'last',
-    'first', 'many', 'few', 'own', 'thing', 'things', 'way', 'ways', 'place', 'part',
-    'case', 'point', 'fact', 'like', 'back', 'time', 'year', 'day', 'one', 'two',
-
-    // Chinese stopwords (Simplified + Traditional)
-    'three', '的', '地', '得', '着', '了', '过', '嘛', '呢', '吧',
-    '啊', '哦', '哈', '嗯', '我', '你', '他', '她', '它', '谁',
-    '这', '那', '哪', '我们', '你们', '他们', '她们', '它们', '是', '有',
-    '在', '被', '让', '把', '使', '叫', '会', '要', '能', '说',
-    '做', '来', '去', '到', '看', '用', '将', '和', '与', '及',
-    '或', '但', '而', '因', '所', '如', '既', '虽', '若', '则',
-    '就', '才', '也', '还', '都', '又', '再', '不', '没', '很',
-    '最', '更', '只', '其', '此', '已', '正', '便', '即', '仍',
-    '曾', '各', '该', '于', '以', '从', '由', '向', '往', '对',
-    '为', '给', '按', '比', '跟', '同', '什么', '怎么', '为什么', '哪里',
-    '一', '二', '三', '四', '五', '六', '七', '八', '九', '十',
-    '百', '千', '万', '亿', '个', '些', '点', '多', '少', '几',
-    '上', '下', '中', '内', '外', '里', '前', '后', '左', '右',
-    '今', '年', '月', '日', '时', '现在', '以前', '以后', '但是', '所以',
-    '因此', '然后', '虽然', '不过', '而且', '另外', '此外', '总之', '如果', '即使',
-    '发出', '进行', '出现', '开始', '表示', '感到', '看到', '听到', '走向', '回到',
-    '走进', '走出', '拿出', '拿起', '放下', '站起', '坐下', '转向', '继续', '停下',
-    '离开', '来到', '回来', '出来', '进来', '上来', '下来', '完成', '结束', '发现',
-    '明白', '知道', '觉得', '认为', '希望', '想到', '一下', '一起', '一直', '一样',
-    '一边', '一旁', '一番', '一声', '微微', '轻轻', '慢慢', '缓缓', '渐渐', '稍微',
-    '略微', '稍稍', '脸上', '身上', '手上', '眼中', '心中', '脑中', '胸口', '那是',
-    '这是', '就是', '只是', '还是', '或是', '可是', '因为', '不管', '无论', '已经',
-    '正在', '将要', '可以', '应该', '需要', '必须', '非常', '十分', '相当', '有些',
-    '有点', '有时', '有人', '有什么', '自己', '彼此', '大家', '大概', '可能', '似乎',
-    '好像', '确实', '布料', '声音', '气息', '气氛', '动作', '姿态', '表情', '眼神',
-    '却', '现', '妳', '妳们', '您', '她的', '他的', '它的', '妳的', '你的',
-    '我的', '著', '過', '這', '誰', '什麼', '我們', '你們', '他們', '她們',
-    '它們', '讓', '會', '沒', '說', '將', '與', '卻', '還', '雖',
-    '該', '從', '對', '為', '給', '於', '哪裡', '怎麼', '為什麼', '萬',
-    '億', '個', '點', '幾', '裡', '裏', '後', '時', '現', '然後',
-    '雖然', '不過', '總之', '妳們', '牠', '牠們', '發出', '進行', '出現', '開始',
-    '聽到', '走進', '轉向', '繼續', '離開', '來到', '回來', '出來', '進來', '上來',
-    '下來', '結束', '發現', '覺得', '認為', '一樣', '一邊', '一聲', '輕輕', '緩緩',
-    '漸漸', '臉上', '腦中', '這是', '還是', '因為', '無論', '已經', '將要', '應該',
-    '必須', '相當', '有點', '有時', '有什麼', '確實', '聲音', '氣息', '氣氛', '動作',
-    '姿態',
-
-    // Japanese stopwords (particles, auxiliaries, function words, connectors)
-    'は', 'が', 'を', 'に', 'へ', 'で', 'と', 'も', 'の', 'や',
-    'か', 'な', 'ね', 'よ', 'ぞ', 'さ', 'わ',
-    'だ', 'です', 'ます', 'でした', 'ません', 'である', 'ある', 'いる', 'する', 'した',
-    'して', 'ない', 'なく', 'なり', 'なる', 'れる', 'られる', 'たい',
-    'これ', 'それ', 'あれ', 'この', 'その', 'あの', 'ここ', 'そこ', 'あそこ', 'どこ',
-    'そして', 'しかし', 'だから', 'また', 'ただ', 'でも', 'ので', 'など', 'ため',
-    'よう', 'もの', 'こと', 'ところ', 'ほう', 'ほか', 'まで', 'より', 'だけ', 'ばかり',
-    'くらい', 'ぐらい', 'ほとんど', 'とても', 'かなり',
-
-    // Korean stopwords (particles, postpositions, auxiliary verbs, conjunctions)
-    '은', '는', '이', '가', '을', '를', '의', '에', '에서', '에게',
-    '로', '으로', '와', '과', '도', '만', '부터', '까지', '보다',
-    '처럼', '같이', '마다', '이나', '나', '든', '든지', '라도', '조차', '마저',
-    '이것', '그것', '저것', '이게', '그게', '저게', '여기', '거기', '저기',
-    '어디', '누구', '무엇', '어느',
-    '이다', '이에요', '예요', '입니다', '이었다', '였다', '있다', '없다',
-    '하다', '했다', '한다', '합니다', '했습니다', '되다', '됩니다', '됐다',
-    '같다', '같은', '그런', '이런', '저런',
-    '안', '못', '않다', '않고', '없이',
-    '그리고', '그러나', '하지만', '그래서', '따라서', '그러므로', '또한', '또는',
-    '혹은', '아니면', '만약', '비록', '즉', '결국', '왜냐하면', '때문에',
-    '위해', '위해서', '통해', '통해서',
-    '매우', '아주', '너무', '정말', '참', '좀', '조금', '많이', '잘', '더',
-    '가장', '제일', '별로', '전혀', '거의', '약간', '꽤', '다시', '또', '이미',
-    '아직', '항상', '자주', '보통', '갑자기', '함께', '서로', '모두', '다',
-    '말하다', '생각하다', '보다', '오다', '가다', '나오다', '들어오다', '돌아오다',
-]);
+const _STOP_WORDS = DEFAULT_STOP_WORD_SET;
 
 // Matches CJK ideographs + Kana + Hangul spans.
 const _CJK_SPAN_RE = /[\u3400-\u9fff\uf900-\ufaff\u3040-\u30ff\uac00-\ud7af]+/g;
@@ -128,87 +34,111 @@ const _CJK_SPAN_RE = /[\u3400-\u9fff\uf900-\ufaff\u3040-\u30ff\uac00-\ud7af]+/g;
  * Extract search keywords from a mixed Latin/CJK query string.
  *
  * Strategy:
- *  1. CJK spans   — Intl.Segmenter word granularity when available and producing
- *                   real multi-char words; otherwise bigram fallback.
- *  2. Latin tokens — simple regex word extraction (min 3 chars, no stopwords).
- *  3. ALL tokens are tallied into a frequency Map (token → count) instead of a Set.
- *     Sorting by frequency before capping ensures high-signal tokens (character names,
- *     locations, repeated plot terms) survive the budget limit regardless of their
- *     position in the source text. This fixes the "important events at the end get cut"
- *     problem caused by first-occurrence ordering.
- *  4. CJK tokens take priority over Latin tokens of equal frequency.
+ *  1. Anchor region — extract keywords from the earliest/highest-intent portion of the
+ *                     query first so recent user wording survives long prompt dilution.
+ *  2. Context region — extract additional keywords from the full query body.
+ *  3. CJK spans      — Intl.Segmenter word granularity when available and producing
+ *                     real multi-char words; otherwise bigram fallback.
+ *  4. Latin tokens   — simple regex word extraction (min 3 chars, no stopwords).
+ *  5. Tokens are tallied into frequency Maps (token → count) instead of Sets.
+ *     Sorting by frequency before capping ensures repeated high-signal tokens survive,
+ *     while separate anchor/context budgets protect rare but important terms.
+ *  6. CJK tokens take priority over Latin tokens of equal frequency.
  *     If CJK fills the primary budget (maxKeywords), allow +10 overflow slots for
  *     English names/locations (fullCJK mode).
  *
  * @param {string} searchText
- * @param {number} [maxKeywords=20]
+ * @param {number} [maxKeywords=50]
  * @returns {string[]}
  */
-function extractQueryKeywords(searchText, maxKeywords = 20) {
+function extractQueryKeywords(searchText, maxKeywords = 50) {
     const text = searchText.toLowerCase();
 
-    // Use a frequency Map instead of a Set — tokens appearing multiple times
-    // score higher and survive the cap regardless of position in source text.
-    const cjkFreq = new Map();   // token → count (CJK)
-    const latinFreq = new Map(); // token → count (Latin)
+    function tallyTokens(sourceText) {
+        const cjkFreq = new Map();
+        const latinFreq = new Map();
 
-    // ── CJK spans (FIRST PRIORITY) ─────────────────────────────────────────
-    const spans = text.match(_CJK_SPAN_RE) || [];
-    for (const span of spans) {
-        let usedSegmenter = false;
+        const spans = sourceText.match(_CJK_SPAN_RE) || [];
+        for (const span of spans) {
+            let usedSegmenter = false;
 
-        if (typeof Intl !== 'undefined' && Intl.Segmenter) {
-            try {
-                const seg = new Intl.Segmenter('zh', { granularity: 'word' });
-                const segs = Array.from(seg.segment(span));
-                const multiChar = segs.filter(s => s.isWordLike && s.segment.length >= 2);
-                if (multiChar.length > 0) {
-                    for (const { segment } of multiChar) {
-                        if (!_STOP_WORDS.has(segment)) {
-                            cjkFreq.set(segment, (cjkFreq.get(segment) || 0) + 1);
+            if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+                try {
+                    const seg = new Intl.Segmenter('zh', { granularity: 'word' });
+                    const segs = Array.from(seg.segment(span));
+                    const multiChar = segs.filter(s => s.isWordLike && s.segment.length >= 2);
+                    if (multiChar.length > 0) {
+                        for (const { segment } of multiChar) {
+                            if (!_STOP_WORDS.has(segment)) {
+                                cjkFreq.set(segment, (cjkFreq.get(segment) || 0) + 1);
+                            }
                         }
+                        usedSegmenter = true;
                     }
-                    usedSegmenter = true;
-                }
-            } catch (_) { /* fallthrough */ }
-        }
+                } catch (_) { /* fallthrough */ }
+            }
 
-        if (!usedSegmenter) {
-            // Bigram fallback
-            for (let i = 0; i + 1 < span.length; i++) {
-                const bigram = span.slice(i, i + 2);
-                if (!_STOP_WORDS.has(bigram)) {
-                    cjkFreq.set(bigram, (cjkFreq.get(bigram) || 0) + 1);
+            if (!usedSegmenter) {
+                for (let i = 0; i + 1 < span.length; i++) {
+                    const bigram = span.slice(i, i + 2);
+                    if (!_STOP_WORDS.has(bigram)) {
+                        cjkFreq.set(bigram, (cjkFreq.get(bigram) || 0) + 1);
+                    }
                 }
             }
         }
+
+        const latinMatches = sourceText.match(/[a-z][a-z0-9'_-]{2,}/g) || [];
+        for (const tok of latinMatches) {
+            if (!_STOP_WORDS.has(tok)) {
+                latinFreq.set(tok, (latinFreq.get(tok) || 0) + 1);
+            }
+        }
+
+        return { cjkFreq, latinFreq };
     }
 
-    // ── Latin words (SECONDARY PRIORITY) ───────────────────────────────────
-    const latinMatches = text.match(/[a-z][a-z0-9'_-]{2,}/g) || [];
-    for (const tok of latinMatches) {
-        if (!_STOP_WORDS.has(tok)) {
-            latinFreq.set(tok, (latinFreq.get(tok) || 0) + 1);
+    function sortFreqMap(freqMap) {
+        return [...freqMap.entries()].sort((a, b) => b[1] - a[1]);
+    }
+
+    const anchorCharBudget = Math.min(text.length, 240);
+    const anchorText = text.slice(0, anchorCharBudget);
+    const anchorCJKBudget = Math.min(15, maxKeywords);
+    const contextCJKBudget = Math.max(0, maxKeywords - anchorCJKBudget);
+
+    const { cjkFreq: anchorCJKFreq, latinFreq: anchorLatinFreq } = tallyTokens(anchorText);
+    const { cjkFreq: fullCJKFreq, latinFreq: fullLatinFreq } = tallyTokens(text);
+
+    const sortedAnchorCJK = sortFreqMap(anchorCJKFreq);
+    const sortedFullCJK = sortFreqMap(fullCJKFreq);
+
+    const anchorCJKTokens = sortedAnchorCJK.slice(0, anchorCJKBudget).map(([t]) => t);
+    const seenCJK = new Set(anchorCJKTokens);
+    const contextCJKTokens = [];
+    for (const [token] of sortedFullCJK) {
+        if (!seenCJK.has(token)) {
+            contextCJKTokens.push(token);
+            seenCJK.add(token);
+            if (contextCJKTokens.length >= contextCJKBudget) break;
         }
     }
+    const cjkTokens = [...anchorCJKTokens, ...contextCJKTokens];
 
-    // ── Rank by frequency, CJK first ───────────────────────────────────────
-    // Sort each group descending by count so most-mentioned tokens (character
-    // names, locations, key plot terms) always make it into the final list.
-    const sortedCJK = [...cjkFreq.entries()].sort((a, b) => b[1] - a[1]);
-    const sortedLatin = [...latinFreq.entries()].sort((a, b) => b[1] - a[1]);
+    const mergedLatinFreq = new Map(fullLatinFreq);
+    for (const [token, count] of anchorLatinFreq) {
+        mergedLatinFreq.set(token, (mergedLatinFreq.get(token) || 0) + count);
+    }
+    const sortedLatin = sortFreqMap(mergedLatinFreq);
 
-    // Determine final cap: if CJK fills the primary budget, allow +10 overflow
-    // slots for English names/locations (characters/places in English stories
-    // mixed into Chinese narrative).
-    const cjkTokens = sortedCJK.slice(0, maxKeywords).map(([t]) => t);
     const fullCJK = cjkTokens.length >= maxKeywords;
     const latinBudget = fullCJK ? 10 : (maxKeywords - cjkTokens.length);
     const latinTokens = sortedLatin.slice(0, latinBudget).map(([t]) => t);
 
     const result = [...cjkTokens, ...latinTokens];
 
-    console.log(`[Qdrant] extractQueryKeywords CJK pass → ${sortedCJK.length} unique tokens (showing top ${cjkTokens.length}): ${cjkTokens.join(', ') || '(none)'}`);
+    console.log(`[Qdrant] extractQueryKeywords anchor CJK pass → ${sortedAnchorCJK.length} unique tokens (showing top ${anchorCJKTokens.length}): ${anchorCJKTokens.join(', ') || '(none)'}`);
+    console.log(`[Qdrant] extractQueryKeywords context CJK pass → ${sortedFullCJK.length} unique tokens (showing top ${contextCJKTokens.length}): ${contextCJKTokens.join(', ') || '(none)'}`);
     console.log(`[Qdrant] extractQueryKeywords Latin pass → ${sortedLatin.length} unique tokens (showing top ${latinTokens.length}): ${latinTokens.join(', ') || '(none)'}`);
     console.log(`[Qdrant] extractQueryKeywords final → ${result.length} tokens (fullCJK=${fullCJK}): ${result.join(', ')}`);
 
@@ -1551,7 +1481,7 @@ async function _getLegacySingleEmbedding(source, text, model, directories, req) 
                     console.log(`[Qdrant] hybrid searchText snippet (~100 words, ${String(searchText || '').length} chars, ${whitespaceWordCount} whitespace words): ${snippet}`);
                 }
 
-                extractedKeywords = extractQueryKeywords(searchText, 20);
+                extractedKeywords = extractQueryKeywords(searchText, 50);
                 if (hybridOptions.eventbaseDebug) {
                     console.log(`[Qdrant] extractQueryKeywords → ${extractedKeywords.length} tokens: ${extractedKeywords.join(', ')}`);
                 }
