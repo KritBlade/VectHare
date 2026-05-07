@@ -877,10 +877,10 @@ function updateOptionsSection(type) {
                             Off - Manual only
                         </option>
                         <option value="minimal" ${currentSettings.keywordLevel === 'minimal' ? 'selected' : ''}>
-                            Minimal - Title only (3 max)
+                            Minimal - Intro section (5 max)
                         </option>
                         <option value="balanced" ${currentSettings.keywordLevel === 'balanced' || !currentSettings.keywordLevel ? 'selected' : ''}>
-                            Balanced - Header area (8 max)
+                            Balanced - Header area (12 max)
                         </option>
                         <option value="aggressive" ${currentSettings.keywordLevel === 'aggressive' ? 'selected' : ''}>
                             Aggressive - Full text (15 max)
