@@ -41,6 +41,38 @@ import {
 let pluginAvailable = null;
 
 /**
+ * Detect collection IDs that VectHare should NOT register or query.
+ * Two categories:
+ *   1. Prefix-stacked corruption — IDs that start with a known backend name without
+ *      a colon separator (e.g. "vectraopenrouterfile_xxx"). These come from a prior
+ *      bug where the registry key was used as the on-disk collection name. The
+ *      filesystem stripped colons, leaving folders that get re-discovered each load.
+ *   2. ST-native file attachments — IDs starting with "file_<digits>". Created by
+ *      SillyTavern's built-in Vector Storage extension when files are attached to
+ *      chat. VectHare can't usefully retrieve from them (different embedding model
+ *      and lifecycle) and they pollute the query path.
+ *
+ * @param {string} collectionId - Plain collection ID (no backend:source: prefix)
+ * @returns {string|null} Reason string when filtered, null when ID is OK
+ */
+export function getCollectionFilterReason(collectionId) {
+    if (!collectionId || typeof collectionId !== 'string') return null;
+
+    // (1) Stacked-prefix corruption. Real collection IDs never start with a backend
+    // name; backend is only used in the registry key with colon separators.
+    if (/^(vectra|qdrant|milvus|lancedb|standard)(?![:_])/i.test(collectionId)) {
+        return 'corrupted-prefix-stacked';
+    }
+
+    // (2) ST-native file attachments — `file_` followed by digits.
+    if (/^file_\d+$/.test(collectionId)) {
+        return 'st-native-file';
+    }
+
+    return null;
+}
+
+/**
  * Gets or initializes the collection registry
  * @returns {string[]} Array of collection IDs
  */
@@ -365,6 +397,8 @@ async function discoverViaPlugin(settings) {
             pluginCollectionData = {};
             const uniqueKeys = [];
 
+            let skippedCorruption = 0;
+            let skippedStFile = 0;
             for (const collection of data.collections) {
                 const backend = collection.backend || 'standard';
 
@@ -374,6 +408,15 @@ async function discoverViaPlugin(settings) {
                 if (collectionId.startsWith(`${backend}:`)) {
                     collectionId = collectionId.substring(backend.length + 1);
                     console.debug(`   🔧 Stripped backend prefix from collection ID: ${collection.id} → ${collectionId}`);
+                }
+
+                // Skip corrupted/ST-native IDs at discovery time
+                const filterReason = getCollectionFilterReason(collectionId);
+                if (filterReason) {
+                    if (filterReason === 'corrupted-prefix-stacked') skippedCorruption++;
+                    else if (filterReason === 'st-native-file') skippedStFile++;
+                    console.debug(`   ⛔ Skipping ${collectionId} (${filterReason})`);
+                    continue;
                 }
 
                 console.debug(`   - ${backend}:${collection.source}:${collectionId} (${collection.chunkCount} chunks)`);
@@ -402,6 +445,10 @@ async function discoverViaPlugin(settings) {
             // This ensures the registry matches actual disk state
             const currentRegistry = getCollectionRegistry();
             const pluginKeySet = new Set(uniqueKeys);
+
+            if (skippedCorruption > 0 || skippedStFile > 0) {
+                console.log(`   🛡️ Discovery filter skipped ${skippedCorruption} corrupted + ${skippedStFile} ST-native file collection(s) — use Cleanup Corrupted to delete them from disk`);
+            }
 
             console.debug(`\n📋 VectHare: Updating registry...`);
             console.debug(`   Current registry has ${currentRegistry.length} entries`);
@@ -480,6 +527,108 @@ async function discoverViaPlugin(settings) {
     }
 
     return [];
+}
+
+/**
+ * Cleanup corrupted/ST-native collections from disk.
+ *
+ * Re-fetches the raw plugin discovery list (bypasses the discovery filter so we
+ * can SEE the corrupted entries), then calls the plugin's /chunks/purge endpoint
+ * for each one. Also clears any matching registry entries.
+ *
+ * @returns {Promise<{purged: Array<{key: string, ok: boolean, error?: string}>, total: number, corruption: number, stFile: number}>}
+ */
+export async function cleanupCorruptedCollections() {
+    const result = {
+        purged: [],
+        total: 0,
+        corruption: 0,
+        stFile: 0,
+    };
+
+    try {
+        const response = await fetch('/api/plugins/similharity/collections', {
+            method: 'GET',
+            headers: getRequestHeaders(),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Plugin /collections returned ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (!data.success || !Array.isArray(data.collections)) {
+            throw new Error('Plugin returned no collection list');
+        }
+
+        // Pick out everything our discovery filter would skip
+        const targets = [];
+        for (const collection of data.collections) {
+            const backend = collection.backend || 'standard';
+            let collectionId = collection.id;
+            if (collectionId.startsWith(`${backend}:`)) {
+                collectionId = collectionId.substring(backend.length + 1);
+            }
+
+            const reason = getCollectionFilterReason(collectionId);
+            if (reason) {
+                targets.push({
+                    backend,
+                    source: collection.source || 'transformers',
+                    collectionId,
+                    reason,
+                    registryKey: `${backend}:${collection.source}:${collectionId}`,
+                });
+            }
+        }
+
+        result.total = targets.length;
+        result.corruption = targets.filter(t => t.reason === 'corrupted-prefix-stacked').length;
+        result.stFile = targets.filter(t => t.reason === 'st-native-file').length;
+
+        if (targets.length === 0) {
+            console.log('VectHare cleanup: no corrupted or ST-native file collections found on disk');
+            return result;
+        }
+
+        console.log(`VectHare cleanup: purging ${targets.length} collection(s) (${result.corruption} corrupted, ${result.stFile} ST-native file)`);
+
+        for (const target of targets) {
+            try {
+                const purgeResp = await fetch('/api/plugins/similharity/chunks/purge', {
+                    method: 'POST',
+                    headers: getRequestHeaders(),
+                    body: JSON.stringify({
+                        backend: target.backend,
+                        collectionId: target.collectionId,
+                        source: target.source,
+                    }),
+                });
+
+                if (!purgeResp.ok) {
+                    const body = await purgeResp.text().catch(() => '');
+                    throw new Error(`HTTP ${purgeResp.status}: ${body.substring(0, 200)}`);
+                }
+
+                // Drop from registry too
+                unregisterCollection(target.registryKey);
+
+                result.purged.push({ key: target.registryKey, ok: true });
+                console.log(`   ✅ Purged ${target.registryKey} (${target.reason})`);
+            } catch (err) {
+                result.purged.push({ key: target.registryKey, ok: false, error: err.message });
+                console.warn(`   ❌ Failed to purge ${target.registryKey}: ${err.message}`);
+            }
+        }
+
+        // Reset plugin cache so a subsequent discovery sees the fresh state
+        pluginAvailable = null;
+    } catch (error) {
+        console.error('VectHare cleanup: failed', error);
+        throw error;
+    }
+
+    return result;
 }
 
 /**

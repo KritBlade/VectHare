@@ -28,7 +28,7 @@ import { purgeAllVectorIndexes, purgeVectorIndex } from './core/core-vector-api.
 import { getChatCollectionId } from './core/chat-vectorization.js';
 import { getDefaultDecaySettings } from './core/temporal-decay.js';
 import { migrateOldEnabledKeys } from './core/collection-metadata.js';
-import { clearCollectionRegistry, discoverExistingCollections } from './core/collection-loader.js';
+import { clearCollectionRegistry, discoverExistingCollections, cleanupCorruptedCollections } from './core/collection-loader.js';
 import AsyncUtils from './utils/async-utils.js';
 
 // VectHare modules - UI
@@ -266,6 +266,44 @@ async function onPurgeClick() {
 }
 
 /**
+ * Action: Cleanup corrupted/ST-native collections from disk
+ */
+async function onCleanupCorruptedClick() {
+    const confirmed = confirm(
+        'This deletes corrupted prefix-stacked collections and ST-native file_* attachments\n' +
+        'from disk. Useful when reply latency is dominated by ghost collections.\n\n' +
+        'Cannot be undone. Continue?'
+    );
+    if (!confirmed) {
+        toastr.info('Cleanup cancelled');
+        return;
+    }
+
+    try {
+        const result = await cleanupCorruptedCollections();
+        if (result.total === 0) {
+            toastr.info('No corrupted or ST-native file collections found');
+            return;
+        }
+
+        const { saveSettingsDebounced } = await import('../../../../script.js');
+        saveSettingsDebounced();
+
+        const failed = result.purged.filter(p => !p.ok).length;
+        const succeeded = result.purged.length - failed;
+        const summary = `Purged ${succeeded}/${result.total} (${result.corruption} corrupted, ${result.stFile} ST-native file). ${failed > 0 ? failed + ' failed.' : ''}`;
+        if (failed === 0) {
+            toastr.success(summary, 'Cleanup Complete');
+        } else {
+            toastr.warning(summary, 'Cleanup Partial');
+        }
+    } catch (error) {
+        console.error('VectHare: Cleanup failed:', error);
+        toastr.error('Cleanup failed: ' + error.message);
+    }
+}
+
+/**
  * Action: Run diagnostics - opens the diagnostics modal
  */
 function onRunDiagnosticsClick() {
@@ -348,6 +386,7 @@ jQuery(async () => {
     renderSettings('extensions_settings2', settings, {
         onVectorizeAll: onVectorizeAllClick,
         onPurge: onPurgeClick,
+        onCleanupCorrupted: onCleanupCorruptedClick,
         onRunDiagnostics: onRunDiagnosticsClick
     });
 

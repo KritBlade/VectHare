@@ -36,6 +36,7 @@ import { DEFAULT_SUMMARIZE_PROMPT } from '../core/summarizer.js';
  * @param {object} callbacks - Object containing callback functions
  * @param {Function} callbacks.onVectorizeAll - Called when "Vectorize All" is clicked
  * @param {Function} callbacks.onPurge - Called when "Purge" is clicked
+ * @param {Function} callbacks.onCleanupCorrupted - Called when "Cleanup Corrupted" is clicked
  * @param {Function} callbacks.onRunDiagnostics - Called when "Run Diagnostics" is clicked
  */
 export function renderSettings(containerId, settings, callbacks) {
@@ -868,6 +869,10 @@ export function renderSettings(containerId, settings, callbacks) {
                                 <button id="vecthare_purge" class="vecthare-action-btn vecthare-btn-danger-outline">
                                     <i class="fa-solid fa-trash"></i>
                                     <span>Purge</span>
+                                </button>
+                                <button id="vecthare_cleanup_corrupted" class="vecthare-action-btn vecthare-btn-danger-outline" title="Delete corrupted prefix-stacked collections and ST-native file_* attachments from disk. Irreversible.">
+                                    <i class="fa-solid fa-broom"></i>
+                                    <span>Cleanup Corrupted</span>
                                 </button>
                                 <button id="vecthare_text_cleaning" class="vecthare-action-btn vecthare-btn-secondary">
                                     <i class="fa-solid fa-broom"></i>
@@ -3361,6 +3366,7 @@ function bindSettingsEvents(settings, callbacks) {
     });
     $('#vecthare_vectorize_all').on('click', callbacks.onVectorizeAll);
     $('#vecthare_purge').on('click', callbacks.onPurge);
+    $('#vecthare_cleanup_corrupted').on('click', callbacks.onCleanupCorrupted);
     $('#vecthare_run_diagnostics').on('click', callbacks.onRunDiagnostics);
     $('#vecthare_database_browser').on('click', () => {
         openDatabaseBrowser();
