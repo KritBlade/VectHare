@@ -11,7 +11,7 @@
  * ============================================================================
  */
 
-import { setExtensionPrompt, extension_prompts, getCurrentChatId, substituteParams } from '../../../../../script.js';
+import { setExtensionPrompt, extension_prompts, getCurrentChatId, substituteParams, getContext } from '../../../../../script.js';
 import { extension_settings } from '../../../../extensions.js';
 import { getChatUUID, parseRegistryKey, COLLECTION_PREFIXES, getRegistryBackend } from './collection-ids.js';
 import { getCollectionRegistry } from './collection-loader.js';
@@ -421,7 +421,7 @@ export async function runEventBaseRetrieval({ chat, searchText, settings, chatUU
     const { events, debug } = await retrieveEvents({
         searchText,
         keywordQuery,
-        chatLength: chat?.length || 0,
+        chatLength: getContext().chat?.length || chat?.length || 0,
         settings,
         chatUUID: uuid,
         additionalCandidates,
