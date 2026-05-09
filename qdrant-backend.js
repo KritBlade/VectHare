@@ -573,7 +573,7 @@ class QdrantBackend {
 
         console.log(`[Qdrant] Hybrid options: vectorWeight=${vectorWeight}, keywordWeight=${keywordWeight}, fusion=${fusionMethod}`);
         if (debugLog) {
-            console.log(`[Hdrant-backend] Hybrid query keywords (${keywords.length}): ${keywords.length ? keywords.join(', ') : '(none)'}`);
+            console.log(`[Qdrant-backend] Hybrid query keywords (${keywords.length}): ${keywords.length ? keywords.join(', ') : '(none)'}`);
         }
 
         try {
@@ -881,7 +881,7 @@ class QdrantBackend {
                 .slice(0, Math.min(topK, 10));
             previewResults.forEach((result, index) => {
                 console.log(
-                    `[Hdrant-backend] [${index}] finalScore=${Number(result.score || 0).toFixed(6)}, ` +
+                    `[Qdrant-backend] [${index}] finalScore=${Number(result.score || 0).toFixed(6)}, ` +
                     `vectorScore=${Number(result.debug?.vectorScore || 0).toFixed(6)}, ` +
                     `keywordScore=${Number(result.debug?.keywordScore || 0).toFixed(6)}, ` +
                     `vectorRank=${result.debug?.vectorRank ?? 'n/a'}, ` +
