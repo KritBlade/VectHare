@@ -11,8 +11,8 @@
  * ============================================================================
  */
 
-import { setExtensionPrompt, extension_prompts, getCurrentChatId, substituteParams, getContext } from '../../../../../script.js';
-import { extension_settings } from '../../../../extensions.js';
+import { setExtensionPrompt, extension_prompts, getCurrentChatId, substituteParams } from '../../../../../script.js';
+import { extension_settings, getContext } from '../../../../extensions.js';
 import { getChatUUID, parseRegistryKey, COLLECTION_PREFIXES, getRegistryBackend } from './collection-ids.js';
 import { getCollectionRegistry } from './collection-loader.js';
 import { queryCollection } from './core-vector-api.js';

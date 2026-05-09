@@ -1,49 +1,70 @@
 Generate entered
 index.js:19 [QR2] calling {args: Array(3), functionToCall: ƒ}
 chat-vectorization.js:1844 🐰 VectHare: rearrangeChat called (type: normal, chat length: 14)
-eventbase-workflow.js:383 [EventBase] Phase A: live=true, archiveCollections=0, searchText length=2326
-eventbase-workflow.js:397 [EventBase] Keyword query (user last message, 400 chars): <最新互动>
-我説 "Alpha, 你的分析沒有錯.  不過, 我有一個你不知道的資訊可以跟你分享.  我們跟5龍族有很大的關聯, 我的龍脈之氣, 有2脈 (黃, 赤) 都是來自2個龍族公主, 御膳是跟Nikita.  而5龍族的守護神是一
-eventbase-retrieval.js:114 [EventBase] Retrieval start — topK overfetch=16, minImportance=1, method=bm25, nativePrefer=true
-backend-manager.js:278 VectHare: Health cache stale for qdrant, re-verifying...
-backend-manager.js:278 VectHare: Health cache stale for qdrant, re-verifying...
-core-vector-api.js:876 [VectHare] Hybrid search (native), dispatching to hybrid search module
-hybrid-search.js:48 [HybridSearch] Using native hybrid search (QdrantBackend)
-qdrant.js:781 [EventBase] Native hybrid request payload: backend=qdrant, collection=vecthare_eventbase_qdrant_critblade_chat_60d40b35-fa7a-4f30-8485-805303f4916a, source=openrouter, model=qwen/qwen3-embedding-8b, topK=16, threshold=0, vectorWeight=0.5, textWeight=0.5, fusion=rrf, rrfK=60, searchTextLen=400, searchTextPreview="<最新互动> 我説 "Alpha, 你的分析沒有錯. 不過, 我有一個你不知道的資訊可以跟你分享. 我們跟5龍族有很大的關聯, 我的龍脈之氣, 有2脈 (黃, 赤) 都是來自2個龍族公主, 御膳是跟Nikita. 而5龍族的守護神是一個深不可測的老頑童雪兎姫. 我覺得可以先問一問她'老人家' 有沒有打贏魔王族的人" 光笑着説 "你最好不要給她聽到你説'老人家', 不然我們7個魔女跟她打也沒有必勝的機會" 我笑着説 "對對對...就我們這樣説她就好, 不要給她知道. 那...今天晚上就先休息, 明天我們才會見她" 以上是使用者的本輪輸入，以下輸入的代碼為接"
-core-vector-api.js:876 [VectHare] Hybrid search (native), dispatching to hybrid search module
-hybrid-search.js:48 [HybridSearch] Using native hybrid search (QdrantBackend)
-qdrant.js:781 [EventBase] Native hybrid request payload: backend=qdrant, collection=vecthare_eventbase_qdrant_critblade_chat_60d40b35-fa7a-4f30-8485-805303f4916a, source=openrouter, model=qwen/qwen3-embedding-8b, topK=16, threshold=0, vectorWeight=0.5, textWeight=0.5, fusion=rrf, rrfK=60, searchTextLen=2326, searchTextPreview=". 阿爾法聽完關於「雪兔姬」的描述，那雙冰藍色的眸子微微收縮。她伸出食指，在虛空中輕點，幾條代表龍脈能量的數據線在魔導圖譜上重新排列，試圖將「守護神」這個變量納入她那精密的計算公式中。「……守護神嗎？如果五龍族的龍脈是這台機器的硬體核心，那麼這位『雪兔姬』可能就是最初的底層代碼守護者。」她低聲自語，隨即看向勇希，神情依舊冷淡，但語氣中多了一分認同，「既然如此，與其在這裡盲目推算，獲取她的情報確實是目前最優的選擇。我會將這個目標標註為『關鍵轉折點』。」 客廳內的緊張氣氛隨著勇希決定休息的命令而逐漸消解。長桌上的魔法燈光被輕輕調暗，落地窗外，校園都市西邊的草"
-qdrant.js:794 [Qdrant] Native hybrid search returned 16 results
-core-vector-api.js:886 [VectHare] Hybrid search (RRF) response: 16 result(s) in 697ms, scores=[0.0163, 0.0158, 0.0081, 0.0079, 0.0078, 0.0077, 0.0075, 0.0074, 0.0072, 0.0071, 0.0070, 0.0069, 0.0068, 0.0068, 0.0067, 0.0066]
-qdrant.js:794 [Qdrant] Native hybrid search returned 16 results
-core-vector-api.js:886 [VectHare] Hybrid search (RRF) response: 16 result(s) in 849ms, scores=[0.0163, 0.0160, 0.0157, 0.0155, 0.0142, 0.0079, 0.0078, 0.0076, 0.0074, 0.0072, 0.0071, 0.0070, 0.0069, 0.0068, 0.0068, 0.0067]
-eventbase-retrieval.js:154 [EventBase] Dual-query: user=16 + context=16 → merged=17 unique events
-eventbase-retrieval.js:187 [EventBase] After importance filter (>=1): 17 candidates
-eventbase-retrieval.js:248 [EventBase] Dedup-depth skip: event "main_quest_update" source_window_end=31 is within last 50 messages (threshold=-36)
-eventbase-retrieval.js:248 [EventBase] Dedup-depth skip: event "revelation" source_window_end=15 is within last 50 messages (threshold=-36)
-eventbase-retrieval.js:248 [EventBase] Dedup-depth skip: event "revelation" source_window_end=31 is within last 50 messages (threshold=-36)
-eventbase-retrieval.js:248 [EventBase] Dedup-depth skip: event "travel" source_window_end=19 is within last 50 messages (threshold=-36)
-eventbase-retrieval.js:248 [EventBase] Dedup-depth skip: event "faction_change" source_window_end=3 is within last 50 messages (threshold=-36)
-eventbase-retrieval.js:248 [EventBase] Dedup-depth skip: event "revelation" source_window_end=23 is within last 50 messages (threshold=-36)
-eventbase-retrieval.js:248 [EventBase] Dedup-depth skip: event "character_introduction" source_window_end=27 is within last 50 messages (threshold=-36)
-eventbase-retrieval.js:248 [EventBase] Dedup-depth skip: event "dialogue_significant" source_window_end=3 is within last 50 messages (threshold=-36)
-eventbase-retrieval.js:248 [EventBase] Dedup-depth skip: event "revelation" source_window_end=11 is within last 50 messages (threshold=-36)
-eventbase-retrieval.js:248 [EventBase] Dedup-depth skip: event "discovery" source_window_end=7 is within last 50 messages (threshold=-36)
-eventbase-retrieval.js:248 [EventBase] Dedup-depth skip: event "relationship_change" source_window_end=11 is within last 50 messages (threshold=-36)
-eventbase-retrieval.js:248 [EventBase] Dedup-depth skip: event "promise_or_oath" source_window_end=15 is within last 50 messages (threshold=-36)
-eventbase-retrieval.js:248 [EventBase] Dedup-depth skip: event "dialogue_significant" source_window_end=7 is within last 50 messages (threshold=-36)
-eventbase-retrieval.js:248 [EventBase] Dedup-depth skip: event "location_change" source_window_end=23 is within last 50 messages (threshold=-36)
-eventbase-retrieval.js:254 [EventBase] Dedup depth (50) removed 14 event(s) already visible in context
-eventbase-retrieval.js:262 [EventBase] Final events after dedup + trim: 0
-eventbase-workflow.js:432 [EventBase] Retrieval debug: {dualQuery: true, keywordScoringMethod: 'bm25', nativeHybridPrefer: true, fusionMethod: 'rrf', rawCount: 17, …}
-eventbase-workflow.js:436 [EventBase] No events to inject
-chat-vectorization.js:1908 VectHare: Will query 1 collections: ['vectra:vecthare_lorebook_story1_1778288919954']
-chat-vectorization.js:1927 VectHare: Extracted 8 keywords from query: (8) ['cup', 'echidna', 'kamira', 'satella', 'vex', 'alpha', '阿爾法', '聽完']
-collection-metadata.js:908 [VectHare Activation Filter] Collection vectra:vecthare_lorebook_story1_1778288919954: hasTriggers=false, hasConditions=false
-collection-metadata.js:945 [VectHare Activation Filter] Collection vectra:vecthare_lorebook_story1_1778288919954: ✗ NOT_ACTIVATED (no trigger match, no condition pass, not locked)
-collection-metadata.js:965 [VectHare Activation Filter] Summary: 1 collections → 0 active
-chat-vectorization.js:1954 ⚠️ VectHare: No collections passed activation conditions and World Info disabled - chunks cannot be injected!
-chat-vectorization.js:1955    💡 Check your collection activation conditions in VectHare settings
+chat-vectorization.js:2200 VectHare: Failed to rearrange chat SyntaxError: The requested module '../../../../../script.js' does not provide an export named 'getContext' (at eventbase-workflow.js:14:85)
+rearrangeChat @ chat-vectorization.js:2200
+await in rearrangeChat
+vecthare_rearrangeChat @ index.js:207
+runGenerationInterceptors @ extensions.js:2028
+await in runGenerationInterceptors
+Generate @ script.js:4505
+await in Generate
+triggerRefresh @ PromptViewer.vue:268
+(anonymous) @ PromptViewer.vue:250
+callWithErrorHandling @ runtime-core.esm-bundler.js:199
+(anonymous) @ runtime-core.esm-bundler.js:8133
+(anonymous) @ runtime-core.esm-bundler.js:8095
+(anonymous) @ runtime-core.esm-bundler.js:6018
+(anonymous) @ runtime-core.esm-bundler.js:5984
+(anonymous) @ runtime-core.esm-bundler.js:5483
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:5914
+(anonymous) @ runtime-core.esm-bundler.js:5457
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:5650
+(anonymous) @ runtime-core.esm-bundler.js:5605
+(anonymous) @ runtime-core.esm-bundler.js:5471
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:5650
+(anonymous) @ runtime-core.esm-bundler.js:5605
+(anonymous) @ runtime-core.esm-bundler.js:5471
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:5650
+(anonymous) @ runtime-core.esm-bundler.js:5605
+(anonymous) @ runtime-core.esm-bundler.js:5471
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:1000
+(anonymous) @ runtime-core.esm-bundler.js:1026
+process @ runtime-core.esm-bundler.js:1060
+(anonymous) @ runtime-core.esm-bundler.js:5495
+(anonymous) @ runtime-core.esm-bundler.js:6132
+run @ reactivity.esm-bundler.js:250
+(anonymous) @ runtime-core.esm-bundler.js:6260
+(anonymous) @ runtime-core.esm-bundler.js:6032
+(anonymous) @ runtime-core.esm-bundler.js:5984
+(anonymous) @ runtime-core.esm-bundler.js:5483
+(anonymous) @ runtime-core.esm-bundler.js:5856
+(anonymous) @ runtime-core.esm-bundler.js:5932
+(anonymous) @ runtime-core.esm-bundler.js:5457
+(anonymous) @ runtime-core.esm-bundler.js:6212
+run @ reactivity.esm-bundler.js:250
+runIfDirty @ reactivity.esm-bundler.js:288
+callWithErrorHandling @ runtime-core.esm-bundler.js:199
+flushJobs @ runtime-core.esm-bundler.js:408
+Promise.then
+queueFlush @ runtime-core.esm-bundler.js:322
+queueJob @ runtime-core.esm-bundler.js:317
+(anonymous) @ runtime-core.esm-bundler.js:6254
+trigger @ reactivity.esm-bundler.js:278
+endBatch @ reactivity.esm-bundler.js:336
+notify @ reactivity.esm-bundler.js:627
+trigger @ reactivity.esm-bundler.js:601
+value @ reactivity.esm-bundler.js:1540
+(anonymous) @ reactivity.esm-bundler.js:1570
+(anonymous) @ Toolbox.vue:36
+callWithErrorHandling @ runtime-core.esm-bundler.js:199
+callWithAsyncErrorHandling @ runtime-core.esm-bundler.js:206
+(anonymous) @ runtime-dom.esm-bundler.js:745
 script.js:4547 Core/all messages: 14/731
 world-info.js:5159 [WI] Adding 38 entries to prompt (38) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
 index.js:19 [QR2] calling {args: Array(1), functionToCall: ƒ}
@@ -57,25 +78,6 @@ index.js:1524 [shujuku_v91] [剧情推进] [Plot] planningGuard_ACU.inProgress: 
 index.js:1524 [shujuku_v91] [剧情推进] [Plot] planningGuard_ACU.ignoreNextGenerationEndedCount: 0
 index.js:1524 [shujuku_v91] [剧情推进] [Plot] tempPlotToSave_ACU: (空)
 index.js:1524 [shujuku_v91] [剧情推进] [Plot] tempPlotToSave_ACU 为空，无需保存
-script.js:5538 AbortError: signal is aborted without reason
-    at StreamingProcessor.onStopStreaming (script.js:3789:30)
-    at stopGeneration (script.js:5551:28)
-    at S (PromptViewer.vue:273:5)
-    at EventEmitter.<anonymous> (PromptViewer.vue:367:3)
-    at EventEmitter.emit (eventemitter.js:146:36)
-    at async sendOpenAIRequest (openai.js:3052:5)
-    at async sendStreamingRequest (script.js:6095:20)
-    at async finishGenerating (script.js:5334:44)
-prompts.ts:72 [Prompt Template] processing send result: 19104 tokens and 27830 chars
-script.js:3789 Uncaught (in promise) AbortError: signal is aborted without reason
-    at StreamingProcessor.onStopStreaming (script.js:3789:30)
-    at stopGeneration (script.js:5551:28)
-    at S (PromptViewer.vue:273:5)
-    at EventEmitter.<anonymous> (PromptViewer.vue:367:3)
-    at EventEmitter.emit (eventemitter.js:146:36)
-    at async sendOpenAIRequest (openai.js:3052:5)
-    at async sendStreamingRequest (script.js:6095:20)
-    at async finishGenerating (script.js:5334:44)
 onStopStreaming @ script.js:3789
 stopGeneration @ script.js:5551
 collectPrompts @ PromptViewer.vue:273
@@ -91,6 +93,7 @@ Generate @ script.js:5394
 index.js:1524 [shujuku_v91] Debounced new message processing triggered for ACU.
 index.js:1524 [shujuku_v91] ACU Loaded 731 messages for: 異世界學校 - 2025-12-16@09h56m28s.
 index.js:1524 [shujuku_v91] ACU Auto-Trigger: Starting independent check...
+index.js:1524 [shujuku_v91] ACU: AI Message count increased (0 -> 366). Waiting 2000ms...
 index.js:1524 [shujuku_v91] [Trigger Check] Table: 全局数据表, TotalAI: 366, Skip: 0, LastUpdated: 366, Unrecorded: 0, Freq: 1
 index.js:1524 [shujuku_v91] [Trigger Check] Table: 主角信息, TotalAI: 366, Skip: 0, LastUpdated: 366, Unrecorded: 0, Freq: 1
 index.js:1524 [shujuku_v91] [Trigger Check] Table: 重要人物表, TotalAI: 366, Skip: 0, LastUpdated: 366, Unrecorded: 0, Freq: 1
