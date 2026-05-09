@@ -863,8 +863,10 @@ export async function queryCollection(collectionId, searchText, topK, settings) 
     }
 
     // Three-case routing:
-    //   A3 — native hybrid (Qdrant/Milvus with prefer_native ON)
-    //   A2 — client-side hybrid full scan (standard backend, method = 'hybrid')
+    //   A3 — server-side hybrid (Qdrant/Milvus with prefer_native ON) — dense vector search +
+    //         full-corpus payload/text keyword matching via Qdrant scroll, fused in plugin code
+    //         (NOT Qdrant native dense+sparse-vector hybrid; no sparse vectors stored)
+    //   A2 — client-side hybrid over ANN candidates (standard backend, method = 'hybrid')
     //   A1 — BM25 re-rank of ANN top-K (standard backend default, method = 'bm25')
     const nativeHybridAvailable = backend?.supportsHybridSearch?.() === true;
     const preferNative = settings.hybrid_native_prefer !== false;

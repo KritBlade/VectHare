@@ -1,0 +1,316 @@
+= Hybrid Search: Client-Side vs Native (Qdrant/hdrant) Comparison
+:toc: left
+:toclevels: 3
+
+== Overview
+
+When "Prefer Native Backend Hybrid" is enabled in the GUI, the system routes
+through two fundamentally different paths depending on the backend:
+
+* *Standard backend (Vectra/ST-native)* → client-side hybrid in `hybrid-search.js`
+* *Qdrant backend (hdrant)* → server-side hybrid via the Similharity plugin's `/chunks/hybrid-query` endpoint
+  (dense vector search + payload/text keyword matching via scroll, fused in plugin code —
+  NOT Qdrant's native dense+sparse-vector hybrid API; no sparse vectors are stored)
+
+This document compares the two paths in detail.
+
+== At a Glance
+
+[cols="1,2,2",options="header"]
+|===
+| Area | Standard client-side hybrid | hdrant/Qdrant server-side hybrid
+
+| Vector search
+| Uses standard backend vector query
+| Uses Qdrant vector search
+
+| Keyword search scope
+| Only over vector candidates already returned
+| Searches DB payload/index server-side
+
+| Can find keyword-only matches?
+| Mostly no
+| Yes
+
+| Uses stored keywords payload?
+| Mostly through BM25 field boosting if candidate already found
+| Yes, directly in Qdrant keyword search
+
+| Candidate recall
+| Limited by vector topK * 3, max 100
+| Union of vector results + keyword-matched DB results
+
+| Filtering
+| Mostly after retrieval in EventBase
+| Can filter inside Qdrant query/scroll path
+
+| Performance on large collections
+| Browser/client does scoring over candidates; vector backend still limits candidates
+| Server-side DB does matching/filtering closer to storage
+
+| CJK / exact-name matching
+| Depends on client keyword extractor + BM25 over candidates
+| Server plugin has CJK-aware keyword extraction and DB-side text matching
+
+| Score semantics
+| Client RRF has custom display-score recalculation
+| Server returns fused score plus vector/keyword debug fields
+
+| Failure mode
+| If vector search misses it, keyword search cannot recover it
+| Keyword side can recover vector-missed records
+|===
+
+== Routing Decision (core-vector-api.js, lines 865–893)
+
+[source,javascript]
+----
+const nativeHybridAvailable = backend?.supportsHybridSearch?.() === true;
+const preferNative = settings.hybrid_native_prefer !== false;
+const useHybridPath = (nativeHybridAvailable && preferNative)
+                   || settings.keyword_scoring_method === 'hybrid';
+----
+
+* `StandardBackend.supportsHybridSearch()` returns `false` (inherited default)
+* `QdrantBackend.supportsHybridSearch()` returns `true`
+
+So for the standard backend, `useHybridPath` is only true when
+`keyword_scoring_method === 'hybrid'` is explicitly set. Otherwise it falls
+through to the A1 BM25 re-rank path.
+
+== Path A3: Server-Side Hybrid (Qdrant/hdrant)
+
+=== Flow
+
+1. `queryCollection()` → `hybridSearch()` → `backend.hybridQuery()`
+2. `QdrantBackend.hybridQuery()` sends a POST to `/api/plugins/similharity/chunks/hybrid-query`
+3. The Similharity plugin on the server:
+   a. Generates a **dense vector** embedding from the query text
+   b. Extracts **keywords** from the query text (whitespace/CJK tokenization)
+   c. Runs dense vector search via POST `/points/search`
+   d. Runs keyword candidate retrieval via POST `/points/scroll` using Qdrant
+      payload text indexes (`match: { text }`) and keyword array indexes (`match: { any }`)
+   e. Computes a weighted keyword-match score per candidate in plugin JavaScript
+   f. Fuses the two result lists using RRF or weighted combination in plugin code
+   g. Returns fused results with `vectorScore`, `keywordScore`, `vectorRank`, `keywordRank`
+
+NOTE: This is *not* Qdrant's native dense+sparse-vector hybrid API.
+No sparse vectors are stored in Qdrant at insert time.
+Fusion happens in plugin JavaScript, not inside Qdrant itself.
+
+=== Key Characteristics
+
+* **Single client round-trip** — from the browser's perspective, one HTTP call
+  goes to the Similharity plugin (`/chunks/hybrid-query`); the plugin then issues
+  two separate requests to Qdrant internally (one vector search, one scroll)
+* **Full-corpus keyword matching** — the scroll-based keyword search runs against
+  the entire Qdrant collection (filtered by type/sourceId), not just the ANN top-K
+* **Plugin-side fusion** — RRF or weighted combination is computed in the
+  Similharity plugin's JavaScript, not by Qdrant internally
+* **No sparse vectors stored** — keyword matching uses Qdrant's payload text
+  indexes and payload keyword arrays; no BM25 sparse vectors are generated at
+  insert time or stored in Qdrant
+* **Server-side embedding** — the plugin generates the query embedding on the
+  server, so no client-side embedding cost
+
+== Path A2: Client-Side Hybrid (Standard Backend)
+
+=== Flow
+
+1. `queryCollection()` → `hybridSearch()` → `clientSideHybridSearch()`
+2. The client:
+   a. Calls `backend.queryCollection()` to get **dense vector** results (ANN top-K × 3)
+   b. Builds a BM25 scorer from the returned result set
+   c. Scores each result against the query using BM25
+   d. Fuses the two ranked lists using RRF or weighted combination
+   e. Returns fused results
+
+=== Key Characteristics
+
+* **Two round-trips** (or one if you count the vector query as the primary)
+* **BM25 over ANN top-K only** — BM25 is computed only on the results returned
+  by the dense vector search, not the full corpus
+* **Client-side BM25** — the BM25 scorer is built and applied in JavaScript
+* **No sparse vectors stored** — BM25 is computed on-the-fly from the text
+  content of the ANN results
+* **Client-side fusion** — RRF/weighted combination is computed in JavaScript
+
+== Path A1: BM25 Re-rank (Standard Backend, Default)
+
+When `keyword_scoring_method` is NOT `'hybrid'` and the backend is standard,
+the system uses the A1 path:
+
+1. Dense vector search (ANN) with overfetch
+2. BM25 re-rank of the ANN results using `applyBM25Scoring()`
+3. Weighted combination: `alpha * vectorScore + beta * bm25Score`
+
+This is NOT a true hybrid search — it's a re-ranking of the vector results
+using BM25 as a secondary signal. It cannot surface results that the dense
+vector search missed.
+
+== Where the BM25 in Our Codebase Actually Lives
+
+`bm25-scorer.js` is the client-side (Path A1/A2) BM25 re-ranker. It runs in
+the browser, only on the ANN top-K results already returned. It never
+touches Qdrant internals.
+
+[cols="2,3,2",options="header"]
+|===
+| Path | Where BM25 runs | Corpus scope
+
+| A1 (client BM25 re-rank)
+| Browser JS, `bm25-scorer.js`
+| ANN top-K only
+
+| A2 (client-side hybrid)
+| Browser JS, `hybrid-search.js`
+| ANN top-K × 3 only
+
+| *A3 (server-side hybrid, what we have)*
+| Plugin JS, hit counting — *new BM25*
+| Full collection via scroll
+
+| True Qdrant sparse-vector hybrid
+| Qdrant engine, actual BM25/SPLADE sparse vectors
+| Full collection, single request
+|===
+
+*TL;DR:* Our A3 is server-side and covers the full corpus, which is better
+than A1/A2 — but the keyword scoring math is simple hit counting, not BM25.
+"True" Qdrant hybrid would store BM25 sparse vectors as actual vector fields
+and let Qdrant score them natively with proper IDF weighting.
+
+== Technical Differences
+
+=== 1. Corpus Coverage
+
+|===
+| Aspect | Client-Side Hybrid (A2) | Server-Side Hybrid (A3)
+| Keyword scope | ANN top-K only (topK × 3) | Full Qdrant collection (scroll)
+| Can surface non-ANN results? | No | Yes
+| Recall for keyword-specific queries | Limited by ANN recall | Full recall
+|===
+
+This is the **most significant difference**. In the client-side path, if a
+document has high keyword relevance but low vector similarity, it will never be
+considered because it wasn't in the ANN result set. The server-side path can
+surface these documents because the keyword scroll runs independently against
+the full collection.
+
+=== 2. Keyword Matching Quality
+
+|===
+| Aspect | Client-Side Hybrid (A2) | Server-Side Hybrid (A3)
+| Keyword corpus scope | ANN top-K only (topK × 3) | Full Qdrant collection (payload index + scroll)
+| Scoring method | BM25 with IDF over ANN results | Weighted hit count (text substring + payload keyword array); no IDF
+| IDF accuracy | Poor — IDF is based on a biased subset | N/A — not IDF-based scoring
+| Keyword match type | BM25 term frequency × IDF | Binary hit per keyword × TEXT_HIT_WEIGHT or PAYLOAD_HIT_WEIGHT
+|===
+
+The client-side BM25 computes IDF (inverse document frequency) from only the
+ANN results. If the ANN results are a biased sample (e.g., all from one topic),
+the IDF values will be distorted.
+The server-side path searches the full corpus but uses simple weighted keyword
+counting (not IDF), so term rarity is not factored into the keyword score.
+
+=== 3. Round-Trips
+
+|===
+| Aspect | Client-Side Hybrid (A2) | Server-Side Hybrid (A3)
+| HTTP requests (client→plugin) | 1 (vector) + 0 (BM25 is client-side) | 1 (plugin handles both internally)
+| HTTP requests (plugin→Qdrant) | 1 (vector search) | 2 (vector search + scroll)
+| Embedding generation | Server-side (or client-side for webllm/koboldcpp) | Server-side
+| Latency | Lower (no extra network call) | Slightly higher (plugin issues two Qdrant requests)
+|===
+
+The client-side path is actually faster in terms of network latency because
+BM25 is computed locally. However, this speed comes at the cost of recall and
+accuracy.
+
+=== 4. Fusion Quality
+
+|===
+| Aspect | Client-Side Hybrid (A2) | Server-Side Hybrid (A3)
+| RRF implementation | JavaScript in `hybrid-search.js` | JavaScript in Similharity plugin (`qdrant-backend.js`)
+| Score normalization | Min-max normalization (batch-dependent) | Plugin-level normalization (keyword score capped at 1.0)
+| Dual-signal bonus | Yes (up to 8% boost for having both signals) | Yes (items appearing in both lists get both vectorRank and keywordRank in RRF)
+|===
+
+The client-side RRF in `hybrid-search.js` (lines 215–311) has sophisticated
+score normalization including:
+- BM25 saturation normalization (`score / (score + 3.0)`)
+- Dual-signal bonus for documents matching both vector and text
+- Penalty for vector-only or text-only results
+
+The native path's fusion quality depends on the Similharity plugin's
+implementation on the server side.
+
+=== 5. Storage Requirements
+
+|===
+| Aspect | Client-Side Hybrid (A2) | Server-Side Hybrid (A3)
+| Sparse vectors stored? | No | No — payload text/keyword indexes only
+| Extra storage | None | Qdrant payload text index and keyword array index (low overhead)
+| Insert-time overhead | None | Payload indexing by Qdrant (minimal; no sparse vector generation)
+|===
+
+Neither path stores sparse vectors. The server-side path relies on Qdrant's
+payload text indexes and keyword array indexes, which are created at collection
+setup time and updated automatically during upsert.
+
+=== 6. EventBase Retrieval Context
+
+In `eventbase-retrieval.js`, the hybrid path is only used for the initial
+vector query (`queryEvents()` → `queryCollection()`). The re-ranking in
+`retrieveEvents()` (lines 130–200) is a **separate, additional re-ranking**
+that uses:
+- Cosine score (from the hybrid/vector result)
+- Importance (from event metadata)
+- Persist bonus
+- Recency bonus
+
+This means:
+
+* **Native hybrid path**: The events returned to `retrieveEvents()` already
+  have better recall (full-corpus BM25). The re-ranker then applies its own
+  weighting on top.
+* **Client-side hybrid path**: The events returned may miss keyword-relevant
+  events that weren't in the ANN top-K. The re-ranker can only work with what
+  it receives.
+
+== Summary: Why Server-Side Hybrid Is Better
+
+1. **Full-corpus keyword recall** — The server-side path scrolls through the
+   entire Qdrant collection for keyword matches, surfacing documents that are
+   relevant by keyword but have low vector similarity. The client-side path
+   cannot recover documents outside the ANN top-K.
+
+2. **No ANN bottleneck for keyword recall** — Dense and keyword searches run
+   independently. The keyword scroll is not constrained by what the ANN
+   returned, giving true dual-signal recall.
+
+3. **Single client round-trip** — From the browser's perspective, one HTTP
+   call goes to the Similharity plugin, which issues two Qdrant requests
+   internally and returns fused results.
+
+4. **No extra sparse-vector storage overhead** — Keyword matching uses Qdrant's
+   existing payload text indexes, so no additional per-document storage is
+   needed beyond the dense vector and normal payload fields.
+
+NOTE: Unlike true dense+sparse-vector hybrid databases, this architecture
+does NOT use Qdrant's native sparse-vector support. Fusion is performed in
+plugin JavaScript, not by Qdrant internally. Keyword scoring uses weighted
+hit counting, not IDF-based BM25.
+
+== When Client-Side Hybrid Is Acceptable
+
+1. **Small collections** (< 1000 documents) — ANN recall is high enough that
+   the BM25-over-ANN limitation rarely matters.
+
+2. **Semantically-focused queries** — If the query is well-captured by semantic
+   similarity, the ANN results already contain the relevant documents.
+
+3. **No sparse vector support** — Backends like LanceDB or ST-native Vectra
+   don't support sparse vectors, so client-side hybrid is the only option.
+
+4. **Lower storage requirements** — No sparse vectors means less disk usage.

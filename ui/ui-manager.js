@@ -433,9 +433,9 @@ export function renderSettings(containerId, settings, callbacks) {
                                 </label>
                                 <select id="vecthare_keyword_scoring_method" class="vecthare-select">
                                     <option value="bm25">BM25 (fast re-rank of top-K)</option>
-                                    <option value="hybrid">Hybrid (full corpus scan)</option>
+                                    <option value="hybrid">Hybrid (vector candidates + BM25 fusion)</option>
                                 </select>
-                                <small class="vecthare_hint">BM25 re-ranks the vector top-K candidates (fast, no bulk load). Hybrid scores the full corpus then fuses with vector results (slower on large collections).</small>
+                                <small class="vecthare_hint">BM25 re-ranks the vector top-K candidates. Hybrid expands the vector candidate window, scores those candidates with BM25, then fuses both signals. It is broader than BM25 mode, but not a true full-corpus keyword scan.</small>
 
                                 <label style="margin-top: 8px;">
                                     <small>Query Keyword Budget</small>

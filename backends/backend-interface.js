@@ -118,7 +118,15 @@ export class VectorBackend {
     }
 
     /**
-     * Check if backend supports native hybrid search (dense + sparse/full-text)
+     * Check if backend supports a backend-native/server-side hybrid search path.
+     * This means the backend can combine dense vector retrieval with an additional
+     * lexical/full-text style signal on the backend side, rather than requiring
+     * client-side fusion.
+     *
+     * NOTE: This does not guarantee true dense+sparse-vector hybrid at the
+     * database level; some backends may implement server-side keyword/text
+     * matching plus plugin-side fusion instead.
+     *
      * Override in backends that support native hybrid search (e.g., Qdrant, Milvus)
      * @returns {boolean}
      */
@@ -127,13 +135,17 @@ export class VectorBackend {
     }
 
     /**
-     * Perform hybrid search using both dense vectors and full-text/sparse vectors
-     * Default implementation falls back to regular vector search.
-     * Override in backends with native hybrid search support.
+     * Perform hybrid search using dense vectors plus a backend-side lexical/text
+     * signal. Default implementation falls back to regular vector search.
+     * Override in backends with native/server-side hybrid support.
      *
-     * @param {string} collectionId - Collection to query
-     * @param {string} searchText - Query text
-     * @param {number} topK - Number of results to return
+     * NOTE: Depending on backend implementation, the lexical side may be sparse
+     * vectors, full-text search, payload keyword matching, or another backend-
+     * local retrieval strategy.
+     *
+     * @param {string} collectionId
+     * @param {string} searchText
+     * @param {number} topK
      * @param {object} settings - VectHare settings
      * @param {object} hybridOptions - Hybrid search options
      * @param {number} hybridOptions.vectorWeight - Weight for vector scores (0-1)

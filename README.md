@@ -77,11 +77,12 @@ Technical Requirement: Because of the high data throughput required, this system
 - Better signal-to-noise for multilingual retrieval
 
 ### 🔀 Smarter Two-Search Recall (Qdrant)
-- VectHarePlus can run **two searches at the same time**: one from important keywords, and one from full message meaning
-- It then combines both result lists and keeps the better match when duplicates appear
-- If one search has a problem, the other search still works so memory recall does not fully fail
+- VectHarePlus runs **two independent searches**: one using dense vector similarity (semantic meaning), and one using keyword matching against Qdrant payload text and keyword indexes
+- It then combines both result lists using RRF or weighted fusion and keeps the best match when duplicates appear
+- The keyword search covers the **full collection** (not just the ANN top-K), so keyword-relevant results are not missed even if they have low vector similarity
+- If one search returns no results, the other still contributes — memory recall does not fully fail
 
-> ℹ️ **Simple speed note:** This is safe to run in parallel. On some local model setups it may still feel sequential, while cloud providers usually show better parallel speed gains.
+> ℹ️ **Architecture note:** This is server-side hybrid search implemented in the Similharity plugin, not Qdrant's native dense+sparse-vector hybrid API. No sparse vectors are stored in Qdrant. Keyword matching uses Qdrant payload text indexes and keyword arrays, with RRF/weighted fusion computed in plugin JavaScript.
 
 ### 🧹 Numerous bug fixes
 

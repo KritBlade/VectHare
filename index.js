@@ -105,7 +105,7 @@ const defaultSettings = {
     deduplication_depth: 50, // Number of recent messages to check for duplicates (0 = check all)
 
     // Keyword scoring method for retrieval (standard backend only; ignored when native hybrid active)
-    keyword_scoring_method: 'bm25', // 'bm25' (fast re-rank of ANN top-K) | 'hybrid' (full corpus scan)
+    keyword_scoring_method: 'bm25', // 'bm25' (fast re-rank of ANN top-K) | 'hybrid' (candidate-limited hybrid fusion over expanded vector results)
 
     // BM25 parameters
     bm25_k1: 1.5,  // Term frequency saturation (1.2-2.0 typical)

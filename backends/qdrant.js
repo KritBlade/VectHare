@@ -718,8 +718,12 @@ export class QdrantBackend extends VectorBackend {
     // ========================================================================
 
     /**
-     * Check if this backend supports native hybrid search.
-     * Qdrant supports sparse vectors for hybrid search via the Similharity plugin.
+     * Check if this backend supports the Similharity server-side hybrid path.
+     *
+     * Current implementation uses backend-side dense vector search plus plugin-
+     * side keyword/text matching and fusion. It is native/server-side within this
+     * architecture, but not necessarily Qdrant named sparse-vector hybrid.
+     *
      * @returns {boolean}
      */
     supportsHybridSearch() {

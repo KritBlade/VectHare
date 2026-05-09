@@ -134,7 +134,9 @@ async function clientSideHybridSearch(backend, collectionId, searchText, topK, s
         metadata: meta
     }));
 
-    // 3. Perform BM25 full-text search over the result set with field boosting
+    // 3. Perform BM25 scoring over the ANN candidate set only (not full-corpus).
+    //    Unlike native hybrid (Qdrant), this cannot surface documents that the
+    //    dense vector search missed — BM25 is computed only on the vector top-K.
     console.log(`[HybridSearch] Computing BM25 scores for ${resultsWithText.length} results...`);
     const bm25Results = performBM25Search(resultsWithText, searchText, {
         k1: settings.bm25_k1 || 1.5,
