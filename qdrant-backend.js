@@ -540,18 +540,27 @@ class QdrantBackend {
     }
 
     /**
-     * Native hybrid query combining vector similarity and keyword matching (QDRANT OPTIMIZED)
-     * Uses Qdrant's built-in full-text search capabilities for better performance
+     * Server-side hybrid query combining dense vector similarity and keyword matching.
+     *
+     * Implementation note: this is NOT Qdrant's native dense+sparse-vector hybrid API.
+     * No sparse vectors are stored in or queried from Qdrant.  What actually happens is:
+     *   1. Dense vector search via POST /collections/.../points/search
+     *   2. Keyword candidate retrieval via POST /collections/.../points/scroll
+     *      using Qdrant payload text/keyword indexes (match: { text } and match: { any })
+     *   3. Manual weighted-score fusion (RRF or linear) in this plugin code
+     *
      * @param {string} collectionName - Collection name (always "vecthare_main")
      * @param {number[]} queryVector - Query vector for semantic search
-     * @param {string[]} keywords - Keywords for full-text matching (BM25-like)
+     * @param {string[]} keywords - Keywords for payload text/array matching via Qdrant scroll
      * @param {number} topK - Number of results to return
      * @param {object} options - Query options
      *   - vectorWeight: Weight for vector similarity (0-1, default: 0.5)
      *   - keywordWeight / textWeight: Weight for keyword matching (0-1, default: 0.5)
      *   - fusionMethod: 'rrf' or 'weighted' (default: 'rrf')
      *   - rrfK: RRF constant (default: 60)
-     *   - keywordBoost: Multiplier for keyword matches (default: 1.5)
+     *   - bm25k1: BM25 term-frequency saturation constant (default: 1.5)
+     *   - bm25b: BM25 length-normalization factor (default: 0.75)
+     *   - bm25SatK: BM25 score saturation divisor for 0-1 normalization (default: 3.0)
      * @param {object} filters - Payload filters {type, sourceId, etc.}
      * @returns {Promise<Array>} Hybrid search results with {hash, text, score, metadata, debug}
      */
@@ -568,7 +577,6 @@ class QdrantBackend {
         const keywordWeight = options.keywordWeight ?? options.textWeight ?? 0.5;
         const fusionMethod = options.fusionMethod || 'rrf';
         const rrfK = options.rrfK || 60;
-        const keywordBoost = options.keywordBoost || 1.5;
         const debugLog = options.eventbaseDebug === true;
 
         console.log(`[Qdrant] Hybrid options: vectorWeight=${vectorWeight}, keywordWeight=${keywordWeight}, fusion=${fusionMethod}`);
@@ -672,31 +680,22 @@ class QdrantBackend {
             console.log(`[Qdrant] Vector search complete: ${vectorResults.length} results`);
 
             // ================================================================
-            // STRATEGY 2: Keyword Search (Full-Text Matching)
+            // STRATEGY 2: Keyword Search (BM25 over full collection via scroll)
             // ================================================================
             let keywordResults = [];
 
             if (keywords && keywords.length > 0) {
-                console.log(`[Qdrant] Starting keyword search with ${keywords.length} keywords: ${keywords.join(', ')}`);
+                console.log(`[Qdrant] Starting BM25 keyword search with ${keywords.length} keywords: ${keywords.join(', ')}`);
 
-                // Build keyword filter using text matching on 'text' and 'keywords' payload fields
+                // Build keyword filter using Qdrant payload text index and keyword array index
                 const keywordConditions = [];
-
                 for (const keyword of keywords) {
-                    // Search in text field (full-text)
-                    keywordConditions.push({
-                        key: 'text',
-                        match: { text: keyword }
-                    });
-
-                    // Search in keywords array field (stored keywords)
-                    keywordConditions.push({
-                        key: 'keywords',
-                        match: { any: [keyword] }
-                    });
+                    keywordConditions.push({ key: 'text',     match: { text: keyword } });
+                    keywordConditions.push({ key: 'keywords', match: { any: [keyword] } });
                 }
 
-                // Scroll through points matching keyword filter
+                // ---- PASS 1: Collect all candidate documents ----
+                const candidatePoints = [];
                 let offset = null;
                 const maxScrollIterations = 10;
                 let scrollCount = 0;
@@ -709,69 +708,129 @@ class QdrantBackend {
                         filter: {
                             must: [...must],
                             should: keywordConditions,
-                        }
+                        },
                     };
-
-                    if (offset !== null) {
-                        scrollPayload.offset = offset;
-                    }
+                    if (offset !== null) scrollPayload.offset = offset;
 
                     const scrollResponse = await this._request('POST', `/collections/${mainCollection}/points/scroll`, scrollPayload);
-                    const points = scrollResponse.result?.points || [];
-
-                    // Calculate keyword match scores for each point
-                    for (const point of points) {
-                        const text = (point.payload.text || '').toLowerCase();
-                        const storedKeywords = (point.payload.keywords || []).map(k =>
-                            typeof k === 'string' ? k.toLowerCase() : (k.text || '').toLowerCase()
-                        );
-
-                        // Weighted scoring: payload keyword hits are higher-quality
-                        // signals than raw substring matches in the full text.
-                        const TEXT_HIT_WEIGHT = 0.5;
-                        const PAYLOAD_HIT_WEIGHT = 1.0;
-
-                        let weightedMatchScore = 0;
-                        const matchedKeywordList = [];
-                        for (const keyword of keywords) {
-                            const kw = keyword.toLowerCase();
-                            // Raw text substring match (lower confidence)
-                            if (text.includes(kw)) {
-                                weightedMatchScore += TEXT_HIT_WEIGHT;
-                                matchedKeywordList.push(`${keyword}:text`);
-                            }
-                            // Stored payload keyword match (higher confidence)
-                            if (storedKeywords.some(sk => sk.includes(kw) || kw.includes(sk))) {
-                                weightedMatchScore += PAYLOAD_HIT_WEIGHT;
-                                matchedKeywordList.push(`${keyword}:payload`);
-                            }
-                        }
-
-                        if (weightedMatchScore > 0) {
-                            const keywordScore = Math.min(1.0, (weightedMatchScore / keywords.length) * keywordBoost);
-                            keywordResults.push({
-                                hash: point.payload.hash,
-                                text: point.payload.text,
-                                keywordScore: keywordScore,
-                                matchedKeywordWeight: weightedMatchScore,
-                                matchedKeywordList,
-                                metadata: point.payload,
-                            });
-                        }
-                    }
-
+                    candidatePoints.push(...(scrollResponse.result?.points || []));
                     offset = scrollResponse.result?.next_page_offset;
                     scrollCount++;
 
-                    // Safety limit
                     if (scrollCount >= maxScrollIterations) {
-                        console.warn(`[Qdrant] Keyword search exceeded max iterations (${maxScrollIterations})`);
+                        console.warn(`[Qdrant] BM25 keyword search exceeded max scroll iterations (${maxScrollIterations})`);
                         break;
                     }
-
                 } while (offset !== null && offset !== undefined);
 
-                console.log(`[Qdrant] Keyword search complete: ${keywordResults.length} results`);
+                // ---- PASS 2: Compute BM25 corpus statistics ----
+                // N = candidate set size; IDF is computed over candidates that matched
+                // any query keyword (the relevant slice of the corpus).
+                const N = candidatePoints.length;
+                const normalizedTerms = keywords.map(k => k.toLowerCase());
+
+                // Document frequency per term (how many candidates contain that term)
+                const df = new Map();
+                let totalWords = 0;
+
+                for (const point of candidatePoints) {
+                    const text = (point.payload.text || '').toLowerCase();
+                    const words = text.trim() ? text.trim().split(/\s+/) : [];
+                    totalWords += words.length;
+
+                    const storedKeywords = (point.payload.keywords || []).map(k =>
+                        typeof k === 'string' ? k.toLowerCase() : (k.text || '').toLowerCase()
+                    );
+
+                    // Count each term at most once per document (document frequency)
+                    for (const term of normalizedTerms) {
+                        if (!df.has(term)) df.set(term, 0); // ensure key exists
+                        const inText = text.includes(term);
+                        const inPayload = storedKeywords.some(sk => sk.includes(term) || term.includes(sk));
+                        if (inText || inPayload) {
+                            df.set(term, df.get(term) + 1);
+                        }
+                    }
+                }
+
+                const avgdl = N > 0 ? totalWords / N : 1;
+
+                // BM25 hyperparameters (can be overridden via options)
+                const bm25k1 = options.bm25k1 ?? 1.5;
+                const bm25b  = options.bm25b  ?? 0.75;
+
+                if (debugLog) {
+                    console.log(`[Qdrant-backend] BM25 corpus stats: N=${N}, avgdl=${avgdl.toFixed(1)}, k1=${bm25k1}, b=${bm25b}`);
+                    for (const term of normalizedTerms) {
+                        console.log(`[Qdrant-backend] BM25 df["${term}"]=${df.get(term) || 0}`);
+                    }
+                }
+
+                // ---- PASS 3: Score each candidate with BM25 ----
+                for (const point of candidatePoints) {
+                    const text = (point.payload.text || '').toLowerCase();
+                    const words = text.trim() ? text.trim().split(/\s+/) : [];
+                    const dl = words.length || 1;
+
+                    const storedKeywords = (point.payload.keywords || []).map(k =>
+                        typeof k === 'string' ? k.toLowerCase() : (k.text || '').toLowerCase()
+                    );
+
+                    // Build word-level TF map from document text
+                    const tfMap = new Map();
+                    for (const word of words) tfMap.set(word, (tfMap.get(word) || 0) + 1);
+
+                    let bm25Score = 0;
+                    const matchedKeywordList = [];
+
+                    for (const term of normalizedTerms) {
+                        // TF: word occurrences in text
+                        let tf = tfMap.get(term) || 0;
+
+                        // Substring match for CJK / compound terms not split by whitespace
+                        if (tf === 0 && text.includes(term)) {
+                            tf = 1;
+                            matchedKeywordList.push(`${term}:text`);
+                        } else if (tf > 0) {
+                            matchedKeywordList.push(`${term}:text`);
+                        }
+
+                        // Payload keyword match: higher-confidence signal, adds +1 to TF
+                        // (equivalent to one extra occurrence — raises score without dominating)
+                        if (storedKeywords.some(sk => sk.includes(term) || term.includes(sk))) {
+                            tf += 1;
+                            matchedKeywordList.push(`${term}:payload`);
+                        }
+
+                        if (tf === 0) continue;
+
+                        // IDF with Okapi smoothing: log((N - df + 0.5) / (df + 0.5) + 1)
+                        const docFreq = df.get(term) || 1;
+                        const idf = Math.log((N - docFreq + 0.5) / (docFreq + 0.5) + 1);
+
+                        // TF with saturation and document-length normalization
+                        const tfNorm = (tf * (bm25k1 + 1)) / (tf + bm25k1 * (1 - bm25b + bm25b * (dl / avgdl)));
+
+                        bm25Score += idf * tfNorm;
+                    }
+
+                    if (bm25Score > 0) {
+                        // Saturation normalization: score / (score + 3.0) maps (0, ∞) → (0, 1)
+                        // The constant 3.0 is the "half-max" point; adjust via options.bm25SatK if needed.
+                        const satK = options.bm25SatK ?? 3.0;
+                        const normalizedScore = bm25Score / (bm25Score + satK);
+                        keywordResults.push({
+                            hash: point.payload.hash,
+                            text: point.payload.text,
+                            keywordScore: normalizedScore,
+                            bm25RawScore: bm25Score,
+                            matchedKeywordList,
+                            metadata: point.payload,
+                        });
+                    }
+                }
+
+                console.log(`[Qdrant] BM25 scoring complete: ${keywordResults.length} scored from ${candidatePoints.length} candidates (N=${N}, avgdl=${avgdl.toFixed(1)})`);
             } else {
                 console.log(`[Qdrant] No keywords provided, skipping keyword search`);
             }
@@ -830,7 +889,7 @@ class QdrantBackend {
                 const existing = resultsMap.get(result.hash);
                 existing.keywordScore = result.keywordScore;
                 existing.keywordRank = index + 1;
-                existing.matchedKeywordWeight = result.matchedKeywordWeight;
+                existing.bm25RawScore = result.bm25RawScore;
                 existing.matchedKeywordList = result.matchedKeywordList || [];
             } else {
                 resultsMap.set(result.hash, {
@@ -839,6 +898,7 @@ class QdrantBackend {
                     vectorRank: Infinity,
                     keywordScore: result.keywordScore,
                     keywordRank: index + 1,
+                    bm25RawScore: result.bm25RawScore,
                     matchedKeywordList: result.matchedKeywordList || [],
                 });
             }
@@ -866,9 +926,9 @@ class QdrantBackend {
                 debug: {
                     vectorScore: result.vectorScore,
                     keywordScore: result.keywordScore,
+                    bm25RawScore: result.bm25RawScore || 0,
                     vectorRank: result.vectorRank,
                     keywordRank: result.keywordRank,
-                    matchedKeywordWeight: result.matchedKeywordWeight || 0,
                     matchedKeywordList: result.matchedKeywordList || [],
                     fusionMethod: method,
                 },
@@ -886,6 +946,7 @@ class QdrantBackend {
                     `keywordScore=${Number(result.debug?.keywordScore || 0).toFixed(6)}, ` +
                     `vectorRank=${result.debug?.vectorRank ?? 'n/a'}, ` +
                     `keywordRank=${result.debug?.keywordRank ?? 'n/a'}, ` +
+                    `bm25Raw=${Number(result.debug?.bm25RawScore || 0).toFixed(4)}, ` +
                     `matchedKeywordList=${(result.debug?.matchedKeywordList || []).join(', ') || '(none)'}`
                 );
             });
