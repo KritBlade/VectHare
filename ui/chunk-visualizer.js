@@ -279,6 +279,11 @@ export function openVisualizer(results, collectionId, settings, onReload = null)
 
     applyFilters();
     createModal();
+    // Sync persisted UI state into the freshly-rendered dropdowns. createModal()
+    // rebuilds the HTML, so without this the dropdowns silently revert to their
+    // first option on reload while sortBy/filterBy retain the user's choice.
+    $('#vecthare_chunk_sort').val(sortBy);
+    $('#vecthare_chunk_filter').val(filterBy);
     renderChunkList();
     renderDetailPanel();
     bindEvents();
