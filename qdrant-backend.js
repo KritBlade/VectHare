@@ -697,15 +697,17 @@ class QdrantBackend {
                     keywordConditions.push({ key: 'keywords', match: { any: [keyword] } });
                 }
 
-                // ---- PASS 1: Collect all candidate documents ----
+                // ---- PASS 1: Collect all candidate documents (full corpus scan) ----
+                // Scroll until next_page_offset is null. Qdrant's payload index makes this
+                // cheap because the `should: keywordConditions` filter is index-backed —
+                // we only fetch points that match at least one query keyword, not the
+                // entire collection.
                 const candidatePoints = [];
                 let offset = null;
-                const maxScrollIterations = 10;
-                let scrollCount = 0;
 
                 do {
                     const scrollPayload = {
-                        limit: 100,
+                        limit: 250,
                         with_payload: true,
                         with_vector: false,
                         filter: {
@@ -718,12 +720,6 @@ class QdrantBackend {
                     const scrollResponse = await this._request('POST', `/collections/${mainCollection}/points/scroll`, scrollPayload);
                     candidatePoints.push(...(scrollResponse.result?.points || []));
                     offset = scrollResponse.result?.next_page_offset;
-                    scrollCount++;
-
-                    if (scrollCount >= maxScrollIterations) {
-                        console.warn(`[Qdrant] BM25 keyword search exceeded max scroll iterations (${maxScrollIterations})`);
-                        break;
-                    }
                 } while (offset !== null && offset !== undefined);
 
                 // ---- PASS 2: Compute BM25 corpus statistics ----
