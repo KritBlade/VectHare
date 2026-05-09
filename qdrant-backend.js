@@ -391,20 +391,22 @@ class QdrantBackend {
 
                 // ===== LEGACY VECTHARE FEATURES =====
                 // Fall back to item.metadata.* when the top-level field is undefined.
-                // EventBase items store importance/summary inside metadata only;
-                // legacy chunk items set them at the top level.
+                // EventBase items store importance inside metadata only; legacy chunk
+                // items set it at the top level. EventBase summary is no longer stored —
+                // it lives inside `text` and is parsed back at injection time.
+                // Scene chunks DO store summary (user-editable search hint, not AI-derived).
                 importance: item.importance !== undefined ? item.importance : (item.metadata?.importance ?? 100),
                 keywords: item.keywords || item.metadata?.keywords || [],
                 customWeights: item.customWeights || item.metadata?.customWeights || {},
                 disabledKeywords: item.disabledKeywords || item.metadata?.disabledKeywords || [],
                 chunkGroup: item.chunkGroup !== undefined ? item.chunkGroup : (item.metadata?.chunkGroup ?? null),
                 conditions: item.conditions !== undefined ? item.conditions : (item.metadata?.conditions ?? null),
-                summary: item.summary !== undefined ? item.summary : (item.metadata?.summary ?? null),
                 isSummaryChunk: item.isSummaryChunk !== undefined ? item.isSummaryChunk : (item.metadata?.isSummaryChunk ?? false),
                 parentHash: item.parentHash !== undefined ? item.parentHash : (item.metadata?.parentHash ?? null),
 
                 // ===== CHAT-SPECIFIC =====
                 speaker: item.metadata?.speaker,
+                summary: item.metadata?.summary ?? null,
                 sceneTitle: item.metadata?.sceneTitle,
                 sceneIndex: item.metadata?.sceneIndex,
                 sceneStart: item.metadata?.sceneStart,
