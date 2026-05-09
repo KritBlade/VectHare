@@ -1,53 +1,25 @@
-[VectHare] saveActivation: alwaysActive checkbox=true, chatId=異世界學校 - 2025-12-16@09h56m28s, collection=vecthare_eventbase_qdrant_critblade_chat_60d40b35-fa7a-4f30-8485-805303f4916a
-collection-metadata.js:261 VectHare: Updated metadata for collection vecthare_eventbase_qdrant_critblade_chat_60d40b35-fa7a-4f30-8485-805303f4916a
-collection-metadata.js:541 VectHare: Collection vecthare_eventbase_qdrant_critblade_chat_60d40b35-fa7a-4f30-8485-805303f4916a locks updated: ['異世界學校 - 2025-12-16@09h56m28s']
-collection-metadata.js:261 VectHare: Updated metadata for collection vecthare_eventbase_qdrant_critblade_chat_60d40b35-fa7a-4f30-8485-805303f4916a
-collection-metadata.js:261 VectHare: Updated metadata for collection vecthare_eventbase_qdrant_critblade_chat_60d40b35-fa7a-4f30-8485-805303f4916a
-database-browser.js:195 VectHare Database Browser: Closed
-script.js:4232 Generate entered
+Generate entered
 index.js:19 [QR2] calling {args: Array(3), functionToCall: ƒ}
-chat-vectorization.js:1841 🐰 VectHare: rearrangeChat called (type: normal, chat length: 14)
-eventbase-workflow.js:348 [EventBase] Live collection not locked to chat (異世界學校 - 2025-12-16@09h56m28s), lockedChats=[]
-eventbase-workflow.js:356 [EventBase] No live collection and no archive collections — skipping Phase A
+chat-vectorization.js:1841 🐰 VectHare: rearrangeChat called (type: normal, chat length: 2117)
+eventbase-workflow.js:357 [EventBase] Live retrieval: uuid=67d28099-167f-4c07-a7cb-1b62e44f43d0, registeredEventBases=1, candidateKeys=["qdrant:vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0","vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0"]
+eventbase-workflow.js:365 [EventBase] Live collection not locked to chat (ArtificRealm創世域 - 2026-04-28@17h24m18s927ms imported), lockedChats=["ArtificRealm創世域 - 2026-05-06@22h12m22s372ms"], lockMetaKey=vecthare_eventbase_qdrant_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+eventbase-workflow.js:373 [EventBase] No live collection and no archive collections — skipping Phase A
 chat-vectorization.js:1905 VectHare: Will query 1 collections: ['vectra:vecthare_lorebook_story1_1778288919954']
-chat-vectorization.js:1924 VectHare: Extracted 8 keywords from query: (8) ['cup', 'echidna', 'kamira', 'satella', 'vex', 'alpha', '阿爾法', '聽完']
+chat-vectorization.js:1924 VectHare: Extracted 8 keywords from query: (8) ['mayla', 'kashier', 'engni', 'fern', 'lia', 'critblade', '擁著', '懷裡']
 collection-metadata.js:908 [VectHare Activation Filter] Collection vectra:vecthare_lorebook_story1_1778288919954: hasTriggers=false, hasConditions=false
 collection-metadata.js:945 [VectHare Activation Filter] Collection vectra:vecthare_lorebook_story1_1778288919954: ✗ NOT_ACTIVATED (no trigger match, no condition pass, not locked)
 collection-metadata.js:965 [VectHare Activation Filter] Summary: 1 collections → 0 active
 chat-vectorization.js:1951 ⚠️ VectHare: No collections passed activation conditions and World Info disabled - chunks cannot be injected!
 chat-vectorization.js:1952    💡 Check your collection activation conditions in VectHare settings
-script.js:4547 Core/all messages: 14/731
-world-info.js:5159 [WI] Adding 38 entries to prompt (38) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+script.js:4547 Core/all messages: 2117/2117
+world-info.js:623 [WI] Processing sticky entry ArtificRealm創世域.42 {hash: 5608283655957508, start: 2116, end: 2117, protected: false}
+world-info.js:649 [WI] Removing sticky entry from timedWorldInfo: sticky interval passed {uid: 42, world: 'ArtificRealm創世域', key: Array(14), keysecondary: Array(0), comment: 'Monster_Guide', …}
+world-info.js:722 [WI] Adding sticky entry ArtificRealm創世域.42: start=2117, end=2118, protected=false
+world-info.js:5159 [WI] Adding 54 entries to prompt (54) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
 index.js:19 [QR2] calling {args: Array(1), functionToCall: ƒ}
 script.js:4606 skipWIAN not active, adding WIAN
-handler.ts:225 [Prompt Template] start generate after 37 messages
-handler.ts:395 [Prompt Template] processing 37 messages in 5ms
-index.js:1524 [shujuku_v91] ACU GENERATION_ENDED event for message_id: 731
-index.js:1524 [shujuku_v91] New message event (GENERATION_ENDED) detected for ACU, debouncing for 500ms...
-index.js:1524 [shujuku_v91] [剧情推进] [Plot] savePlotToLatestMessage_ACU 被调用
-index.js:1524 [shujuku_v91] [剧情推进] [Plot] planningGuard_ACU.inProgress: false
-index.js:1524 [shujuku_v91] [剧情推进] [Plot] planningGuard_ACU.ignoreNextGenerationEndedCount: 0
-index.js:1524 [shujuku_v91] [剧情推进] [Plot] tempPlotToSave_ACU: (空)
-index.js:1524 [shujuku_v91] [剧情推进] [Plot] tempPlotToSave_ACU 为空，无需保存
-script.js:5538 AbortError: signal is aborted without reason
-    at StreamingProcessor.onStopStreaming (script.js:3789:30)
-    at stopGeneration (script.js:5551:28)
-    at S (PromptViewer.vue:273:5)
-    at EventEmitter.<anonymous> (PromptViewer.vue:367:3)
-    at EventEmitter.emit (eventemitter.js:146:36)
-    at async sendOpenAIRequest (openai.js:3052:5)
-    at async sendStreamingRequest (script.js:6095:20)
-    at async finishGenerating (script.js:5334:44)
-prompts.ts:72 [Prompt Template] processing send result: 19104 tokens and 27830 chars
-script.js:3789 Uncaught (in promise) AbortError: signal is aborted without reason
-    at StreamingProcessor.onStopStreaming (script.js:3789:30)
-    at stopGeneration (script.js:5551:28)
-    at S (PromptViewer.vue:273:5)
-    at EventEmitter.<anonymous> (PromptViewer.vue:367:3)
-    at EventEmitter.emit (eventemitter.js:146:36)
-    at async sendOpenAIRequest (openai.js:3052:5)
-    at async sendStreamingRequest (script.js:6095:20)
-    at async finishGenerating (script.js:5334:44)
+handler.ts:225 [Prompt Template] start generate after 39 messages
+handler.ts:395 [Prompt Template] processing 39 messages in 13ms
 onStopStreaming @ script.js:3789
 stopGeneration @ script.js:5551
 collectPrompts @ PromptViewer.vue:273
@@ -60,18 +32,4 @@ sendStreamingRequest @ script.js:6095
 finishGenerating @ script.js:5334
 await in finishGenerating
 Generate @ script.js:5394
-index.js:1524 [shujuku_v91] Debounced new message processing triggered for ACU.
-index.js:1524 [shujuku_v91] ACU Loaded 731 messages for: 異世界學校 - 2025-12-16@09h56m28s.
-index.js:1524 [shujuku_v91] ACU Auto-Trigger: Starting independent check...
-index.js:1524 [shujuku_v91] ACU: AI Message count increased (0 -> 366). Waiting 2000ms...
-index.js:1524 [shujuku_v91] [Trigger Check] Table: 全局数据表, TotalAI: 366, Skip: 0, LastUpdated: 366, Unrecorded: 0, Freq: 1
-index.js:1524 [shujuku_v91] [Trigger Check] Table: 主角信息, TotalAI: 366, Skip: 0, LastUpdated: 366, Unrecorded: 0, Freq: 1
-index.js:1524 [shujuku_v91] [Trigger Check] Table: 重要人物表, TotalAI: 366, Skip: 0, LastUpdated: 366, Unrecorded: 0, Freq: 1
-index.js:1524 [shujuku_v91] [Trigger Check] Table: 主角技能表, TotalAI: 366, Skip: 0, LastUpdated: 366, Unrecorded: 0, Freq: 1
-index.js:1524 [shujuku_v91] [Trigger Check] Table: 支援角色, TotalAI: 366, Skip: 0, LastUpdated: 366, Unrecorded: 0, Freq: 1
-index.js:1524 [shujuku_v91] [Trigger Check] Table: 背包物品表, TotalAI: 366, Skip: 0, LastUpdated: 366, Unrecorded: 0, Freq: 1
-index.js:1524 [shujuku_v91] [Trigger Check] Table: 任务与事件表, TotalAI: 366, Skip: 0, LastUpdated: 366, Unrecorded: 0, Freq: 1
-index.js:1524 [shujuku_v91] [Trigger Check] Table: 总结表, TotalAI: 366, Skip: 0, LastUpdated: 366, Unrecorded: 0, Freq: 1
-index.js:1524 [shujuku_v91] [Trigger Check] Table: 总体大纲, TotalAI: 366, Skip: 0, LastUpdated: 366, Unrecorded: 0, Freq: 1
-index.js:1524 [shujuku_v91] [Trigger Check] Table: 选项表, TotalAI: 366, Skip: 0, LastUpdated: 366, Unrecorded: 0, Freq: 1
-index.js:1524 [shujuku_v91] [Trigger Check] Table: 世界資訊, TotalAI: 366, Skip: 0, LastUpdated: 366, Unrecorded: 0, Freq: 1
+prompts.ts:72 [Prompt Template] processing send result: 99587 tokens and 271295 chars

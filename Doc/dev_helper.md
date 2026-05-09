@@ -240,21 +240,34 @@ Do **not** call `hybridSearch()` directly from `eventbase-retrieval.js` or `even
 
 Three retrieval paths exist after the keyword-level simplification. All paths are chosen inside `queryCollection()` — EventBase inherits whichever applies to the active backend.
 
-| Path | When | Loads all chunks? |
-|---|---|---|
-| A1 — BM25 re-rank | Default for standard/LanceDB; or Qdrant/Milvus with `hybrid_native_prefer=false` and `keyword_scoring_method=bm25` | No |
-| A2 — client-side hybrid full scan | `keyword_scoring_method=hybrid` (non-native) | **Yes** — slow on large collections |
-| A3 — native hybrid | Qdrant/Milvus with `hybrid_native_prefer=true` (default) | No |
+| Path | When | Loads all chunks? | Keyword scoring | Fusion |
+|---|---|---|---|---|
+| A1 — BM25 re-rank | Default for standard/LanceDB; or Qdrant/Milvus with `hybrid_native_prefer=false` and `keyword_scoring_method=bm25` | No | Okapi BM25 over ANN top-K only | Weighted linear: `α·vectorScore + β·bm25Score` (no RRF, no dual-signal bonus) |
+| A2 — client-side hybrid full scan | `keyword_scoring_method=hybrid` (non-native) | **Yes** — slow on large collections | Okapi BM25 over all chunks (full corpus scan in browser) | **RRF** (default) or weighted; **min-max normalization** per batch; **dual-signal bonus** (up to +8% for docs matching both signals); single-signal penalty (×0.55 vector-only, ×0.60 text-only) |
+| A3 — server-side hybrid | Qdrant/Milvus with `hybrid_native_prefer=true` (default) | No | Okapi BM25 (k1/b configurable) over full collection via Qdrant scroll — IDF computed over keyword-matching candidates | **RRF** (default) or weighted; **saturation normalization** (`score/(score+3.0)`); implicit dual-signal reward via RRF (no explicit bonus or single-signal penalty) |
+
+**Fusion method detail:**
+
+| Feature | A1 | A2 | A3 |
+|---|---|---|---|
+| RRF | ✗ | ✓ | ✓ |
+| Weighted linear | ✓ (always) | ✓ (opt-in) | ✓ (opt-in) |
+| Min-max normalization (batch-relative) | ✗ | ✓ | ✗ |
+| Saturation normalization `score/(score+k)` | ✗ | ✓ (BM25 side) | ✓ (BM25 side, k=3.0) |
+| Dual-signal bonus (explicit ×1.0–1.08) | ✗ | ✓ | ✗ (implicit via RRF) |
+| Single-signal penalty | ✗ | ✓ | ✗ |
+| BM25 corpus scope | ANN top-K | All chunks (full scan) | Keyword-matching candidates (scroll) |
+| BM25 IDF accuracy | Biased (ANN subset) | Full corpus | Candidate subset (broader than A1, narrower than true full-corpus) |
 
 | Setting | Affects EventBase? | Notes |
 |---|---|---|
 | `keyword_scoring_method` (`bm25` \| `hybrid`) | Yes | `bm25` = A1 fast re-rank; `hybrid` = A2 full corpus scan. Ignored when A3 active. |
 | `hybrid_keyword_level` (`minimal` / `balance` / `maximum`) | Yes (A1 and A2) | Controls how many keywords (30/50/70) are extracted from the query for BM25 scoring. Ignored under A3. |
-| `hybrid_native_prefer` | Yes | `true` (default for Qdrant/Milvus) → A3 native path. `false` → falls back to A1/A2 by `keyword_scoring_method`. |
-| `hybrid_fusion_method` (`rrf` / `weighted`) | Yes (A2 and A3) | Fusion strategy for client-side or native hybrid. Not used in A1. |
+| `hybrid_native_prefer` | Yes | `true` (default for Qdrant/Milvus) → A3 server-side path. `false` → falls back to A1/A2 by `keyword_scoring_method`. |
+| `hybrid_fusion_method` (`rrf` / `weighted`) | Yes (A2 and A3) | Fusion strategy. A2: RRF includes dual-signal bonus and single-signal penalty; weighted uses min-max normalization. A3: RRF provides implicit dual-signal reward via rank contribution; weighted uses saturation normalization. Not used in A1. |
 | `hybrid_vector_weight`, `hybrid_text_weight` | Yes (A2/A3 weighted mode) | Used only when `hybrid_fusion_method = weighted`. |
-| `hybrid_rrf_k` | Yes (A2/A3 RRF mode) | Used only when `hybrid_fusion_method = rrf`. |
-| `bm25_k1`, `bm25_b` | Yes (A1 and A2) | BM25 parameters for both re-rank (A1) and full corpus scan (A2). |
+| `hybrid_rrf_k` | Yes (A2/A3 RRF mode) | RRF constant k (default 60). Higher k flattens rank differences; lower k amplifies top-rank advantage. Used only when `hybrid_fusion_method = rrf`. |
+| `bm25_k1`, `bm25_b` | Yes (A1 and A2) | BM25 TF saturation (k1, default 1.5) and length normalization (b, default 0.75) for A1 and A2. A3 also accepts these via `options.bm25k1` / `options.bm25b` passed through `hybridQuery`. |
 | `keyword_extraction_level`, `keyword_boost_base_weight` | No | Ingestion-only settings. No longer used in any retrieval path. |
 | `hybrid_search_enabled` | Removed | Setting deleted. Hybrid is now always available; path chosen by `keyword_scoring_method` + `hybrid_native_prefer`. |
 | `deduplication_depth` | Yes | EventBase context deduplication — suppress events already visible in recent chat window. |
@@ -280,3 +293,12 @@ const chatUUID = ctx.chatMetadata?.integrity || ctx.chatId;
 const handleId = (ctx.name1 || 'user').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '_').replace(/^_|_$/g, '').substring(0, 30) || 'user';
 const charName = (ctx.name2 || 'chat').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '_').replace(/^_|_$/g, '').substring(0, 30) || 'chat';
 console.log({ chatUUID, handleId, charName });
+
+// Check current chat's integrity and which EventBase collection it WOULD map to
+(() => {
+  const md = SillyTavern.getContext().chatMetadata;
+  return {
+    integrity: md?.integrity || '(missing — using chatId fallback)',
+    chatFile: SillyTavern.getContext().chatId,
+  };
+})()

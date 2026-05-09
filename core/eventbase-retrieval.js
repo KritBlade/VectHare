@@ -13,8 +13,7 @@
  * ============================================================================
  */
 
-import { queryEvents } from './eventbase-store.js';
-import { getChatUUID } from './collection-ids.js';
+import { queryCollection } from './core-vector-api.js';
 
 // ---------------------------------------------------------------------------
 // Default re-rank weights (tuned for long-form SillyTavern RP)
@@ -93,16 +92,17 @@ function _normalizeWeights(w) {
  *                                         Falls back to searchText when absent or identical.
  * @param {number} params.chatLength    - Current total chat message count (for recency)
  * @param {object} params.settings      - VectHare settings
- * @param {string} [params.chatUUID]    - Override chat UUID
+ * @param {string[]} [params.liveCollectionIds] - EventBase collection IDs to query for live
+ *        events. Resolved by the workflow from collections locked to the current chat.
+ *        Empty/missing → no live query.
  * @param {object[]} [params.additionalCandidates] - Pre-queried events from archive event
  *        collections (vecthare_archiveevent_*). Already event-shaped; merged before re-ranking.
  * @param {boolean}  [params.skipLiveQuery] - When true, skip live EventBase collection query.
  *        Used when the live collection is paused or not locked to the current chat.
  * @returns {Promise<{ events: object[], debug: object }>}
  */
-export async function retrieveEvents({ searchText, keywordQuery, chatLength, settings, chatUUID, additionalCandidates, skipLiveQuery }) {
+export async function retrieveEvents({ searchText, keywordQuery, chatLength, settings, liveCollectionIds, additionalCandidates, skipLiveQuery }) {
     const debugLog = settings.eventbase_debug_logging;
-    const uuid = chatUUID || getChatUUID();
 
     const topK = (settings.eventbase_retrieval_top_k || 8) * 2; // overfetch for re-rank
     const minImportance = settings.eventbase_retrieval_min_importance || 1;
@@ -110,38 +110,46 @@ export async function retrieveEvents({ searchText, keywordQuery, chatLength, set
     if (debugLog) {
         const method = settings.keyword_scoring_method || 'bm25';
         const nativePrefer = settings.hybrid_native_prefer !== false;
-        console.log(`[EventBase] Retrieval start — topK overfetch=${topK}, minImportance=${minImportance}, method=${method}, nativePrefer=${nativePrefer}`);
+        console.log(`[EventBase] Retrieval start — topK overfetch=${topK}, minImportance=${minImportance}, method=${method}, nativePrefer=${nativePrefer}, liveCollections=${liveCollectionIds?.length || 0}`);
     }
 
-    // 1. Dual vector query — fire both in parallel (each is an independent HTTP fetch).
+    // 1. Dual vector query against each locked live EventBase collection.
     //    userQuery  → user's last message: high-precision, intent-focused
     //    searchText → full multi-message context: broad narrative coverage
-    //    When both strings are identical (no user message extracted) fall back to a
-    //    single query to avoid paying double cost for the same embedding.
-    //    Skipped entirely when the live EventBase collection is unavailable.
-    let rawCandidates;
+    //    When the two strings are identical (no user message extracted) we fall
+    //    back to a single query per collection to avoid paying double cost.
+    //    Skipped entirely when no live collection is available.
+    let rawCandidates = [];
     const dualQuery = keywordQuery && keywordQuery !== searchText;
+    const queryTexts = dualQuery ? [keywordQuery, searchText] : [searchText];
 
-    if (skipLiveQuery) {
-        rawCandidates = [];
-        if (debugLog) console.log('[EventBase] Live query skipped (collection paused or not locked)');
-    } else if (dualQuery) {
-        const [userResults, contextResults] = await Promise.all([
-            queryEvents(keywordQuery, topK, settings, uuid).catch(err => {
-                console.error('[EventBase] User-query failed:', err);
-                return [];
-            }),
-            queryEvents(searchText, topK, settings, uuid).catch(err => {
-                console.error('[EventBase] Context-query failed:', err);
-                return [];
-            }),
-        ]);
+    if (skipLiveQuery || !liveCollectionIds?.length) {
+        if (debugLog) console.log('[EventBase] Live query skipped (no locked collection or paused)');
+    } else {
+        const promises = [];
+        for (const colId of liveCollectionIds) {
+            for (const queryText of queryTexts) {
+                promises.push(
+                    queryCollection(colId, queryText, topK, settings)
+                        .then(({ hashes, metadata }) => {
+                            if (!hashes?.length) return [];
+                            return metadata.map((meta, i) => ({ ...meta, _hash: hashes[i] }));
+                        })
+                        .catch(err => {
+                            console.error(`[EventBase] Live query failed (${colId}):`, err);
+                            return [];
+                        })
+                );
+            }
+        }
 
-        // Merge by event_id — keep the copy with the higher cosine score so the
-        // re-ranker receives the best available similarity signal for each event.
+        const allResults = await Promise.all(promises);
+
+        // Merge by event_id (or hash fallback) — keep the copy with the highest
+        // cosine score so the re-ranker sees the best similarity signal per event.
         const mergedMap = new Map();
-        for (const event of [...userResults, ...contextResults]) {
-            const key = event.event_id ?? event.hash ?? JSON.stringify(event);
+        for (const event of allResults.flat()) {
+            const key = event.event_id ?? event._hash ?? JSON.stringify(event);
             const existing = mergedMap.get(key);
             if (!existing || event.score > existing.score) {
                 mergedMap.set(key, event);
@@ -150,18 +158,7 @@ export async function retrieveEvents({ searchText, keywordQuery, chatLength, set
         rawCandidates = [...mergedMap.values()];
 
         if (debugLog) {
-            console.log(`[EventBase] Dual-query: user=${userResults.length} + context=${contextResults.length} → merged=${rawCandidates.length} unique events`);
-        }
-    } else {
-        try {
-            rawCandidates = await queryEvents(searchText, topK, settings, uuid);
-        } catch (err) {
-            console.error('[EventBase] Query failed:', err);
-            return { events: [], debug: { error: err.message } };
-        }
-
-        if (debugLog) {
-            console.log(`[EventBase] Query returned ${rawCandidates.length} raw candidates`);
+            console.log(`[EventBase] Live query: ${liveCollectionIds.length} collection(s) × ${queryTexts.length} query/queries → ${rawCandidates.length} unique events`);
         }
     }
 

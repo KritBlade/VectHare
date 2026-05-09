@@ -19,7 +19,7 @@ import { queryCollection } from './core-vector-api.js';
 import { EXTENSION_PROMPT_TAG } from './constants.js';
 import { EventBaseFatalError, EventBaseExtractionError } from './eventbase-schema.js';
 import { extractEvents } from './eventbase-extractor.js';
-import { insertEvents, isWindowAlreadyExtracted, markWindowExtracted, clearWindowCacheForChat, buildEventBaseCollectionId, findEventBaseCollectionIdsForChat } from './eventbase-store.js';
+import { insertEvents, isWindowAlreadyExtracted, markWindowExtracted, clearWindowCacheForChat, buildEventBaseCollectionId } from './eventbase-store.js';
 import { getSavedHashes } from './core-vector-api.js';
 import { retrieveEvents } from './eventbase-retrieval.js';
 import { formatEventsForInjectionDetailed } from './eventbase-injection.js';
@@ -311,6 +311,47 @@ function _gatherArchiveEventCollections(currentChatId, debugLog) {
 }
 
 /**
+ * Scan the registry for live EventBase collections (vecthare_eventbase_*) that
+ * are enabled and locked to the current chat.
+ *
+ * The chat UUID embedded in the ID is only used for write-side collision
+ * avoidance. For reads, the lock is the activation gate — a user can lock
+ * another chat's EventBase to the current chat to share its data (e.g. after
+ * branching/duplicating a chat).
+ *
+ * @param {string} currentChatId
+ * @param {boolean} debugLog
+ * @returns {{ collectionId: string, registryKey: string }[]}
+ */
+function _gatherLockedEventBaseCollections(currentChatId, debugLog) {
+    if (!currentChatId) return [];
+    const registry = getCollectionRegistry();
+    const results = [];
+    for (const registryKey of registry) {
+        const parsed = parseRegistryKey(registryKey);
+        const colId = parsed.collectionId;
+        if (!colId?.startsWith(COLLECTION_PREFIXES.VECTHARE_EVENTBASE)) continue;
+
+        const candidateKeys = [registryKey, colId].filter(Boolean);
+
+        const pausedKey = candidateKeys.find(key => !isCollectionEnabled(key));
+        if (pausedKey) {
+            if (debugLog) console.log(`[EventBase] Live collection skipped (paused: "${pausedKey}")`);
+            continue;
+        }
+
+        const isLocked = candidateKeys.some(key => isCollectionLockedToChat(key, currentChatId));
+        if (!isLocked) {
+            if (debugLog) console.log(`[EventBase] Live collection skipped (not locked to chat): ${colId}`);
+            continue;
+        }
+
+        results.push({ collectionId: colId, registryKey });
+    }
+    return results;
+}
+
+/**
  * Run the EventBase retrieval pipeline and inject the result into the prompt.
  *
  * @param {object} params
@@ -324,46 +365,17 @@ export async function runEventBaseRetrieval({ chat, searchText, settings, chatUU
     const debugLog = settings.eventbase_debug_logging;
     const uuid = chatUUID || getChatUUID();
     const currentChatId = getCurrentChatId();
-    const backend = getRegistryBackend(settings?.vector_backend);
 
-    // --- Determine if the live EventBase collection should be queried ---
-    // The registry is the source of truth for which collection ID belongs to
-    // this chat — buildEventBaseCollectionId can drift across sanitization
-    // rule changes, so we can't rely on it for lookups. Each registered
-    // collection contributes both its registry key (backend:id) and its bare
-    // collection ID since pause/lock metadata can be stored under either.
-    const registeredEventBases = findEventBaseCollectionIdsForChat(uuid, backend);
-    const candidateKeys = [];
-    for (const { registryKey, collectionId: colId } of registeredEventBases) {
-        if (registryKey && !candidateKeys.includes(registryKey)) candidateKeys.push(registryKey);
-        if (colId && !candidateKeys.includes(colId)) candidateKeys.push(colId);
-    }
-
-    // If nothing has been registered for this chat yet, seed candidateKeys
-    // with the would-be ID so first-run lock checks against the freshly
-    // created collection still work.
-    if (candidateKeys.length === 0) {
-        const seedId = buildEventBaseCollectionId(uuid, settings?.vector_backend);
-        if (seedId) {
-            candidateKeys.push(`${backend}:${seedId}`, seedId);
-        }
-    }
-
-    const eventbasePaused = candidateKeys.find(key => key && !isCollectionEnabled(key));
-    const eventbaseLocked = currentChatId && candidateKeys.some(key => isCollectionLockedToChat(key, currentChatId));
-    const queryEventbase = !eventbasePaused && eventbaseLocked;
+    // --- Gather all live EventBase collections locked to the current chat ---
+    // The lock — not the chat UUID — is the activation gate. The UUID embedded
+    // in the collection ID exists for write-side collision avoidance, not for
+    // read-time activation. A user can lock any EventBase collection to the
+    // current chat (e.g. after branching) and we should query it.
+    const lockedLiveCollections = _gatherLockedEventBaseCollections(currentChatId, debugLog);
+    const queryEventbase = lockedLiveCollections.length > 0;
 
     if (debugLog) {
-        console.log(`[EventBase] Live retrieval: uuid=${uuid}, registeredEventBases=${registeredEventBases.length}, candidateKeys=${JSON.stringify(candidateKeys)}`);
-        if (eventbasePaused) console.log(`[EventBase] Live collection paused (key="${eventbasePaused}")`);
-        if (!eventbaseLocked) {
-            const collectionsMeta = extension_settings?.vecthareplus?.collections || {};
-            const lockMetaKey = candidateKeys.find(key =>
-                collectionsMeta[key] && Object.prototype.hasOwnProperty.call(collectionsMeta[key], 'lockedToChatIds')
-            );
-            const lockedChats = lockMetaKey ? collectionsMeta[lockMetaKey]?.lockedToChatIds : [];
-            console.log(`[EventBase] Live collection not locked to chat (${currentChatId || 'none'}), lockedChats=${JSON.stringify(lockedChats)}, lockMetaKey=${lockMetaKey || 'none'}`);
-        }
+        console.log(`[EventBase] Live retrieval: uuid=${uuid}, lockedLiveCollections=${lockedLiveCollections.length}, ids=${JSON.stringify(lockedLiveCollections.map(c => c.collectionId))}`);
     }
 
     // --- Find archive event collections locked to this chat ---
@@ -420,7 +432,7 @@ export async function runEventBaseRetrieval({ chat, searchText, settings, chatUU
         keywordQuery,
         chatLength: getContext().chat?.length || chat?.length || 0,
         settings,
-        chatUUID: uuid,
+        liveCollectionIds: lockedLiveCollections.map(c => c.collectionId),
         additionalCandidates,
         skipLiveQuery: !queryEventbase,
     });
