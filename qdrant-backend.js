@@ -860,10 +860,19 @@ class QdrantBackend {
     }
 
     /**
-     * Fuse vector and keyword search results using RRF or weighted combination
+     * Fuse vector and keyword search results using RRF or weighted combination.
+     *
+     * After the raw RRF/weighted score is computed, a display-score pass is applied:
+     *   - Dual-signal bonus: documents present in BOTH vector and keyword results
+     *     receive up to +8% multiplicative boost proportional to the weaker signal.
+     *     Formula: bonus = 1.0 + min(vectorScore, keywordScore) * 0.08
+     *   - Single-signal penalty: vector-only results are multiplied by 0.55;
+     *     keyword-only results are multiplied by 0.60.
+     *   - Score is capped at 1.0.
+     *
      * @param {Array} vectorResults - Results from vector search
      * @param {Array} keywordResults - Results from keyword search
-     * @param {object} options - Fusion options {method, vectorWeight, keywordWeight, rrfK, topK}
+     * @param {object} options - Fusion options {method, vectorWeight, keywordWeight, rrfK, topK, debugLog}
      * @returns {Array} Fused results sorted by combined score
      */
     _fuseResults(vectorResults, keywordResults, options) {
@@ -904,33 +913,73 @@ class QdrantBackend {
             }
         });
 
-        // Calculate fused scores
-        const fusedResults = Array.from(resultsMap.values()).map(result => {
-            let fusedScore;
-
+        // ---- Step 1: Raw fusion score (RRF or weighted) ----
+        const rawFused = Array.from(resultsMap.values()).map(result => {
+            let rawScore;
             if (method === 'rrf') {
-                // Reciprocal Rank Fusion (RRF)
                 const vectorRRF = 1 / (rrfK + result.vectorRank);
                 const keywordRRF = 1 / (rrfK + result.keywordRank);
-                fusedScore = (vectorWeight * vectorRRF) + (keywordWeight * keywordRRF);
+                rawScore = (vectorWeight * vectorRRF) + (keywordWeight * keywordRRF);
             } else {
-                // Weighted linear combination
-                fusedScore = (vectorWeight * result.vectorScore) + (keywordWeight * result.keywordScore);
+                rawScore = (vectorWeight * result.vectorScore) + (keywordWeight * result.keywordScore);
+            }
+            return { ...result, rawScore };
+        });
+
+        // ---- Step 2: Display-score pass with dual-signal bonus / single-signal penalty ----
+        // RRF determines ORDER but display scores should reflect actual signal quality:
+        //   - Both signals strong   → combinedScore × (1 + min(v,k) × 0.08) capped at 1.0
+        //   - Vector-only           → penalised ×0.55 (missing keyword overlap lowers confidence)
+        //   - Keyword-only          → penalised ×0.60 (missing semantic similarity lowers confidence)
+        const DUAL_SIGNAL_BONUS_FACTOR = 0.08; // max +8%
+        const VECTOR_ONLY_PENALTY     = 0.55;
+        const KEYWORD_ONLY_PENALTY    = 0.60;
+        const SIGNAL_THRESHOLD        = 0.01; // minimum score to be considered "present"
+
+        // For the dual-signal display score we need normalised [0-1] individual scores.
+        // vectorScore is already cosine (0-1). keywordScore is saturation-normalised (0-1).
+        const fusedResults = rawFused.map(result => {
+            const vectorScore  = result.vectorScore  || 0;
+            const keywordScore = result.keywordScore || 0;
+            const hasVector    = vectorScore  > SIGNAL_THRESHOLD;
+            const hasKeyword   = keywordScore > SIGNAL_THRESHOLD;
+
+            let displayScore;
+            let signalMode;
+
+            if (hasVector && hasKeyword) {
+                // Both signals: weighted average then dual-signal bonus
+                const combined         = (vectorScore * 0.55) + (keywordScore * 0.45);
+                const dualSignalBonus  = 1.0 + (Math.min(vectorScore, keywordScore) * DUAL_SIGNAL_BONUS_FACTOR);
+                displayScore = Math.min(1.0, combined * dualSignalBonus);
+                signalMode = 'dual';
+            } else if (hasVector) {
+                displayScore = vectorScore * VECTOR_ONLY_PENALTY;
+                signalMode = 'vector-only';
+            } else if (hasKeyword) {
+                displayScore = keywordScore * KEYWORD_ONLY_PENALTY;
+                signalMode = 'keyword-only';
+            } else {
+                // Fallback: pure rank signal — very low confidence
+                displayScore = result.rawScore * 0.25;
+                signalMode = 'rank-only';
             }
 
             return {
                 hash: result.hash,
                 text: result.text,
-                score: fusedScore,
+                score: displayScore,
                 metadata: result.metadata,
                 debug: {
-                    vectorScore: result.vectorScore,
-                    keywordScore: result.keywordScore,
+                    vectorScore,
+                    keywordScore,
                     bm25RawScore: result.bm25RawScore || 0,
+                    rawFusionScore: result.rawScore,
                     vectorRank: result.vectorRank,
                     keywordRank: result.keywordRank,
                     matchedKeywordList: result.matchedKeywordList || [],
                     fusionMethod: method,
+                    signalMode,
                 },
             };
         });
@@ -941,13 +990,15 @@ class QdrantBackend {
                 .slice(0, Math.min(topK, 10));
             previewResults.forEach((result, index) => {
                 console.log(
-                    `[Qdrant-backend] [${index}] finalScore=${Number(result.score || 0).toFixed(6)}, ` +
+                    `[Qdrant-backend] [${index}] displayScore=${Number(result.score || 0).toFixed(6)}, ` +
+                    `rawFusion=${Number(result.debug?.rawFusionScore || 0).toFixed(6)}, ` +
                     `vectorScore=${Number(result.debug?.vectorScore || 0).toFixed(6)}, ` +
                     `keywordScore=${Number(result.debug?.keywordScore || 0).toFixed(6)}, ` +
+                    `bm25Raw=${Number(result.debug?.bm25RawScore || 0).toFixed(4)}, ` +
                     `vectorRank=${result.debug?.vectorRank ?? 'n/a'}, ` +
                     `keywordRank=${result.debug?.keywordRank ?? 'n/a'}, ` +
-                    `bm25Raw=${Number(result.debug?.bm25RawScore || 0).toFixed(4)}, ` +
-                    `matchedKeywordList=${(result.debug?.matchedKeywordList || []).join(', ') || '(none)'}`
+                    `signal=${result.debug?.signalMode ?? 'n/a'}, ` +
+                    `matched=${(result.debug?.matchedKeywordList || []).join(', ') || '(none)'}`
                 );
             });
         }
