@@ -501,10 +501,20 @@ export async function init(router) {
 
                     list: async (collectionId, source, model, directories, options = {}) => {
                         const items = await qdrantBackend.listItems(collectionId, options.filters || {}, options);
-                        // Return same format as Vectra handler for consistency
+                        // Return same format as Vectra handler for consistency.
+                        // Surface a normalized `index` so the database-browser's "Sort: Message Order"
+                        // works. Newly inserted items have metadata.messageIndex; older data falls back
+                        // to source_window_start (EventBase) or startIndex/messageId (legacy chunks).
                         const offset = options.offset || 0;
                         const limit = options.limit || items.length;
-                        const paginatedItems = items.slice(offset, offset + limit);
+                        const paginatedItems = items.slice(offset, offset + limit).map(item => ({
+                            ...item,
+                            index: item.metadata?.messageIndex
+                                ?? item.metadata?.source_window_start
+                                ?? item.metadata?.startIndex
+                                ?? item.metadata?.messageId
+                                ?? null,
+                        }));
                         return {
                             items: paginatedItems,
                             total: items.length,

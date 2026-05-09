@@ -384,7 +384,10 @@ class QdrantBackend {
 
                 // ===== TIMESTAMPS (for temporal decay) =====
                 timestamp: item.metadata?.timestamp || Date.now(),
-                messageIndex: item.metadata?.messageIndex,
+                // messageIndex carries the chat message number for ordering in the visualizer.
+                // Both ingestion paths set top-level item.index (legacy chat: batch[0].index;
+                // EventBase: source_window_start + 1) — persist it here so the field is queryable.
+                messageIndex: item.index ?? item.metadata?.messageIndex ?? null,
 
                 // ===== LEGACY VECTHARE FEATURES =====
                 // Fall back to item.metadata.* when the top-level field is undefined.
@@ -680,7 +683,7 @@ class QdrantBackend {
             console.log(`[Qdrant] Vector search complete: ${vectorResults.length} results`);
 
             // ================================================================
-            // STRATEGY 2: Keyword Search (BM25 over full collection via scroll)
+            // STRATEGY 2: Keyword Search (BM25 over keyword-matching candidates via scroll)
             // ================================================================
             let keywordResults = [];
 
