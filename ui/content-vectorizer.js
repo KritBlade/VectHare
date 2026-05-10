@@ -257,10 +257,10 @@ function createModal() {
                             <div class="vecthare-cv-slider-row" id="vecthare_cv_parallel_row" style="display:none;">
                                 <label>
                                     Parallel Windows
-                                    <span class="vecthare-cv-value" id="vecthare_cv_parallel_val">1</span>
+                                    <span class="vecthare-cv-value" id="vecthare_cv_parallel_val">3</span>
                                 </label>
                                 <input type="range" id="vecthare_cv_parallel_windows"
-                                       min="1" max="8" step="1" value="1">
+                                       min="1" max="8" step="1" value="3">
                                 <div class="vecthare-cv-slider-hints">
                                     <span>1 (safe)</span>
                                     <span>8 (fast)</span>
@@ -824,12 +824,8 @@ function updateChunkingSection(type) {
     if (isChatType) {
         $('#vecthare_cv_strategy_desc').text('');
         $('#vecthare_cv_size_controls').hide();
-        // Hide the entire chunking section when the Upload tab is active and EventBase is on
-        const activeTab = $('.vecthare-cv-chat-source .vecthare-cv-source-tab.active').data('source');
-        const globalSettings = extension_settings.vecthareplus || {};
-        const hideChunking = activeTab === 'upload' && globalSettings.eventbase_enabled;
-        $('.vecthare-cv-chunking-section').toggle(!hideChunking);
-        $('#vecthare_cv_parallel_row').toggle(!hideChunking);
+        $('.vecthare-cv-chunking-section').show();
+        $('#vecthare_cv_parallel_row').show();
         return;
     }
 

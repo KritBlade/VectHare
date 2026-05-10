@@ -1,55 +1,114 @@
-[EventBase] _runEventBaseBackfill: starting...
-content-vectorizer.js:2734 [EventBase] Context chat length: 2116 EventBase enabled: true
-content-vectorizer.js:2763 [EventBase] Filtered messages: 2115
-content-vectorizer.js:2764 [EventBase] Starting ingestion with settings: {eventbase_enabled: true, eventbase_window_size: 3, eventbase_window_overlap: 0, eventbase_debug_logging: true, legacy_progress_strategy: 'per_message', …}
-eventbase-workflow.js:113 [EventBase] Ingestion: 2115 messages → 705 windows (size=3, overlap=0)
-progress-tracker.js:196 [ProgressTracker] updateEmbeddingProgress: 0/2115
-progress-tracker.js:413 [ProgressTracker] Progress bar: 0/2115 = 0%
-progress-tracker.js:445 [ProgressTracker] Updating chunks display with embedding progress: "0/2115 (2115 left)"
-eventbase-extractor.js:449 [EventBase] Extracting events — window=0, provider=openrouter, messages=3
-eventbase-extractor.js:449 [EventBase] Extracting events — window=1, provider=openrouter, messages=3
-eventbase-extractor.js:449 [EventBase] Extracting events — window=2, provider=openrouter, messages=3
-eventbase-extractor.js:464 [EventBase] Raw LLM reply (window=2): [{"event_type":"side_quest_update","importance":6,"summary":"英妮·維賽塔在薩卡恩的雜貨店內手握紫色晶體承受雷元素魔力測試三分鐘，穩定度達百分之八十七勉強合格。Critblade撐住虛脫的英妮並為她擦拭額頭汗珠，展現細微關懷。薩卡恩支付10枚銀幣與兩瓶中效魔力恢復藥作為報酬。兩人離開雜貨店前往海邊。","cause":"接受薩卡恩的裝備測試委託。","result":"完成SQ.13支線測試，獲得金錢與藥水獎勵，主線任務進度推進。","characters":["英妮·維賽塔","Critblade","薩卡恩"],"locations":["藍色瞭望村東側雜貨店"],"factions":[],"DateTime":"1577-07-08T09:45:00Z","items":["紫色晶體","10枚銀幣","中效魔力恢復藥"],"concepts":["雷元素魔力","魔力測試"],"keywords":["紫色晶體","雷元素","魔力測試","穩定度","銀幣","魔力恢復藥","擦汗","虛脫","SQ.13","報
-eventbase-extractor.js:117 [EventBase] Parser window=2: raw length=1545, preview: [{"event_type":"side_quest_update","importance":6,"summary":"英妮·維賽塔在薩卡恩的雜貨店內手握紫色晶體承受雷元素魔力測試三分鐘，穩定度達百分之八十七勉強合格。Critblade撐住虛脫的英妮並為她擦拭額頭汗珠，展現細微關懷。薩卡恩支付10
-eventbase-extractor.js:227 [EventBase] Parser window=2: 24 candidate array(s) found: (24) ['[0] len=3 firstType=object keys/val=event_type,importance,summary,cause,result', '[1] len=3 firstType=object keys/val=event_type,importance,summary,cause,result', '[2] len=3 firstType=string keys/val="英妮·維賽塔"', '[3] len=1 firstType=string keys/val="藍色瞭望村東側雜貨店"', '[4] len=0 firstType=undefined keys/val=undefined', '[5] len=3 firstType=string keys/val="紫色晶體"', '[6] len=2 firstType=string keys/val="雷元素魔力"', '[7] len=11 firstType=string keys/val="紫色晶體"', '[8] len=1 firstType=string keys/val="下次測試委託"', '[9] len=2 firstType=string keys/val="Critblade"', '[10] len=1 firstType=string keys/val="藍色瞭望村東側海邊"', '[11] len=0 firstType=undefined keys/val=undefined', '[12] len=2 firstType=string keys/val="斯提爾之劍"', '[13] len=2 firstType=string keys/val="食腐蟹"', '[14] len=12 firstType=string keys/val="食腐蟹"', '[15] len=1 firstType=string keys/val="剩餘12隻食腐蟹"', '[16] len=2 firstType=string keys/val="英妮·維賽塔"', '[17] len=2 firstType=string keys/val="藍色瞭望村東側雜貨店"', '[18] len=0 firstType=undefined keys/val=undefined', '[19] len=0 firstType=undefined keys/val=undefined', '[20] len=2 firstType=string keys/val="情感依附"', '[21] len=8 firstType=string keys/val="擦汗"', '[22] len=0 firstType=undefined keys/val=undefined', '[23] len=3 firstType=object keys/val=event_type,importance,summary,cause,result']
-eventbase-extractor.js:266 [EventBase] Parser window=2: chose candidate[0] len=3
-eventbase-extractor.js:481 [EventBase] Window 2: parsed 3 event candidate(s)
-eventbase-extractor.js:491 [EventBase] Parsed array (window=2): 3 items, types: [object, object, object]
-eventbase-extractor.js:549 [EventBase] Window 2: extracted 3 valid events
-eventbase-store.js:96 [EventBase] Inserting 3 event(s) into collection "vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0"
-backend-manager.js:274 VectHare: Health cache stale for qdrant, re-verifying...
-core-vector-api.js:672 VectHare: Processing 3 items in 1 batch(es) of up to 50 with rate limit (Max 5 calls / 60s)
-qdrant.js:295 VectHare Qdrant: Inserting 3 vectors in 1 batch(es) of up to 100 items
-qdrant.js:374 VectHare Qdrant: Batch 1/1 completed (3 vectors)
-collection-loader.js:104 VectHare: Registered collection: vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0
-qdrant.js:385 VectHare Qdrant: Inserted 3 vectors into vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0 (separate mode, content_type: vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0)
-collection-loader.js:104 VectHare: Registered collection: qdrant:vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0
-collection-metadata.js:261 VectHare: Updated metadata for collection vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0
-collection-metadata.js:541 VectHare: Collection vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0 locks updated: ['ArtificRealm創世域 - 2026-04-28@17h24m18s927ms imported']
-eventbase-store.js:116 [EventBase] Locked collection "vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0" to current chat "ArtificRealm創世域 - 2026-04-28@17h24m18s927ms imported"
-eventbase-store.js:121 [EventBase] Insert complete for collection "vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0"
-eventbase-extractor.js:464 [EventBase] Raw LLM reply (window=0): [{"event_type":"main_quest_update","importance":7,"summary":"不破勇希離開客棧後在藍色瞭望村冒險者公會門口與英妮·維賽塔匯合，兩人進入公會查看佈告欄。不破勇希接取清理淺灘附近15隻食腐蟹的F級委託，賞金10銀幣，看板娘蓋章確認。英妮提議先去村東雜貨店測試新型魔導石賺外快，不破勇希同意順道前往後直接去海邊。英妮表現強烈依附，緊貼勇希手臂，並提醒注意海邊潮汐異常。","cause":"不破勇希裝備斯提爾之劍與衛士皮鋼甲後準備接取首個委託。","result":"主線任務MQ.Ⅰ進展至接取完成，正準備前往任務地點；SQ.12清理食腐蟹進行中，SQ.13新型魔導石測試待觸發。","characters":["不破勇希","Critblade","英妮·維賽塔"],"locations":["藍色瞭望村","冒險者公會","無疆者之盟"],"factions":["無疆者之盟"],"DateTime":"1577-07-08T09:35:00Z","items":["斯提爾之劍","衛士皮鋼甲"],"concepts":["委託","食
-eventbase-extractor.js:117 [EventBase] Parser window=0: raw length=694, preview: [{"event_type":"main_quest_update","importance":7,"summary":"不破勇希離開客棧後在藍色瞭望村冒險者公會門口與英妮·維賽塔匯合，兩人進入公會查看佈告欄。不破勇希接取清理淺灘附近15隻食腐蟹的F級委託，賞金10銀幣，看板娘蓋章確認。英妮提議先去
-eventbase-extractor.js:227 [EventBase] Parser window=0: 10 candidate array(s) found: (10) ['[0] len=1 firstType=object keys/val=event_type,importance,summary,cause,result', '[1] len=1 firstType=object keys/val=event_type,importance,summary,cause,result', '[2] len=3 firstType=string keys/val="不破勇希"', '[3] len=3 firstType=string keys/val="藍色瞭望村"', '[4] len=1 firstType=string keys/val="無疆者之盟"', '[5] len=2 firstType=string keys/val="斯提爾之劍"', '[6] len=3 firstType=string keys/val="委託"', '[7] len=15 firstType=string keys/val="清理食腐蟹"', '[8] len=3 firstType=string keys/val="完成清理15隻食腐蟹"', '[9] len=1 firstType=object keys/val=event_type,importance,summary,cause,result']
-eventbase-extractor.js:266 [EventBase] Parser window=0: chose candidate[0] len=1
-eventbase-extractor.js:481 [EventBase] Window 0: parsed 1 event candidate(s)
-eventbase-extractor.js:491 [EventBase] Parsed array (window=0): 1 items, types: [object]
-eventbase-extractor.js:549 [EventBase] Window 0: extracted 1 valid events
-eventbase-store.js:96 [EventBase] Inserting 1 event(s) into collection "vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0"
-core-vector-api.js:672 VectHare: Processing 1 items in 1 batch(es) of up to 50 with rate limit (Max 5 calls / 60s)
-qdrant.js:295 VectHare Qdrant: Inserting 1 vectors in 1 batch(es) of up to 100 items
-qdrant.js:374 VectHare Qdrant: Batch 1/1 completed (1 vectors)
-qdrant.js:385 VectHare Qdrant: Inserted 1 vectors into vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0 (separate mode, content_type: vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0)
-collection-metadata.js:261 VectHare: Updated metadata for collection vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0
-collection-metadata.js:541 VectHare: Collection vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0 locks updated: ['ArtificRealm創世域 - 2026-04-28@17h24m18s927ms imported']
-eventbase-store.js:116 [EventBase] Locked collection "vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0" to current chat "ArtificRealm創世域 - 2026-04-28@17h24m18s927ms imported"
-eventbase-store.js:121 [EventBase] Insert complete for collection "vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0"
-eventbase-extractor.js:464 [EventBase] Raw LLM reply (window=1): [{"event_type":"side_quest_update","importance":7,"summary":"Critblade帶領英妮前往東側雜貨店「奧米加之屋」，要求英妮測試新型魔導石即魔力共振石。薩卡恩解釋測試需維持三分鐘穩定輸出魔力。英妮接觸晶體後身體劇烈顫抖，紫色魔力脈衝蔓延肌膚產生淺紫色紋路，並發出混合痛苦的吟聲。三分鐘後Critblade詢問薩卡恩是否完成，並為流汗的英妮擦拭額頭。","cause":"英妮發現的委託機會，Critblade反客為主指定她測試。","result":"SQ.13新型魔導石測試進行中並接近完成，英妮展現委屈但屈從姿態，身體產生強烈魔力反應。","characters":["Critblade","英妮·維賽塔","薩卡恩"],"locations":["藍色瞭望村","奧米加之屋"],"factions":[],"DateTime":"1577-07-08T09:40:00Z","items":["魔力共振石","新型魔導石"],"concepts":["魔力迴路","魔力脈衝"],"keywords":["魔力共振石","新型魔
-eventbase-extractor.js:117 [EventBase] Parser window=1: raw length=1487, preview: [{"event_type":"side_quest_update","importance":7,"summary":"Critblade帶領英妮前往東側雜貨店「奧米加之屋」，要求英妮測試新型魔導石即魔力共振石。薩卡恩解釋測試需維持三分鐘穩定輸出魔力。英妮接觸晶體後身體劇烈顫抖，紫色魔力脈衝蔓延肌
-eventbase-extractor.js:227 [EventBase] Parser window=1: 24 candidate array(s) found: (24) ['[0] len=3 firstType=object keys/val=event_type,importance,summary,cause,result', '[1] len=3 firstType=object keys/val=event_type,importance,summary,cause,result', '[2] len=3 firstType=string keys/val="Critblade"', '[3] len=2 firstType=string keys/val="藍色瞭望村"', '[4] len=0 firstType=undefined keys/val=undefined', '[5] len=2 firstType=string keys/val="魔力共振石"', '[6] len=2 firstType=string keys/val="魔力迴路"', '[7] len=13 firstType=string keys/val="魔力共振石"', '[8] len=2 firstType=string keys/val="測試結果與報酬"', '[9] len=3 firstType=string keys/val="薩卡恩"', '[10] len=1 firstType=string keys/val="奧米加之屋"', '[11] len=0 firstType=undefined keys/val=undefined', '[12] len=1 firstType=string keys/val="黑木盒子"', '[13] len=2 firstType=string keys/val="流沙之國"', '[14] len=8 firstType=string keys/val="薩卡恩"', '[15] len=0 firstType=undefined keys/val=undefined', '[16] len=2 firstType=string keys/val="Critblade"', '[17] len=3 firstType=string keys/val="藍色瞭望村冒險者公會"', '[18] len=0 firstType=undefined keys/val=undefined', '[19] len=0 firstType=undefined keys/val=undefined', '[20] len=0 firstType=undefined keys/val=undefined', '[21] len=5 firstType=string keys/val="藍色瞭望村"', '[22] len=0 firstType=undefined keys/val=undefined', '[23] len=3 firstType=object keys/val=event_type,importance,summary,cause,result']
-eventbase-extractor.js:266 [EventBase] Parser window=1: chose candidate[0] len=3
-eventbase-extractor.js:481 [EventBase] Window 1: parsed 3 event candidate(s)
-eventbase-extractor.js:491 [EventBase] Parsed array (window=1): 3 items, types: [object, object, object]
-eventbase-extractor.js:549 [EventBase] Window 1: extracted 3 valid events
-eventbase-store.js:96 [EventBase] Inserting 3 event(s) into collection "vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0"
-core-vector-api.js:672 VectHare: Processing 3 items in 1 batch(es) of up to 50 with rate limit (Max 5 calls / 60s)
+client logging 
+
+
+Generate entered
+index.js:19 [QR2] calling {args: Array(3), functionToCall: ƒ}
+chat-vectorization.js:1841 🐰 VectHare: rearrangeChat called (type: normal, chat length: 2116)
+eventbase-workflow.js:344 [EventBase] Live collection skipped (not locked to chat): vecthare_eventbase_standard_critblade_chat_60d40b35-fa7a-4f30-8485-805303f4916a
+eventbase-workflow.js:344 [EventBase] Live collection skipped (not locked to chat): vecthare_eventbase_qdrant_critblade_異世界學校_60d40b35-fa7a-4f30-8485-805303f4916a
+eventbase-workflow.js:377 [EventBase] Live retrieval: uuid=67d28099-167f-4c07-a7cb-1b62e44f43d0, lockedLiveCollections=1, ids=["vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0"]
+eventbase-workflow.js:390 [EventBase] Phase A: live=true, archiveCollections=0, searchText length=4452
+eventbase-workflow.js:404 [EventBase] Keyword query (user last message, 28 chars): 我對 Mayla 説 "你記得我當時怎樣為你贖身的嗎?"
+eventbase-retrieval.js:116 [EventBase] Retrieval start — topK overfetch=16, minImportance=1, method=bm25, nativePrefer=true, liveCollections=1
+2backend-manager.js:274 VectHare: Health cache stale for qdrant, re-verifying...
+core-vector-api.js:878 [VectHare] Hybrid search (native), dispatching to hybrid search module
+hybrid-search.js:48 [HybridSearch] Using native hybrid search (QdrantBackend)
+qdrant.js:784 [EventBase] Native hybrid request payload: backend=qdrant, collection=vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0, source=openrouter, model=qwen/qwen3-embedding-8b, topK=16, threshold=0, vectorWeight=0.5, textWeight=0.5, fusion=rrf, rrfK=60, searchTextLen=28, searchTextPreview="我對 Mayla 説 "你記得我當時怎樣為你贖身的嗎?""
+core-vector-api.js:878 [VectHare] Hybrid search (native), dispatching to hybrid search module
+hybrid-search.js:48 [HybridSearch] Using native hybrid search (QdrantBackend)
+qdrant.js:784 [EventBase] Native hybrid request payload: backend=qdrant, collection=vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0, source=openrouter, model=qwen/qwen3-embedding-8b, topK=16, threshold=0, vectorWeight=0.5, textWeight=0.5, fusion=rrf, rrfK=60, searchTextLen=4452, searchTextPreview="我對 Mayla 説 "你記得我當時怎樣為你贖身的嗎?" 好，來仔細思考一下這次的劇情！ - 回顧當前情況 * 時間：20:15，晚上 * 位置：新大陸.流沙之國.扎赫拉巴德.星月綠洲頂層皇家套房，9個人分配好床位（Critblade+Mayla一張，索拉雅單獨，阿斯蒙蒂斯單獨，Kashier+Fern，Valerie單獨，Engni+Lia） * 人物關係：Mayla剛剛崩潰大哭，擔心Critblade會像她父親影翼一樣消失。Critblade現在要鼓勵她，並對房間內所有人喊話 - 當前劇情的主線是？暗線是？ * 主線：Critblade安撫Mayla"
+qdrant.js:797 [Qdrant] Native hybrid search returned 16 results
+core-vector-api.js:888 [VectHare] Hybrid search (RRF) response: 16 result(s) in 979ms, scores=[0.5669, 0.5658, 0.5344, 0.3397, 0.3342, 0.3324, 0.3306, 0.3263, 0.3263, 0.3237, 0.3204, 0.3180, 0.3154, 0.3108, 0.3086, 0.3085]
+qdrant.js:797 [Qdrant] Native hybrid search returned 16 results
+core-vector-api.js:888 [VectHare] Hybrid search (RRF) response: 16 result(s) in 1128ms, scores=[0.9531, 0.9132, 0.9024, 0.8906, 0.8814, 0.8785, 0.8732, 0.8432, 0.8288, 0.8214, 0.8134, 0.8041, 0.7962, 0.7884, 0.7884, 0.7842]
+eventbase-retrieval.js:164 [EventBase] Live query: 1 collection(s) × 2 query/queries → 27 unique events
+eventbase-retrieval.js:184 [EventBase] After importance filter (>=1): 27 candidates
+eventbase-retrieval.js:249 [EventBase] Dedup-depth skip: event "character_state_change" source_window_end=2114 is within last 50 messages (threshold=2066)
+eventbase-retrieval.js:249 [EventBase] Dedup-depth skip: event "promise_or_oath" source_window_end=2114 is within last 50 messages (threshold=2066)
+eventbase-retrieval.js:249 [EventBase] Dedup-depth skip: event "revelation" source_window_end=2111 is within last 50 messages (threshold=2066)
+eventbase-retrieval.js:249 [EventBase] Dedup-depth skip: event "relationship_change" source_window_end=2111 is within last 50 messages (threshold=2066)
+eventbase-retrieval.js:249 [EventBase] Dedup-depth skip: event "promise_or_oath" source_window_end=2066 is within last 50 messages (threshold=2066)
+eventbase-retrieval.js:255 [EventBase] Dedup depth (50) removed 5 event(s) already visible in context
+eventbase-retrieval.js:263 [EventBase] Final events after dedup + trim: 8
+eventbase-retrieval.js:265   [0] type=relationship_change imp=9 score=0.765 persist=true
+eventbase-retrieval.js:265   [1] type=character_state_change imp=10 score=0.746 persist=true
+eventbase-retrieval.js:265   [2] type=relationship_change imp=8 score=0.725 persist=true
+eventbase-retrieval.js:265   [3] type=relationship_change imp=7 score=0.724 persist=true
+eventbase-retrieval.js:265   [4] type=relationship_change imp=9 score=0.722 persist=true
+eventbase-retrieval.js:265   [5] type=promise_or_oath imp=9 score=0.708 persist=true
+eventbase-retrieval.js:265   [6] type=dialogue_significant imp=8 score=0.706 persist=true
+eventbase-retrieval.js:265   [7] type=relationship_change imp=9 score=0.706 persist=true
+eventbase-workflow.js:446 [EventBase] Retrieval debug: {dualQuery: true, keywordScoringMethod: 'bm25', nativeHybridPrefer: true, fusionMethod: 'rrf', rawCount: 27, …}
+eventbase-workflow.js:490 [EventBase] Injected 8 event(s) (requested 8), text length: 5050
+eventbase-workflow.js:491 [EventBase] setExtensionPrompt tag="3_vecthare_eventbase" position=0 depth=2
+eventbase-workflow.js:494 [EventBase] Slot verification — key exists: true, value type: string, length: 5050
+eventbase-workflow.js:495 [EventBase] extension_prompts keys: (11) ['1_memory', '2_floating_prompt', 'QUIET_PROMPT', 'customDepthWI_0_0', 'customDepthWI_0_1', 'customDepthWI_0_2', 'PERSONA_DESCRIPTION', '__STORY_STRING__', 'DEPTH_PROMPT', '3_vecthare', '3_vecthare_eventbase']
+eventbase-workflow.js:496 [EventBase] Injection preview: <VectHareMemory>
+# Event 1
+event_type: relationship_change
+importance: 9
+summary: Critblade前往Mayla房間探視，安慰因公主身份與娼妓過去衝突而自卑崩潰的她。Mayla坦露羞恥感、怕配不上Master而被拋棄如影翼拋棄母親的恐懼，並自比其他眷屬為廢物。Critblade以贖身初衷、她在妓院堅韌、轉變為影之軍師、早朝破牢籠等事例反駁，重構其過去為勳章證明價值。Mayla感動安靜落淚後發誓無論身份皆屬於他，用智慧力量掃清障礙，主動親吻確認需求。Critblade溫柔加深後止步額吻，約晚間再談，令她體會被珍視
+chat-vectorization.js:1905 VectHare: Will query 1 collections: ['vectra:vecthare_lorebook_story1_1778288919954']
+chat-vectorization.js:1924 VectHare: Extracted 8 keywords from query: (8) ['mayla', 'critblade', 'kashier', 'fern', 'engni', 'lia', 'valerie', 'master']
+collection-metadata.js:908 [VectHare Activation Filter] Collection vectra:vecthare_lorebook_story1_1778288919954: hasTriggers=false, hasConditions=false
+collection-metadata.js:945 [VectHare Activation Filter] Collection vectra:vecthare_lorebook_story1_1778288919954: ✗ NOT_ACTIVATED (no trigger match, no condition pass, not locked)
+collection-metadata.js:965 [VectHare Activation Filter] Summary: 1 collections → 0 active
+chat-vectorization.js:1951 ⚠️ VectHare: No collections passed activation conditions and World Info disabled - chunks cannot be injected!
+chat-vectorization.js:1952    💡 Check your collection activation conditions in VectHare settings
+script.js:4547 Core/all messages: 2116/2116
+world-info.js:623 [WI] Processing sticky entry ArtificRealm創世域.42 {hash: 5608283655957508, start: 2116, end: 2117, protected: false}
+world-info.js:627 [WI] Removing sticky entry ArtificRealm創世域.42 from timedWorldInfo: chat not advanced {hash: 5608283655957508, start: 2116, end: 2117, protected: false}
+world-info.js:722 [WI] Adding sticky entry ArtificRealm創世域.42: start=2116, end=2117, protected=false
+
+
+-----------------------------
+
+server side logging 
+
+>>> [Qdrant] Listed 1058 items from vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+Discovered Qdrant Collection: vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0 1058 items
+>>> [Qdrant] Listed 1139 items from vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0
+Discovered Qdrant Collection: vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0 1139 items
+>>> [Qdrant] Listed 18 items from vecthare_eventbase_qdrant_critblade_異世界學校_60d40b35-fa7a-4f30-8485-805303f4916a
+Discovered Qdrant Collection: vecthare_eventbase_qdrant_critblade_異世界學校_60d40b35-fa7a-4f30-8485-805303f4916a 18 items
+>>> [Qdrant] Listed 1058 items from vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0
+Discovered Qdrant Collection: vecthare_chat_critblade_artificrealm_67d28099-167f-4c07-a7cb-1b62e44f43d0 1058 items
+Instantiated the tokenizer for gpt-3.5-turbo
+>>> [Qdrant] Listed 1139 items from vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0
+Discovered Qdrant Collection: vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0 1139 items
+>>> [Qdrant] Listed 18 items from vecthare_eventbase_qdrant_critblade_異世界學校_60d40b35-fa7a-4f30-8485-805303f4916a
+Discovered Qdrant Collection: vecthare_eventbase_qdrant_critblade_異世界學校_60d40b35-fa7a-4f30-8485-805303f4916a 18 items
+New connection from 10.0.1.249 (forwarded: 172.69.195.156); User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36
+
+New connection from 10.0.1.249 (forwarded: 172.64.192.72); User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36
+
+New connection from 10.0.1.249 (forwarded: 172.68.186.102); User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36
+
+New connection from 10.0.1.249 (forwarded: 141.101.98.156); User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36
+
+New connection from 10.0.1.249 (forwarded: 162.158.216.67); User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36
+
+[Qdrant] extractQueryKeywords anchor CJK pass → 35 unique tokens (showing top 15): 單獨, 我對, 記得, 當時, 為你, 贖身, 仔細, 思考, 劇情, 回顧, 當前, 情況, 時間, 晚上, 位置
+[Qdrant] extractQueryKeywords context CJK pass → 565 unique tokens (showing top 35): 帶著, 起身, 兩個, 依然, 眼眸, 父親, 不能, 找到, 新大陸, 房間, 角落, 反應, 你要, 眷屬, 角色, 內心, 軍師, 恐懼, 精明, 忠誠, 方式, 掃過, 女人, 套房, 崩潰, 都會, 點醒, 能力, 整天, 愁眉苦臉, 表面, 內容, 這間, 沒有, 完整
+[Qdrant] extractQueryKeywords Latin pass → 45 unique tokens (showing top 10): mayla, critblade, engni, kashier, lia, fern, master, valerie, lead, nsfw
+[Qdrant] extractQueryKeywords final → 60 tokens (fullCJK=true): 單獨, 我對, 記得, 當時, 為你, 贖身, 仔細, 思考, 劇情, 回顧, 當前, 情況, 時間, 晚上, 位置, 帶著, 起身, 兩個, 依然, 眼眸, 父親, 不能, 找到, 新大陸, 房間, 角落, 反應, 你要, 眷屬, 角色, 內心, 軍師, 恐懼, 精明, 忠誠, 方式, 掃過, 女人, 套房, 崩潰, 都會, 點醒, 能力, 整天, 愁眉苦臉, 表面, 內容, 這間, 沒有, 完整, mayla, critblade, engni, kashier, lia, fern, master, valerie, lead, nsfw
+[Qdrant] Hybrid query START: collection=vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0, keywords=60, topK=16
+[Qdrant] Hybrid options: vectorWeight=0.5, keywordWeight=0.5, fusion=rrf
+[Qdrant] Collection vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0 exists, proceeding with hybrid search
+[Qdrant] extractQueryKeywords anchor CJK pass → 5 unique tokens (showing top 5): 我對, 記得, 當時, 為你, 贖身
+[Qdrant] extractQueryKeywords context CJK pass → 5 unique tokens (showing top 0): (none)
+[Qdrant] extractQueryKeywords Latin pass → 1 unique tokens (showing top 1): mayla
+[Qdrant] extractQueryKeywords final → 6 tokens (fullCJK=false): 我對, 記得, 當時, 為你, 贖身, mayla
+[Qdrant] Hybrid query START: collection=vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0, keywords=6, topK=16
+[Qdrant] Hybrid options: vectorWeight=0.5, keywordWeight=0.5, fusion=rrf
+[Qdrant] Collection vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0 exists, proceeding with hybrid search
+[Qdrant] Vector search complete: 32 results
+[Qdrant] Starting BM25 keyword search with 60 keywords: 單獨, 我對, 記得, 當時, 為你, 贖身, 仔細, 思考, 劇情, 回顧, 當前, 情況, 時間, 晚上, 位置, 帶著, 起身, 兩個, 依然, 眼眸, 父親, 不能, 找到, 新大陸, 房間, 角落, 反應, 你要, 眷屬, 角色, 內心, 軍師, 恐懼, 精明, 忠誠, 方式, 掃過, 女人, 套房, 崩潰, 都會, 點醒, 能力, 整天, 愁眉苦臉, 表面, 內容, 這間, 沒有, 完整, mayla, critblade, engni, kashier, lia, fern, master, valerie, lead, nsfw
+[Qdrant] Vector search complete: 32 results
+[Qdrant] Starting BM25 keyword search with 6 keywords: 我對, 記得, 當時, 為你, 贖身, mayla
+[Qdrant] BM25 scoring complete: 107 scored from 107 candidates (N=107, avgdl=54.3)
+[Qdrant] Starting fusion: 32 vector + 107 keyword results
+[Qdrant] Hybrid query: 32 vector + 107 keyword = 16 fused results
+[Qdrant] BM25 scoring complete: 922 scored from 922 candidates (N=922, avgdl=53.5)
+[Qdrant] Starting fusion: 32 vector + 922 keyword results
+[Qdrant] Hybrid query: 32 vector + 922 keyword = 16 fused results

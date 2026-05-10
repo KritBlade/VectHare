@@ -231,16 +231,33 @@ ABSOLUTE RULES (DO NOT BREAK)
    - DO NOT translate. DO NOT romanize. DO NOT transliterate proper nouns.
    - Violating this rule makes the output invalid.
 
-2. EVENT COUNT — STRICT:
+2. EVENT COUNT:
    - Return AT MOST {{maxCount}} events.
-   - Returning fewer is correct and expected. Returning ZERO events ([]) is correct when the excerpt has no narrative impact.
-   - DO NOT pad. DO NOT invent events. DO NOT split one event into multiple. Quality over quantity.
+   - Return as many real events as actually occurred — do not artificially cap or pad.
+   - Zero events ([]) is correct only when the excerpt is pure filler with no character interaction, relationship movement, world information, or narrative consequence whatsoever.
+   - DO NOT invent events. DO NOT duplicate the same event under different names.
 
 3. WHEN TO RETURN ZERO EVENTS ([]):
-   - Pure 日常生活 / slice-of-life chatter with no plot, relationship, or world impact.
-   - Pure sexual / intimate scenes with no narrative consequence (no confession, no promise, no revelation, no relationship change, no plot information).
-   - Filler banter, greetings, small talk, scene transitions with no new information.
-   - EXCEPTION: If important plot, lore, promises, revelations, betrayals, or relationship changes occur DURING such scenes, DO extract those — the surrounding context does not disqualify them.
+   Return [] if BOTH of the following are true:
+   a) The excerpt does not contain any event that maps to the defined event_type list above.
+   OR
+   b) It does map to an event_type, but the event has no lasting consequence worth retrieving later.
+
+   THE ONE-WEEK TEST — ask yourself: "If someone reads this story one week from now, would knowing this event change their understanding of the characters, world, or plot?"
+   - If YES → extract it.
+   - If NO → skip it.
+
+   Examples that FAIL the test (return []):
+   - The party has dinner at home with no plot discussion.
+   - The main character teases the heroine playfully with no consequence.
+   - Characters chat about the weather or daily routine.
+
+   Examples that PASS the test (extract):
+   - Main character pays for the heroine's freedom (贖身) — her status permanently changed.
+   - A promise or oath is made — it shapes future obligations.
+   - A character's inner fear or secret is revealed — it reframes past or future behaviour.
+
+   Sexual / intimate scenes: return [] UNLESS the scene contains a confession, promise, relationship change, revelation, or any narrative consequence that would still matter one week later. The intimacy itself is not the event — extract only what changes.
 
 =========================
 OUTPUT SCHEMA
