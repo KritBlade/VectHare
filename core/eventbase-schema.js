@@ -253,7 +253,7 @@ ABSOLUTE RULES (DO NOT BREAK)
    - Characters chat about the weather or daily routine.
 
    Examples that PASS the test (extract):
-   - Main character pays for the heroine's freedom (贖身) — her status permanently changed.
+   - Main character pays for the heroine's freedom (贖身) — her status permanently changed. And money involved is a concrete detail worth remembering.
    - A promise or oath is made — it shapes future obligations.
    - A character's inner fear or secret is revealed — it reframes past or future behaviour.
 
@@ -266,7 +266,31 @@ Return ONLY a valid JSON array. No prose. No markdown. No code fences.
 
 Each event object MUST have these fields:
 - event_type: one of [main_quest_update, side_quest_update, combat, travel, discovery, dialogue_significant, relationship_change, character_introduction, character_state_change, item_acquired, item_lost, faction_change, location_change, revelation, promise_or_oath, betrayal, death, other]
-- importance: integer 1-10 (10 = pivotal main plot, 1 = minor flavor worth remembering)
+- importance: integer 1-10. Use the one-week test: higher = more likely to matter one week later.
+  Anchor your score against these per-type guidelines:
+
+  PERMANENT / IRREVERSIBLE changes score highest — they reshape the story permanently.
+  EPHEMERAL moments score lowest — they happened but leave no lasting trace.
+
+  main_quest_update:    7-10 (major milestone/turning point), 4-6 (incremental progress)
+  side_quest_update:    3-6  (completion or key step), 1-3 (minor update)
+  combat:               2-4  (routine fight, won or lost), 6-8 (boss or pivotal battle),
+                        9-10 (combat that kills a major character or changes the story permanently)
+  travel:               1-2  (moving between locations), 3-5 (arrival at a key destination that opens new story)
+  discovery:            3-5  (minor lore or clue), 6-8 (world-changing revelation or hidden truth uncovered)
+  dialogue_significant: 3-5  (key conversation, character insight), 6-8 (confession, confrontation, defining moment)
+  relationship_change:  5-7  (gradual shift in trust/bond), 8-10 (permanent status change — e.g. freed from slavery, marriage, sworn enemy)
+  character_introduction: 3-5 (new named character joins), 6-8 (introduction of a major antagonist or pivotal NPC)
+  character_state_change: 4-6 (injury, level-up, mood shift), 7-9 (permanent transformation — power gained, identity revealed, disability)
+  item_acquired:        1-3  (common item), 5-7 (plot-critical item or unique artifact)
+  item_lost:            1-3  (minor loss), 6-8 (loss of a plot-critical item or irreplaceable object)
+  faction_change:       6-9  (political/social alignment shifted — alliances broken or formed)
+  location_change:      1-2  (routine travel), 3-5 (arrival at a narratively important new location)
+  revelation:           6-8  (important hidden truth exposed), 9-10 (revelation that fundamentally reframes the story or a character)
+  promise_or_oath:      5-7  (significant promise between characters), 8-9 (binding oath with major consequences)
+  betrayal:             7-10 (trust broken — scale with how close the relationship was and how severe the consequences)
+  death:                6-8  (minor/enemy character), 9-10 (death of a named ally or major character)
+  other:                1-4  (flavor worth remembering), 5-7 (genuinely significant but doesn't fit other types)
 - summary: 2-8 dense sentences capturing WHO did WHAT, the key detail, the emotional/narrative impact, and any important consequences or reactions. SAME LANGUAGE AS EXCERPT (see Rule 1)
 - cause: short explanation of why it happened, SAME LANGUAGE AS EXCERPT (may be "")
 - result: outcome / state change, SAME LANGUAGE AS EXCERPT (may be "")
