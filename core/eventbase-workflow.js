@@ -19,7 +19,7 @@ import { queryCollection } from './core-vector-api.js';
 import { EXTENSION_PROMPT_TAG } from './constants.js';
 import { EventBaseFatalError, EventBaseExtractionError } from './eventbase-schema.js';
 import { extractEvents } from './eventbase-extractor.js';
-import { insertEvents, isWindowAlreadyExtracted, markWindowExtracted, clearWindowCacheForChat, buildEventBaseCollectionId } from './eventbase-store.js';
+import { insertEvents, isWindowAlreadyExtracted, markWindowExtracted, clearWindowCacheForChat, buildEventBaseCollectionId, isLastWindowExtracted } from './eventbase-store.js';
 import { getSavedHashes } from './core-vector-api.js';
 import { retrieveEvents } from './eventbase-retrieval.js';
 import { formatEventsForInjectionDetailed } from './eventbase-injection.js';
@@ -50,7 +50,7 @@ const EVENTBASE_PROMPT_TAG = `${EXTENSION_PROMPT_TAG}_eventbase`;
  * @param {{ strategy?: string, batchSize?: number, totalChunks?: number }|null} [params.progressPlan]
  * @returns {Promise<{ eventsExtracted: number, windowsProcessed: number, windowsSkipped: number }>}
  */
-export async function runEventBaseIngestion({ messages, chatUUID, settings, abortSignal = null, progressPlan = null, collectionIdOverride = null, parallelWindows = 3 }) {
+export async function runEventBaseIngestion({ messages, chatUUID, settings, abortSignal = null, progressPlan = null, collectionIdOverride = null, parallelWindows = 3, isAutoSync = false }) {
     const debugLog = settings.eventbase_debug_logging;
     const debugVectorizing = settings.debug_vectorizing_log === true;
     const uuid = chatUUID || getChatUUID();
@@ -100,6 +100,16 @@ export async function runEventBaseIngestion({ messages, chatUUID, settings, abor
     // re-extracted (and potentially duplicating events) on every auto-sync fire.
     // A tail window becomes eligible once it reaches windowSize messages, at which
     // point the next step boundary also produces a fresh overlap window correctly.
+    // Quick-exit: check only the LAST complete window fingerprint against the Set cache.
+    // If it's already extracted, all prior windows are done too (processed in order).
+    // Avoids building O(n/step) window objects on every auto-sync fire when nothing is new.
+    // Note: edits to messages deep in history bypass this check — acceptable limitation.
+    const _msgHash = m => { const t = (m.mes || '').trim(); return m.hash ?? _djb2(`${m.name || ''}:${t}`); };
+    if (isLastWindowExtracted(messages, windowSize, step, uuid, _msgHash)) {
+        if (debugLog) console.log(`[EventBase] Quick-exit: last window already extracted, nothing new`);
+        return { eventsExtracted: 0, windowsProcessed: 0, windowsSkipped: 0 };
+    }
+
     const windows = [];
     for (let start = 0; start < messages.length; start += step) {
         const end = Math.min(start + windowSize - 1, messages.length - 1);
@@ -126,6 +136,7 @@ export async function runEventBaseIngestion({ messages, chatUUID, settings, abor
     let windowsProcessed = 0;
     let windowsSkipped = 0;
     let windowIdx = 0;
+    let autosyncPopupShown = false;
 
     while (windowIdx < windows.length) {
         if (abortSignal?.aborted) {
@@ -159,6 +170,12 @@ export async function runEventBaseIngestion({ messages, chatUUID, settings, abor
                 if (alreadyDone) {
                     if (debugLog) console.log(`[EventBase] Window ${wIdx} already extracted — skip`);
                     return { skipped: true };
+                }
+
+                // Fire auto-sync popup on first real extraction (not dedup-skipped)
+                if (isAutoSync && !autosyncPopupShown && settings.eventbase_autosync_popup !== false) {
+                    autosyncPopupShown = true;
+                    try { toastr.info('Auto-Sync: extracting events...', 'VectHare', { timeOut: 3000 }); } catch (_) {}
                 }
 
                 // LLM extraction

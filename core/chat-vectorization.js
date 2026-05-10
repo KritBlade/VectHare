@@ -561,6 +561,7 @@ export async function synchronizeChat(settings, batchSize = 5) {
                 messages,
                 chatUUID: getChatUUID(),
                 settings,
+                isAutoSync: true,
             });
             return {
                 remaining: 0,

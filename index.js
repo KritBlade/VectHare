@@ -163,13 +163,15 @@ const defaultSettings = {
     eventbase_temperature: 0.2,
     eventbase_max_tokens: 2048,
     eventbase_timeout_ms: 60000,
-    eventbase_window_size: 6,                     // Chat messages per extraction window
-    eventbase_window_overlap: 1,                  // Window overlap to avoid edge cuts
+    eventbase_window_size: 2,                     // Chat messages per extraction window
+    eventbase_window_overlap: 0,                  // Window overlap to avoid edge cuts
     eventbase_min_importance_store: 3,            // Drop events below this importance before storing
-    eventbase_max_events_per_window: 5,           // Hard cap on events returned per LLM call
-    eventbase_retrieval_top_k: 8,                 // Events to retrieve per generation
+    eventbase_max_events_per_window: 3,           // Hard cap on events returned per LLM call
+    eventbase_retrieval_top_k: 10,                // Events to retrieve per generation
     eventbase_retrieval_min_importance: 1,        // Minimum importance for retrieval
+    eventbase_injection_format: 'densetext',      // Injection format: 'densetext' or 'jsonarray'
     eventbase_retrieval_filters_enabled: true,
+    eventbase_autosync_popup: true,               // Show popup toast when auto-sync extraction runs
     eventbase_debug_logging: false,
     eventbase_debug_qdrant_backend: false,
     debug_vectorizing_log: false,                // Verbose vectorization progress logs in console

@@ -25,6 +25,11 @@ import { buildEmbedText } from './eventbase-schema.js';
 // Re-export so callers can import from here if needed
 export { buildEventBaseCollectionId };
 
+// In-memory Set cache for O(1) window dedup lookups.
+// Backed by the serialized array in extension_settings (which survives reload).
+// Built lazily on first access per chat UUID.
+const _windowCacheSet = new Map(); // chatUUID → Set<fingerprint>
+
 // ---------------------------------------------------------------------------
 // Insert
 // ---------------------------------------------------------------------------
@@ -216,7 +221,7 @@ export async function deleteEventByHash(hash, settings, chatUUID) {
  * @param {number[]} sourceHashes
  * @returns {string}
  */
-function _windowFingerprint(sourceHashes) {
+export function windowFingerprint(sourceHashes) {
     return [...sourceHashes].map(String).sort().join(',');
 }
 
@@ -236,8 +241,15 @@ export function markWindowExtracted(sourceHashes, chatUUID) {
     if (!store.eventbase_extracted_windows) store.eventbase_extracted_windows = {};
     if (!store.eventbase_extracted_windows[uuid]) store.eventbase_extracted_windows[uuid] = [];
 
-    const fp = _windowFingerprint(sourceHashes);
-    if (!store.eventbase_extracted_windows[uuid].includes(fp)) {
+    const fp = windowFingerprint(sourceHashes);
+
+    // Update the in-memory Set first (O(1) check)
+    if (!_windowCacheSet.has(uuid)) {
+        _windowCacheSet.set(uuid, new Set(store.eventbase_extracted_windows[uuid]));
+    }
+    const set = _windowCacheSet.get(uuid);
+    if (!set.has(fp)) {
+        set.add(fp);
         store.eventbase_extracted_windows[uuid].push(fp);
         saveSettingsDebounced();
     }
@@ -255,11 +267,46 @@ export function clearWindowCacheForChat(chatUUID) {
     const store = extension_settings?.vecthareplus;
     if (!store?.eventbase_extracted_windows) return;
     delete store.eventbase_extracted_windows[uuid];
+    _windowCacheSet.delete(uuid);
     saveSettingsDebounced();
 }
 
 /**
+ * Quick-exit check: returns true if the LAST complete window in the message list
+ * is already extracted. When true, all prior windows are also done (windows are
+ * always processed in-order from the tail). Avoids building O(n) window objects.
+ *
+ * @param {object[]} messages  - Filtered message array (same as passed to runEventBaseIngestion)
+ * @param {number}   windowSize
+ * @param {number}   step       - windowSize - windowOverlap
+ * @param {string}   [chatUUID]
+ * @param {Function} hashFn     - (message) => number hash for that message
+ * @returns {boolean}
+ */
+export function isLastWindowExtracted(messages, windowSize, step, chatUUID, hashFn) {
+    const uuid = chatUUID;
+    if (!uuid || messages.length < windowSize) return false;
+
+    const totalPossible = Math.floor((messages.length - windowSize) / step) + 1;
+    if (totalPossible <= 0) return false;
+
+    const lastStart = (totalPossible - 1) * step;
+    const lastMsgs = messages.slice(lastStart, lastStart + windowSize);
+    if (lastMsgs.length < windowSize) return false;
+
+    const hashes = lastMsgs.map(hashFn);
+
+    if (!_windowCacheSet.has(uuid)) {
+        const arr = extension_settings?.vecthareplus?.eventbase_extracted_windows?.[uuid];
+        _windowCacheSet.set(uuid, new Set(Array.isArray(arr) ? arr : []));
+    }
+
+    return _windowCacheSet.get(uuid).has(windowFingerprint(hashes));
+}
+
+/**
  * Checks whether a window has already been extracted (O(1), no DB query).
+ * Uses an in-memory Set keyed by chatUUID; built lazily from the persisted array.
  *
  * @param {number[]} sourceHashes
  * @param {number[]} messageIds     - unused, kept for API compat
@@ -272,11 +319,14 @@ export async function isWindowAlreadyExtracted(sourceHashes, messageIds, setting
     const uuid = chatUUID || getChatUUID();
     if (!uuid) return false;
 
-    const cache = extension_settings?.vecthareplus?.eventbase_extracted_windows?.[uuid];
-    if (!Array.isArray(cache)) return false;
+    // Build the Set from the persisted array on first access for this chat
+    if (!_windowCacheSet.has(uuid)) {
+        const arr = extension_settings?.vecthareplus?.eventbase_extracted_windows?.[uuid];
+        _windowCacheSet.set(uuid, new Set(Array.isArray(arr) ? arr : []));
+    }
 
-    const fp = _windowFingerprint(sourceHashes);
-    return cache.includes(fp);
+    const fp = windowFingerprint(sourceHashes);
+    return _windowCacheSet.get(uuid).has(fp);  // O(1)
 }
 
 /**

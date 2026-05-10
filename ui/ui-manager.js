@@ -789,7 +789,15 @@ export function renderSettings(containerId, settings, callbacks) {
 
                             <!-- Collection lock moved to Database Browser (per-collection settings) -->
 
-                            <small class="vecthare_hint" style="display:block; margin-top: 12px;">
+                            <div class="vecthare-form-group" style="margin-top: 12px;">
+                                <label class="checkbox_label" for="vecthare_autosync_popup">
+                                    <input type="checkbox" id="vecthare_autosync_popup" />
+                                    <span>Popup: show when auto-sync is extracting</span>
+                                </label>
+                                <small class="vecthare_hint">Show a notification toast each time auto-sync triggers a new EventBase extraction window.</small>
+                            </div>
+
+                            <small class="vecthare_hint" style="display:block; margin-top: 8px;">
                                 Chat Auto-Sync follows the EventBase extraction settings. Legacy chat chunking controls are hidden because chat history no longer uses the old chunk-based retrieval path.
                             </small>
 
@@ -894,14 +902,15 @@ export function renderSettings(containerId, settings, callbacks) {
                             <p class="vecthare-section-label"><strong>Extraction</strong></p>
 
                             <div class="vecthare-form-group">
-                                <label class="vecthare-label">Window Size <span id="vecthare_eventbase_window_size_val">6</span> messages</label>
+                                <label class="vecthare-label">Window Size <span id="vecthare_eventbase_window_size_val">2</span> messages</label>
                                 <input type="range" id="vecthare_eventbase_window_size" min="2" max="20" step="1" class="vecthare-range" />
                                 <small class="vecthare_hint">Number of consecutive messages sent to the AI per extraction call.</small>
                             </div>
 
                             <div class="vecthare-form-group">
-                                <label class="vecthare-label">Window Overlap <span id="vecthare_eventbase_window_overlap_val">1</span></label>
+                                <label class="vecthare-label">Window Overlap <span id="vecthare_eventbase_window_overlap_val">0</span></label>
                                 <input type="range" id="vecthare_eventbase_window_overlap" min="0" max="5" step="1" class="vecthare-range" />
+                                <small class="vecthare_hint">Messages shared between consecutive windows. Higher overlap re-extracts edge messages with more context (more LLM calls). 0 = no overlap, each message extracted once.</small>
                             </div>
 
                             <div class="vecthare-form-group">
@@ -911,7 +920,7 @@ export function renderSettings(containerId, settings, callbacks) {
                             </div>
 
                             <div class="vecthare-form-group">
-                                <label class="vecthare-label">Max Events per Window <span id="vecthare_eventbase_max_events_per_window_val">5</span></label>
+                                <label class="vecthare-label">Max Events per Window <span id="vecthare_eventbase_max_events_per_window_val">3</span></label>
                                 <input type="range" id="vecthare_eventbase_max_events_per_window" min="1" max="10" step="1" class="vecthare-range" />
                                 <small class="vecthare_hint">Hard cap per LLM call. AI is instructed to return fewer (or zero) for filler / 日常 nichijou / non-narrative scenes.</small>
                             </div>
@@ -937,7 +946,7 @@ export function renderSettings(containerId, settings, callbacks) {
                             <p class="vecthare-section-label"><strong>Retrieval</strong></p>
 
                             <div class="vecthare-form-group">
-                                <label class="vecthare-label">Retrieve Top-K <span id="vecthare_eventbase_retrieval_top_k_val">8</span></label>
+                                <label class="vecthare-label">Retrieve Top-K <span id="vecthare_eventbase_retrieval_top_k_val">10</span></label>
                                 <input type="range" id="vecthare_eventbase_retrieval_top_k" min="1" max="32" step="1" class="vecthare-range" />
                             </div>
 
@@ -2410,6 +2419,15 @@ function bindSettingsEvents(settings, callbacks) {
             saveSettingsDebounced();
         });
 
+    // Auto-sync popup toggle
+    $('#vecthare_autosync_popup')
+        .prop('checked', settings.eventbase_autosync_popup !== false)
+        .on('change', function() {
+            settings.eventbase_autosync_popup = $(this).prop('checked');
+            Object.assign(extension_settings.vecthareplus, settings);
+            saveSettingsDebounced();
+        });
+
     // Retrieval popups
     $('#vecthare_retrieval_popup_on_start')
         .prop('checked', settings.retrieval_popup_on_start || false)
@@ -2949,9 +2967,9 @@ function bindSettingsEvents(settings, callbacks) {
     _bindEventBaseRange('retrieval_min_importance', 'eventbase_retrieval_min_importance', 'retrieval_min_importance');
 
     $('#vecthare_eventbase_injection_format')
-        .val(settings.eventbase_injection_format || 'jsonarray')
+        .val(settings.eventbase_injection_format || 'densetext')
         .on('change', function() {
-            settings.eventbase_injection_format = String($(this).val() || 'jsonarray').toLowerCase();
+            settings.eventbase_injection_format = String($(this).val() || 'densetext').toLowerCase();
             Object.assign(extension_settings.vecthareplus, settings);
             saveSettingsDebounced();
         });
