@@ -26,7 +26,8 @@ import {
 } from './collection-ids.js';
 import { extractLorebookKeywords, extractTextKeywords, extractChatKeywords, extractBM25Keywords, EXTRACTION_LEVELS, DEFAULT_EXTRACTION_LEVEL, DEFAULT_BASE_WEIGHT } from './keyword-boost.js';
 import { cleanText, cleanMessages } from './text-cleaning.js';
-import { summarizeText, summarizeTextGroup, isSummarizationFatalError } from './summarizer.js';
+// Summarizer imports kept commented for future use — see disabled summarize-before-store pipeline below.
+// import { summarizeText, summarizeTextGroup, isSummarizationFatalError } from './summarizer.js';
 import { progressTracker } from '../ui/progress-tracker.js';
 import { extension_settings, getContext } from '../../../../extensions.js';
 import { getCurrentChatId } from '../../../../../script.js';
@@ -134,9 +135,14 @@ export async function vectorizeContent({ contentType, source, settings, abortSig
             finalChunks = hashedChunks;
         }
 
-        // Step 3.5 + 4 combined: For chat with summarization, pipeline each chunk
-        // (summarize → embed → insert immediately) to start filling Qdrant right away.
-        // For everything else, do the original batch approach.
+        // Non-chat content (lorebook, character card, document, URL, wiki, YouTube) goes
+        // straight into the vector store without LLM summarization — those sources are
+        // typically short enough that the embedding model can index them directly.
+        // Chat content never reaches this function (EventBase intercepts it upstream).
+        //
+        // The summarize-before-store pipeline below is intentionally preserved (commented out)
+        // in case we want to re-enable per-chunk LLM summarization later.
+        /* ----- BEGIN: summarize-before-store pipeline (DISABLED, kept for future use) -----
         if (contentType === 'chat') {
             progressTracker.updateProgress(3, `Summarizing and inserting ${finalChunks.length} chunks...`);
             console.log(`[VectHare Summarizer] Pipelining ${finalChunks.length} chat chunks via ${vecthareSettings.summarize_provider}...`);
@@ -265,13 +271,11 @@ export async function vectorizeContent({ contentType, source, settings, abortSig
 
             console.log(`[VectHare Summarizer] Pipeline complete: ${pipelined} chunks processed`);
 
-        } else {
-            // Non-chat or summarization off: standard batch summarize then insert
-            if (contentType === 'chat') {
-                // No summarization — finalChunks already equals hashedChunks
-            }
+        }
+        ----- END: summarize-before-store pipeline ----- */
 
-            // Step 4: Insert into vector store
+        {
+            // Direct insert path — embed and store chunks as-is.
             progressTracker.updateProgress(4, 'Processing chunks...');
 
             try {

@@ -27,7 +27,6 @@ import { doesChatHaveVectors, getCollectionRegistry } from '../core/collection-l
 import { getModelField } from '../core/providers.js';
 import { getChunkingStrategies } from '../core/content-types.js';
 import { CJK_TOKENIZER_MODES, setCjkTokenizerMode, ensureJiebaTokenizerLoaded, ensureJiebaTwLoaded } from '../core/bm25-scorer.js';
-import { DEFAULT_SUMMARIZE_PROMPT } from '../core/summarizer.js';
 
 /**
  * Renders the VectHare settings UI
@@ -445,23 +444,11 @@ export function renderSettings(containerId, settings, callbacks) {
                                     </div>
 
                                     <label for="vecthare_summarize_model">
-                                        <small>Summarization Model</small>
+                                        <small>Summarization / EventBase Model</small>
                                     </label>
                                     <input type="text" id="vecthare_summarize_model" class="vecthare-input"
                                         placeholder="e.g. google/gemini-flash-1.5-8b" />
-                                    <small class="vecthare_hint">Model ID for summarization (separate from embedding model)</small>
-
-                                    <label for="vecthare_summarize_prompt" style="margin-top:12px;">
-                                        <small>Summarization Prompt</small>
-                                    </label>
-                                    <textarea id="vecthare_summarize_prompt" class="vecthare-textarea" rows="8"
-                                        placeholder="Leave empty to use built-in default prompt"
-                                        style="margin-top:4px; font-size:11px;"></textarea>
-                                    <small class="vecthare_hint">Use <code>{{text}}</code> as placeholder for the story text. Leave empty for built-in default.</small>
-
-                                    <div style="margin-top:10px; padding:8px; background:rgba(255,200,0,0.08); border-left:3px solid rgba(255,200,0,0.4); border-radius:4px;">
-                                        <small>⚠ Each new message stored will make one additional LLM call. Use a fast, cheap model.</small>
-                                    </div>
+                                    <small class="vecthare_hint">Model ID used for EventBase extraction (separate from embedding model). Required.</small>
 
                                 </div>
                             </div>
@@ -2074,14 +2061,6 @@ function bindSettingsEvents(settings, callbacks) {
             updateSummarizeORKeyDisplay();
         }
     });
-
-    $('#vecthare_summarize_prompt')
-        .val(settings.summarize_prompt || DEFAULT_SUMMARIZE_PROMPT)
-        .on('change', function() {
-            settings.summarize_prompt = String($(this).val());
-            Object.assign(extension_settings.vecthareplus, settings);
-            saveSettingsDebounced();
-        });
 
     // Chunk size (for adaptive strategy)
     $('#vecthare_chunk_size')

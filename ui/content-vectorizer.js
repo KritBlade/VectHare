@@ -27,6 +27,7 @@ import {
 import { extension_settings, getContext } from '../../../../extensions.js';
 import { saveSettingsDebounced } from '../../../../../script.js';
 import { getChatUUID } from '../core/chat-vectorization.js';
+import { validateLLMConfig } from '../core/summarizer.js';
 import { buildArchiveEventCollectionId } from '../core/collection-ids.js';
 import { callGenericPopup, POPUP_TYPE } from '../../../../popup.js';
 import { openTextCleaningManager } from './text-cleaning-manager.js';
@@ -2650,6 +2651,16 @@ async function startContinueVectorization() {
         return;
     }
 
+    const llmCheck = validateLLMConfig(currentSettings);
+    if (!llmCheck.ok) {
+        toastr.error(
+            `${llmCheck.reason} Open VectHare → Core → LLM Summarization & EventBase Extraction and fill in the required fields.`,
+            'Configuration required',
+            { timeOut: 8000 }
+        );
+        return;
+    }
+
     // If no vectors exist yet, just run the normal vectorization
     if (currentContentType === 'chat' && (source.type === 'current' || source.type === 'file')) {
         return _runEventBaseBackfill();
@@ -2847,6 +2858,19 @@ async function startVectorization() {
 
     if (!source) {
         toastr.warning('Please select or enter content first');
+        return;
+    }
+
+    // All vectorization paths (EventBase for chat, chunk pipeline for non-chat) eventually
+    // make LLM calls that share the summarize_* settings. Fail fast with a clear message
+    // rather than letting it blow up mid-ingest.
+    const llmCheck = validateLLMConfig(currentSettings);
+    if (!llmCheck.ok) {
+        toastr.error(
+            `${llmCheck.reason} Open VectHare → Core → LLM Summarization & EventBase Extraction and fill in the required fields.`,
+            'Configuration required',
+            { timeOut: 8000 }
+        );
         return;
     }
 
