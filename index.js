@@ -17,6 +17,7 @@ import sanitize from 'sanitize-filename';
 import vectra from 'vectra';
 import qdrantBackend from './qdrant-backend.js';
 import { DEFAULT_STOP_WORD_SET } from './stop-words.js';
+import { registerMigrationRoutes } from './routes/migrate-to-sparse.js'; // MIGRATE-DELETE
 
 const pluginName = 'similharity';
 const pluginVersion = '3.2.0';
@@ -438,6 +439,10 @@ export async function init(router) {
                     },
 
                     insert: async (collectionId, items, source, model, directories, req, filters = {}) => {
+                        // Extract sparse-vector flag + tokenizer-mode lock from filters before
+                        // they pollute tenantMetadata.
+                        const { nativeSparse = false, cjkTokenizerMode = null, ...tenantFilters } = filters;
+
                         // Generate embeddings if not provided
                         let itemsWithVectors = [...items];
                         const itemsNeedingVectors = itemsWithVectors.filter(i => !i.vector);
@@ -463,10 +468,10 @@ export async function init(router) {
 
                         // Pass source and model for embedding tracking
                         await qdrantBackend.insertVectors(collectionId, itemsWithVectors, {
-                            ...filters,
+                            ...tenantFilters,
                             embeddingSource: source,
                             embeddingModel: model,
-                        });
+                        }, { nativeSparse, cjkTokenizerMode });
                     },
 
                     updateText: async (collectionId, hash, newText, source, model, directories, req, filters = {}) => {
@@ -1018,6 +1023,30 @@ async function _getLegacySingleEmbedding(source, text, model, directories, req) 
      * Insert new chunks
      * Body: { backend, collectionId, items: [{hash, text, index, metadata?, vector?}], source?, model? }
      */
+    /**
+     * POST /api/plugins/similharity/chunks/collection-metadata
+     * Read the sentinel metadata point for a Qdrant collection. Returns null payload
+     * when the collection or sentinel does not exist. Qdrant-only.
+     *
+     * Body: { backend: 'qdrant', collectionId }
+     */
+    router.post('/chunks/collection-metadata', async (req, res) => {
+        try {
+            const { backend = 'qdrant', collectionId } = req.body;
+            if (backend !== 'qdrant') {
+                return res.json({ payload: null, supported: false });
+            }
+            if (!collectionId) {
+                return res.status(400).json({ error: 'collectionId is required' });
+            }
+            const payload = await qdrantBackend.getCollectionMetadata(collectionId);
+            res.json({ payload, supported: true });
+        } catch (error) {
+            console.error(`[${pluginName}] chunks/collection-metadata error:`, error);
+            res.status(500).json({ error: error.message });
+        }
+    });
+
     router.post('/chunks/insert', async (req, res) => {
         try {
             const {
@@ -1026,7 +1055,9 @@ async function _getLegacySingleEmbedding(source, text, model, directories, req) 
                 items,
                 source = 'transformers',
                 model = '',
-                filters = {}
+                filters = {},
+                nativeSparse = false,
+                cjkTokenizerMode = null,
             } = req.body;
 
             if (!collectionId) {
@@ -1037,7 +1068,7 @@ async function _getLegacySingleEmbedding(source, text, model, directories, req) 
             }
 
             const handler = getBackendHandler(backend);
-            await handler.insert(collectionId, items, source, model, req.user.directories, req, filters);
+            await handler.insert(collectionId, items, source, model, req.user.directories, req, { ...filters, nativeSparse, cjkTokenizerMode });
 
             res.json({
                 success: true,
@@ -1234,7 +1265,10 @@ async function _getLegacySingleEmbedding(source, text, model, directories, req) 
                 filters = {},
                 source = 'transformers',
                 model = '',
-                hybridOptions = {}
+                hybridOptions = {},
+                // Phase 3 — fusion mode A/B/C routing (ABC-DELETE after winner picked).
+                fusionMode = 'legacy',          // 'legacy' | 'native_sparse_legacy_fusion' | 'native_rrf'
+                sparseQueryVector = null,       // {indices, values} — required for the two native modes
             } = req.body;
 
             if (!collectionId) {
@@ -1279,6 +1313,60 @@ async function _getLegacySingleEmbedding(source, text, model, directories, req) 
             };
 
             if (backend === 'qdrant') {
+                // Phase 3 — route by fusion mode. ABC-DELETE: after the winner is picked the
+                // other two branches and their methods on qdrantBackend can be removed.
+                if (fusionMode === 'native_rrf') {
+                    if (!sparseQueryVector) {
+                        return res.status(400).json({ error: 'sparseQueryVector required for native_rrf mode' });
+                    }
+                    const results = await qdrantBackend.hybridQueryNative(
+                        collectionId,
+                        vector,
+                        sparseQueryVector,
+                        topK,
+                        { fusion: mergedOptions.qdrantSparseFusion || 'rrf', prefetchLimit: mergedOptions.prefetchLimit },
+                        filters,
+                    );
+                    return res.json({
+                        success: true,
+                        backend: 'qdrant',
+                        collectionId,
+                        fusionMode,
+                        count: results.length,
+                        results: results.map(r => ({
+                            hash: r.hash,
+                            text: r.text,
+                            score: r.score,
+                            metadata: r.metadata,
+                            nativeSparse: true,
+                            fusionMethod: r.fusionMethod,
+                        })),
+                    });
+                }
+
+                if (fusionMode === 'native_sparse_legacy_fusion') {
+                    if (!sparseQueryVector) {
+                        return res.status(400).json({ error: 'sparseQueryVector required for native_sparse_legacy_fusion mode' });
+                    }
+                    const { vector: vectorResults, keyword: keywordResults } = await qdrantBackend.hybridQueryNativeUnfused(
+                        collectionId,
+                        vector,
+                        sparseQueryVector,
+                        topK,
+                        { prefetchLimit: mergedOptions.prefetchLimit },
+                        filters,
+                    );
+                    // Browser fuses these two lists with the legacy bonus/penalty math.
+                    return res.json({
+                        success: true,
+                        backend: 'qdrant',
+                        collectionId,
+                        fusionMode,
+                        unfused: { vector: vectorResults, keyword: keywordResults },
+                    });
+                }
+
+                // Default: legacy plugin-side path.
                 const results = await qdrantBackend.hybridQuery(
                     collectionId,
                     vector,
@@ -1288,10 +1376,11 @@ async function _getLegacySingleEmbedding(source, text, model, directories, req) 
                     filters
                 );
 
-                res.json({
+                return res.json({
                     success: true,
                     backend: 'qdrant',
                     collectionId,
+                    fusionMode: 'legacy',
                     count: results.length,
                     results: results.map(r => ({
                         hash: r.hash,
@@ -1452,6 +1541,9 @@ async function _getLegacySingleEmbedding(source, text, model, directories, req) 
             res.status(500).json({ error: error.message });
         }
     });
+
+    // MIGRATE-DELETE: dev-only sparse-vector migration tool. Remove when migration is no longer needed.
+    registerMigrationRoutes(router, pluginName);
 
     console.log(`[${pluginName}] Plugin initialized successfully`);
 }

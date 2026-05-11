@@ -215,8 +215,11 @@ class QdrantBackend {
      * Ensure collection exists with proper schema and payload indexes
      * @param {string} collectionName - Collection name
      * @param {number} vectorSize - Vector dimension (e.g., 768)
+     * @param {object} [opts]
+     * @param {boolean} [opts.nativeSparse=false] - Declare a `text_sparse` named sparse vector with `modifier: "idf"` for native BM25
      */
-    async ensureCollection(collectionName, vectorSize = 768) {
+    async ensureCollection(collectionName, vectorSize = 768, opts = {}) {
+        const { nativeSparse = false } = opts;
         try {
             // Check if collection exists
             const collections = await this._request('GET', '/collections');
@@ -224,13 +227,22 @@ class QdrantBackend {
             const exists = collections.result?.collections?.some(c => c.name === collectionName);
             if (!exists) {
                 // Create collection
-                await this._request('PUT', `/collections/${collectionName}`, {
+                const body = {
                     vectors: {
                         size: vectorSize,
                         distance: 'Cosine',
                     },
-                });
-                console.log(`[Qdrant] Created collection: ${collectionName} (dim=${vectorSize})`);
+                };
+                if (nativeSparse) {
+                    // Qdrant 1.10+: declare a named sparse vector with IDF modifier so BM25 is
+                    // computed server-side over the true global corpus. Index params left as
+                    // defaults — Qdrant uses on-disk by default for sparse.
+                    body.sparse_vectors = {
+                        text_sparse: { modifier: 'idf' },
+                    };
+                }
+                await this._request('PUT', `/collections/${collectionName}`, body);
+                console.log(`[Qdrant] Created collection: ${collectionName} (dim=${vectorSize}${nativeSparse ? ', +text_sparse[idf]' : ''})`);
 
                 // Create payload indexes for filterable fields
                 await this.createPayloadIndexes(collectionName);
@@ -286,6 +298,74 @@ class QdrantBackend {
     }
 
     /**
+     * Sentinel point ID used to store per-collection VectHare metadata
+     * (e.g. the CJK tokenizer mode this collection was built with).
+     * Uses a fixed UUID so it never collides with hash-derived integer IDs.
+     */
+    _SENTINEL_ID = '00000000-0000-0000-0000-0000feedf00d';
+
+    /**
+     * Read VectHare's sentinel metadata point for a collection. Returns null when
+     * the collection or the sentinel point is missing.
+     *
+     * @param {string} collectionName
+     * @returns {Promise<object|null>}
+     */
+    async getCollectionMetadata(collectionName) {
+        collectionName = this._parseCollectionName(collectionName);
+        try {
+            const resp = await this._request('POST', `/collections/${collectionName}/points`, {
+                ids: [this._SENTINEL_ID],
+                with_payload: true,
+                with_vector: false,
+            });
+            const point = resp.result?.[0];
+            if (!point) return null;
+            return point.payload || null;
+        } catch (error) {
+            console.debug(`[Qdrant] getCollectionMetadata(${collectionName}) failed:`, error.message);
+            return null;
+        }
+    }
+
+    /**
+     * Write VectHare's sentinel metadata point. Creates or overwrites the
+     * sentinel; uses a zero dense vector so the point exists but won't surface
+     * in any normal vector search (also filtered out by the `type` payload).
+     *
+     * @param {string} collectionName
+     * @param {object} metadata - free-form, must serialise cleanly
+     * @param {number} vectorSize - dimension of the dense vector slot
+     */
+    async setCollectionMetadata(collectionName, metadata, vectorSize) {
+        collectionName = this._parseCollectionName(collectionName);
+        const zero = new Array(vectorSize).fill(0);
+        const payload = {
+            ...metadata,
+            type: '_vecthare_meta',
+            _vecthare_sentinel: true,
+            updated_at: Date.now(),
+        };
+        // Inspect the collection so we know whether it has named sparse vectors;
+        // if so the sentinel needs the object-form vector slot.
+        let usesNamedVectors = false;
+        try {
+            const info = await this._request('GET', `/collections/${collectionName}`);
+            usesNamedVectors = !!info.result?.config?.params?.sparse_vectors;
+        } catch (e) { /* assume plain */ }
+
+        const point = {
+            id: this._SENTINEL_ID,
+            vector: usesNamedVectors ? { '': zero } : zero,
+            payload,
+        };
+        await this._request('PUT', `/collections/${collectionName}/points?wait=true`, {
+            points: [point],
+        });
+        console.log(`[Qdrant] Wrote sentinel for ${collectionName}:`, metadata);
+    }
+
+    /**
      * Ensure payload indexes exist on an existing collection
      * @param {string} collectionName - Collection name
      */
@@ -305,11 +385,14 @@ class QdrantBackend {
     /**
      * Insert vector items into collection (MULTITENANCY)
      * @param {string} collectionName - Collection name (always "vecthare_main")
-     * @param {Array} items - Items with {hash, text, vector, metadata}
+     * @param {Array} items - Items with {hash, text, vector, sparseVector?, metadata}
      * @param {object} tenantMetadata - Tenant info {type, sourceId, embeddingSource}
+     * @param {object} [opts]
+     * @param {boolean} [opts.nativeSparse=false] - Use named-vector point shape and ship `item.sparseVector` to Qdrant's `text_sparse` field
      * @returns {Promise<void>}
      */
-    async insertVectors(collectionName, items, tenantMetadata = {}) {
+    async insertVectors(collectionName, items, tenantMetadata = {}, opts = {}) {
+        const { nativeSparse = false, cjkTokenizerMode = null } = opts;
         if (!this.baseUrl) throw new Error('Qdrant not initialized');
         if (items.length === 0) return;
 
@@ -358,7 +441,29 @@ class QdrantBackend {
 
         // Ensure collection exists (use first vector's size)
         const vectorSize = expectedDimension;
-        await this.ensureCollection(mainCollection, vectorSize);
+        await this.ensureCollection(mainCollection, vectorSize, { nativeSparse });
+
+        // Sentinel handling: when native sparse is enabled, the CJK tokenizer mode is baked
+        // into the indexed sparse vectors. Write the sentinel on first insert; verify it
+        // matches on subsequent inserts so a mid-stream mode change is caught early.
+        if (nativeSparse && cjkTokenizerMode) {
+            try {
+                const existing = await this.getCollectionMetadata(mainCollection);
+                if (!existing || !existing.cjk_tokenizer_mode) {
+                    await this.setCollectionMetadata(mainCollection, {
+                        cjk_tokenizer_mode: cjkTokenizerMode,
+                    }, vectorSize);
+                } else if (existing.cjk_tokenizer_mode !== cjkTokenizerMode) {
+                    throw new Error(
+                        `[Qdrant] Tokenizer mode mismatch: collection "${mainCollection}" was built with "${existing.cjk_tokenizer_mode}" but insert is using "${cjkTokenizerMode}". ` +
+                        `Delete the collection and re-vectorize to switch tokenizer modes.`
+                    );
+                }
+            } catch (error) {
+                if (error.message?.includes('Tokenizer mode mismatch')) throw error;
+                console.warn(`[Qdrant] Sentinel read/write failed for ${mainCollection}:`, error.message);
+            }
+        }
 
         // Format points for Qdrant with multitenancy payload
         // NOTE: Spread item.metadata FIRST so critical fields can override it
@@ -367,7 +472,12 @@ class QdrantBackend {
         // convert numbers to strings, so we explicitly coerce here.
         const points = items.map(item => ({
             id: typeof item.hash === 'string' ? parseInt(item.hash, 10) : item.hash, // Ensure numeric ID for Qdrant
-            vector: item.vector,
+            // When the collection has a named sparse vector, Qdrant requires the point's vector
+            // field to be an object keyed by vector name. Default dense vector is keyed by "".
+            // Without sparse, keep the plain-array form so we don't break existing collections.
+            vector: nativeSparse && item.sparseVector
+                ? { '': item.vector, text_sparse: item.sparseVector }
+                : item.vector,
             payload: {
                 // ===== SPREAD ADDITIONAL METADATA FIRST (so it can be overridden) =====
                 ...(item.metadata || {}),
@@ -1008,6 +1118,136 @@ class QdrantBackend {
         return fusedResults
             .sort((a, b) => b.score - a.score)
             .slice(0, topK);
+    }
+
+    /**
+     * Build a Qdrant filter object from VectHare's filter shape. Shared by all hybrid paths.
+     * Always excludes the `_vecthare_meta` sentinel point.
+     * @private
+     * @returns {{ must: Array, must_not: Array }}
+     */
+    _buildHybridFilter(filters) {
+        const must = [];
+        const add = (key, clause) => must.push({ key, ...clause });
+        if (filters.type)               add('type',            { match: { value: filters.type } });
+        if (filters.sourceId)           add('sourceId',        { match: { value: filters.sourceId } });
+        if (filters.minImportance !== undefined) add('importance', { range: { gte: filters.minImportance } });
+        if (filters.timestampAfter !== undefined) add('timestamp', { range: { gte: filters.timestampAfter } });
+        if (filters.characterName)      add('characterName',   { match: { value: filters.characterName } });
+        if (filters.chatId)             add('chatId',          { match: { value: filters.chatId } });
+        if (filters.chunkGroup)         add('chunkGroup.name', { match: { value: filters.chunkGroup } });
+        if (filters.embeddingSource)    add('embeddingSource', { match: { value: filters.embeddingSource } });
+        if (filters.content_type)       add('content_type',    { match: { value: filters.content_type } });
+        // Always exclude the sentinel metadata point.
+        const must_not = [{ key: 'type', match: { value: '_vecthare_meta' } }];
+        return { must, must_not };
+    }
+
+    /**
+     * Native Qdrant hybrid query: single /query call with prefetch on dense + sparse, fused
+     * server-side via RRF (or DBSF). Returns the final ranked list.
+     *
+     * Requires:
+     *   - Qdrant 1.10+
+     *   - Collection created with `sparse_vectors: { text_sparse: { modifier: 'idf' } }`
+     *   - Sparse query vector tokenized with the same CJK mode used at ingest
+     *
+     * @param {string} collectionName
+     * @param {number[]} denseVector
+     * @param {{indices:number[], values:number[]}} sparseVector
+     * @param {number} topK
+     * @param {object} options - { fusion: 'rrf'|'dbsf' (default 'rrf'), prefetchLimit: int (default topK*4) }
+     * @param {object} filters
+     * @returns {Promise<Array<{hash, text, score, metadata}>>}
+     */
+    async hybridQueryNative(collectionName, denseVector, sparseVector, topK = 10, options = {}, filters = {}) {
+        if (!this.baseUrl) throw new Error('Qdrant not initialized');
+        collectionName = this._parseCollectionName(collectionName);
+
+        const fusion = options.fusion || 'rrf';
+        const prefetchLimit = options.prefetchLimit || topK * 4;
+        const filter = this._buildHybridFilter(filters);
+
+        const body = {
+            prefetch: [
+                { query: denseVector,  using: '',           limit: prefetchLimit, filter },
+                { query: sparseVector, using: 'text_sparse', limit: prefetchLimit, filter },
+            ],
+            query: { fusion },
+            limit: topK,
+            with_payload: true,
+        };
+
+        const resp = await this._request('POST', `/collections/${collectionName}/query`, body);
+        const points = resp.result?.points || [];
+
+        console.log(`[Qdrant] Native hybrid (fusion=${fusion}) returned ${points.length} results from ${collectionName}`);
+
+        return points.map(p => ({
+            hash: p.payload?.hash,
+            text: p.payload?.text,
+            score: p.score,
+            metadata: p.payload,
+            fusionMethod: fusion,
+            nativeSparse: true,
+        }));
+    }
+
+    /**
+     * Native Qdrant sparse query, NO server-side fusion: returns the two prefetch result lists
+     * separately so the caller can apply legacy fusion (RRF + dual-signal bonus + single-signal
+     * penalty) in JS. Used by the `native_sparse_legacy_fusion` A/B mode.
+     *
+     * Two parallel /query calls, one per named vector.
+     *
+     * @param {string} collectionName
+     * @param {number[]} denseVector
+     * @param {{indices:number[], values:number[]}} sparseVector
+     * @param {number} topK
+     * @param {object} options - { prefetchLimit: int (default topK*4) }
+     * @param {object} filters
+     * @returns {Promise<{vector: Array, keyword: Array}>}
+     */
+    async hybridQueryNativeUnfused(collectionName, denseVector, sparseVector, topK = 10, options = {}, filters = {}) {
+        if (!this.baseUrl) throw new Error('Qdrant not initialized');
+        collectionName = this._parseCollectionName(collectionName);
+
+        const prefetchLimit = options.prefetchLimit || topK * 4;
+        const filter = this._buildHybridFilter(filters);
+
+        const denseBody = {
+            query: denseVector,
+            using: '',
+            limit: prefetchLimit,
+            filter,
+            with_payload: true,
+        };
+        const sparseBody = {
+            query: sparseVector,
+            using: 'text_sparse',
+            limit: prefetchLimit,
+            filter,
+            with_payload: true,
+        };
+
+        const [denseResp, sparseResp] = await Promise.all([
+            this._request('POST', `/collections/${collectionName}/query`, denseBody),
+            this._request('POST', `/collections/${collectionName}/query`, sparseBody),
+        ]);
+
+        const toItem = (p) => ({
+            hash: p.payload?.hash,
+            text: p.payload?.text,
+            score: p.score,
+            metadata: p.payload,
+        });
+
+        const vectorResults  = (denseResp.result?.points || []).map(p => ({ ...toItem(p), vectorScore: p.score }));
+        const keywordResults = (sparseResp.result?.points || []).map(p => ({ ...toItem(p), keywordScore: p.score, bm25Score: p.score }));
+
+        console.log(`[Qdrant] Native unfused: ${vectorResults.length} dense + ${keywordResults.length} sparse from ${collectionName}`);
+
+        return { vector: vectorResults, keyword: keywordResults };
     }
 
     /**
