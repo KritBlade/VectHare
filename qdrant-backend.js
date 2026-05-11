@@ -707,6 +707,22 @@ class QdrantBackend {
         const fusion = options.fusion || 'rrf';
         const prefetchLimit = options.prefetchLimit || topK * 4;
         const filter = this._buildHybridFilter(filters);
+        const debug = !!options.eventbaseDebug;
+
+        if (debug) {
+            const top5sparse = sparseVector.indices
+                .map((idx, i) => ({ idx, val: sparseVector.values[i] }))
+                .sort((a, b) => b.val - a.val)
+                .slice(0, 5)
+                .map(t => `${t.idx}:${t.val.toFixed(3)}`)
+                .join(', ');
+            console.log(`[Qdrant-debug] hybridQueryNative: collection=${collectionName}, topK=${topK}, fusion=${fusion}, prefetchLimit=${prefetchLimit}`);
+            if (options.debugQuery) {
+                console.log(`[Qdrant-debug] Query text: "${String(options.debugQuery).slice(0, 200)}"`);
+            }
+            console.log(`[Qdrant-debug] Dense: dim=${denseVector.length}`);
+            console.log(`[Qdrant-debug] Sparse: ${sparseVector.indices.length} tokens, top-5 by weight: [${top5sparse}]`);
+        }
 
         // For the default (unnamed) dense vector Qdrant expects `using` to be OMITTED, not "".
         const densePrefetch  = { query: denseVector,  limit: prefetchLimit };
@@ -731,6 +747,13 @@ class QdrantBackend {
         const points = resp.result?.points || [];
 
         console.log(`[Qdrant] Native hybrid (fusion=${fusion}) returned ${points.length} results from ${collectionName}`);
+
+        if (debug) {
+            points.slice(0, 10).forEach((p, i) => {
+                const text = p.payload?.text ? String(p.payload.text).slice(0, 80).replace(/\n/g, ' ') : '';
+                console.log(`[Qdrant-debug] [${i + 1}] score=${p.score?.toFixed(4)}, hash=${(p.payload?.hash || '').slice(0, 8)}, text="${text}"`);
+            });
+        }
 
         return points.map(p => ({
             hash: p.payload?.hash,

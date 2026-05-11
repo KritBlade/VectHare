@@ -1288,12 +1288,18 @@ async function _getLegacySingleEmbedding(source, text, model, directories, req) 
             }
 
             const mergedOptions = { ...hybridOptions, ...options };
+            const debug = !!mergedOptions.eventbaseDebug;
             const results = await qdrantBackend.hybridQueryNative(
                 collectionId,
                 vector,
                 sparseQueryVector,
                 topK,
-                { fusion: 'rrf', prefetchLimit: mergedOptions.prefetchLimit },
+                {
+                    fusion: 'rrf',
+                    prefetchLimit: mergedOptions.prefetchLimit,
+                    eventbaseDebug: debug,
+                    debugQuery: debug ? searchText : undefined,
+                },
                 filters,
             );
 
