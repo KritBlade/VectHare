@@ -1259,16 +1259,13 @@ async function _getLegacySingleEmbedding(source, text, model, directories, req) 
                 collectionId,
                 queryVector,
                 searchText,
-                keywords,
                 topK = 10,
                 options = {},
                 filters = {},
                 source = 'transformers',
                 model = '',
                 hybridOptions = {},
-                // Phase 3 — fusion mode A/B/C routing (ABC-DELETE after winner picked).
-                fusionMode = 'legacy',          // 'legacy' | 'native_sparse_legacy_fusion' | 'native_rrf'
-                sparseQueryVector = null,       // {indices, values} — required for the two native modes
+                sparseQueryVector = null,
             } = req.body;
 
             if (!collectionId) {
@@ -1277,123 +1274,43 @@ async function _getLegacySingleEmbedding(source, text, model, directories, req) 
             if (!queryVector && !searchText) {
                 return res.status(400).json({ error: 'queryVector or searchText is required' });
             }
-
-            // Only Qdrant supports native hybrid query
             if (backend !== 'qdrant') {
                 return res.status(400).json({ error: `Backend ${backend} does not support native hybrid query` });
             }
+            if (!sparseQueryVector) {
+                return res.status(400).json({ error: 'sparseQueryVector is required (collection must be sparse-enabled; run the migration tool first)' });
+            }
 
-            // Generate embedding if searchText provided
+            // Generate embedding if searchText provided.
             let vector = queryVector;
             if (!vector && searchText) {
                 vector = await getEmbeddingForSource(source, searchText, model, req.user.directories, req);
             }
 
-            // Extract keywords if not provided
-            let extractedKeywords = keywords;
-            if (!extractedKeywords && searchText) {
-                if (hybridOptions.eventbaseDebug) {
-                    const snippet = getSearchTextDebugSnippet(searchText, 100, 500);
-                    const whitespaceWordCount = String(searchText || '').trim()
-                        ? String(searchText).trim().split(/\s+/).length
-                        : 0;
-                    console.log(`[Qdrant] hybrid searchText snippet (~100 words, ${String(searchText || '').length} chars, ${whitespaceWordCount} whitespace words): ${snippet}`);
-                }
+            const mergedOptions = { ...hybridOptions, ...options };
+            const results = await qdrantBackend.hybridQueryNative(
+                collectionId,
+                vector,
+                sparseQueryVector,
+                topK,
+                { fusion: 'rrf', prefetchLimit: mergedOptions.prefetchLimit },
+                filters,
+            );
 
-                extractedKeywords = extractQueryKeywords(searchText, 50);
-                if (hybridOptions.eventbaseDebug) {
-                    console.log(`[Qdrant] extractQueryKeywords → ${extractedKeywords.length} tokens: ${extractedKeywords.join(', ')}`);
-                }
-            }
-
-            // Merge hybridOptions with options
-            const mergedOptions = {
-                ...hybridOptions,
-                ...options
-            };
-
-            if (backend === 'qdrant') {
-                // Phase 3 — route by fusion mode. ABC-DELETE: after the winner is picked the
-                // other two branches and their methods on qdrantBackend can be removed.
-                if (fusionMode === 'native_rrf') {
-                    if (!sparseQueryVector) {
-                        return res.status(400).json({ error: 'sparseQueryVector required for native_rrf mode' });
-                    }
-                    const results = await qdrantBackend.hybridQueryNative(
-                        collectionId,
-                        vector,
-                        sparseQueryVector,
-                        topK,
-                        { fusion: mergedOptions.qdrantSparseFusion || 'rrf', prefetchLimit: mergedOptions.prefetchLimit },
-                        filters,
-                    );
-                    return res.json({
-                        success: true,
-                        backend: 'qdrant',
-                        collectionId,
-                        fusionMode,
-                        count: results.length,
-                        results: results.map(r => ({
-                            hash: r.hash,
-                            text: r.text,
-                            score: r.score,
-                            metadata: r.metadata,
-                            nativeSparse: true,
-                            fusionMethod: r.fusionMethod,
-                        })),
-                    });
-                }
-
-                if (fusionMode === 'native_sparse_legacy_fusion') {
-                    if (!sparseQueryVector) {
-                        return res.status(400).json({ error: 'sparseQueryVector required for native_sparse_legacy_fusion mode' });
-                    }
-                    const { vector: vectorResults, keyword: keywordResults } = await qdrantBackend.hybridQueryNativeUnfused(
-                        collectionId,
-                        vector,
-                        sparseQueryVector,
-                        topK,
-                        { prefetchLimit: mergedOptions.prefetchLimit },
-                        filters,
-                    );
-                    // Browser fuses these two lists with the legacy bonus/penalty math.
-                    return res.json({
-                        success: true,
-                        backend: 'qdrant',
-                        collectionId,
-                        fusionMode,
-                        unfused: { vector: vectorResults, keyword: keywordResults },
-                    });
-                }
-
-                // Default: legacy plugin-side path.
-                const results = await qdrantBackend.hybridQuery(
-                    collectionId,
-                    vector,
-                    extractedKeywords || [],
-                    topK,
-                    mergedOptions,
-                    filters
-                );
-
-                return res.json({
-                    success: true,
-                    backend: 'qdrant',
-                    collectionId,
-                    fusionMode: 'legacy',
-                    count: results.length,
-                    results: results.map(r => ({
-                        hash: r.hash,
-                        text: r.text,
-                        score: r.score,
-                        metadata: r.metadata,
-                        vectorScore: r.debug?.vectorScore,
-                        textScore: r.debug?.keywordScore,
-                        debug: r.debug
-                    }))
-                });
-            }
-
+            return res.json({
+                success: true,
+                backend: 'qdrant',
+                collectionId,
+                count: results.length,
+                results: results.map(r => ({
+                    hash: r.hash,
+                    text: r.text,
+                    score: r.score,
+                    metadata: r.metadata,
+                    nativeSparse: true,
+                    fusionMethod: r.fusionMethod,
+                })),
+            });
         } catch (error) {
             console.error(`[${pluginName}] chunks/hybrid-query error:`, error);
             res.status(500).json({ error: error.message });
