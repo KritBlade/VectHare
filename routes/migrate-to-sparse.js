@@ -134,37 +134,99 @@ export function registerMigrationRoutes(router, pluginName = 'similharity') {
 
     /**
      * POST /chunks/migrate-to-sparse/finalize
-     * Body: { sourceCollection, targetCollection, cjkTokenizerMode }
-     * Writes the sentinel on the target, drops the source, then creates an alias
-     * from `sourceCollection` → `targetCollection` so existing queries keep working.
+     * Body: { sourceCollection, targetCollection, cjkTokenizerMode, vectorSize }
+     *
+     * Replaces the original collection in-place so queries keep using the same name:
+     *   1. Drop the source
+     *   2. Recreate source with the sparse_vectors schema
+     *   3. Server-side scroll target → upsert into the freshly-created source
+     *      (keeps dense + sparse vectors; no re-tokenization needed)
+     *   4. Write sentinel onto source with the cjk_tokenizer_mode lock
+     *   5. Drop the temporary target
+     *
+     * No Qdrant collection aliases involved (avoids the alias-resolution issues
+     * seen with CJK-named collections on /query).
      */
     router.post('/chunks/migrate-to-sparse/finalize', async (req, res) => {
         try {
-            const { sourceCollection, targetCollection, cjkTokenizerMode, vectorSize } = req.body;
-            if (!sourceCollection || !targetCollection || !cjkTokenizerMode || !vectorSize) {
+            const { sourceCollection, targetCollection, cjkTokenizerMode: requestedMode, vectorSize } = req.body;
+            if (!sourceCollection || !targetCollection || !requestedMode || !vectorSize) {
                 return res.status(400).json({ error: 'sourceCollection, targetCollection, cjkTokenizerMode, vectorSize required' });
             }
 
-            // Write sentinel onto target with the tokenizer-mode lock.
-            await qdrantBackend.setCollectionMetadata(targetCollection, {
+            // Prefer the mode locked into the target's sentinel (if one already exists from a
+            // prior migration). This protects against the user changing CJK mode between a
+            // failed migration and the recovery — the bakedinto tokens still use the original.
+            let cjkTokenizerMode = requestedMode;
+            try {
+                const existingMeta = await qdrantBackend.getCollectionMetadata(targetCollection);
+                if (existingMeta?.cjk_tokenizer_mode) {
+                    cjkTokenizerMode = existingMeta.cjk_tokenizer_mode;
+                    if (cjkTokenizerMode !== requestedMode) {
+                        console.warn(`[${pluginName}] migrate/finalize: target sentinel says cjk=${cjkTokenizerMode}; ignoring client-supplied ${requestedMode}`);
+                    }
+                }
+            } catch (e) { /* no sentinel yet — fine */ }
+
+            // 1. Drop the original source collection.
+            try {
+                await qdrantBackend._request('DELETE', `/collections/${sourceCollection}`);
+                console.log(`[${pluginName}] migrate/finalize: dropped source ${sourceCollection}`);
+            } catch (e) {
+                console.warn(`[${pluginName}] migrate/finalize: source drop failed (already gone?):`, e.message);
+            }
+
+            // 2. Recreate source with the sparse schema.
+            await qdrantBackend.ensureCollection(sourceCollection, vectorSize, { nativeSparse: true });
+
+            // 3. Server-side scroll target → upsert to source, in 250-point batches.
+            let nextOffset = null;
+            let copied = 0;
+            while (true) {
+                const scrollBody = {
+                    limit: 250,
+                    with_payload: true,
+                    with_vector: true,
+                    filter: { must_not: [{ key: 'type', match: { value: '_vecthare_meta' } }] },
+                };
+                if (nextOffset) scrollBody.offset = nextOffset;
+                const page = await qdrantBackend._request('POST', `/collections/${targetCollection}/points/scroll`, scrollBody);
+                const points = page.result?.points || [];
+                if (points.length === 0) break;
+
+                // Scroll returns vector as object form when collection has named vectors:
+                //   { "": [...dense], "text_sparse": {indices, values} }
+                // Pass through as-is when upserting.
+                const formatted = points.map(p => ({
+                    id: p.id,
+                    vector: p.vector,
+                    payload: p.payload,
+                }));
+                await qdrantBackend._request('PUT', `/collections/${sourceCollection}/points?wait=true`, {
+                    points: formatted,
+                });
+                copied += formatted.length;
+
+                nextOffset = page.result?.next_page_offset || null;
+                if (!nextOffset) break;
+            }
+            console.log(`[${pluginName}] migrate/finalize: copied ${copied} points from ${targetCollection} → ${sourceCollection}`);
+
+            // 4. Write sentinel onto source with the tokenizer-mode lock.
+            await qdrantBackend.setCollectionMetadata(sourceCollection, {
                 cjk_tokenizer_mode: cjkTokenizerMode,
-                migrated_from: sourceCollection,
+                migrated_at: Date.now(),
             }, vectorSize);
 
-            // Drop the original collection (this also removes any alias pointing to it).
-            await qdrantBackend._request('DELETE', `/collections/${sourceCollection}`);
+            // 5. Drop the temporary target.
+            try {
+                await qdrantBackend._request('DELETE', `/collections/${targetCollection}`);
+                console.log(`[${pluginName}] migrate/finalize: dropped temp ${targetCollection}`);
+            } catch (e) {
+                console.warn(`[${pluginName}] migrate/finalize: temp drop failed:`, e.message);
+            }
 
-            // Alias the original name → target so all existing query paths keep working.
-            await qdrantBackend._request('POST', '/collections/aliases', {
-                actions: [{
-                    create_alias: {
-                        alias_name: sourceCollection,
-                        collection_name: targetCollection,
-                    },
-                }],
-            });
-
-            res.json({ ok: true, alias: sourceCollection, target: targetCollection });
+            res.json({ ok: true, collection: sourceCollection, copied });
         } catch (error) {
             console.error(`[${pluginName}] migrate/finalize error:`, error);
             res.status(500).json({ error: error.message });
