@@ -921,9 +921,11 @@ export class QdrantBackend extends VectorBackend {
 
             // Surface the server-side error before falling back, so 500s aren't silent.
             const errorBody = await response.text().catch(() => '(no body)');
-            console.warn(`[Qdrant] Hybrid endpoint failed (${response.status}), falling back to vector-only search. Server said: ${errorBody.slice(0, 500)}`);
+            const failMs = (performance.now() - tNetStart).toFixed(1);
+            console.warn(`[Qdrant timing] mode=${fusionMode} FAILED after ${failMs}ms (HTTP ${response.status}), falling back to vector-only search. Server said: ${errorBody.slice(0, 500)}`);
         } catch (error) {
-            console.warn(`[Qdrant] Hybrid search failed:`, error.message);
+            const failMs = (performance.now() - tNetStart).toFixed(1);
+            console.warn(`[Qdrant timing] mode=${fusionMode} FAILED after ${failMs}ms (exception):`, error.message);
         }
 
         // Fallback to regular vector search

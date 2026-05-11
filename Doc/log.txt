@@ -1,29 +1,23 @@
-[VectHare DB Browser] Active-for-current-chat resolution for vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0_v2: resolved=false, chatScopedActive=false, currentChatId=ArtificRealm創世域 - 2026-04-28@17h24m18s927ms imported
-database-browser.js:2371 [VectHare] saveActivation: alwaysActive checkbox=true, chatId=ArtificRealm創世域 - 2026-04-28@17h24m18s927ms imported, collection=vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0_v2
-collection-metadata.js:261 VectHare: Updated metadata for collection vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0_v2
-collection-metadata.js:541 VectHare: Collection vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0_v2 locks updated: ['ArtificRealm創世域 - 2026-04-28@17h24m18s927ms imported']
-collection-metadata.js:261 VectHare: Updated metadata for collection vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0_v2
-collection-metadata.js:261 VectHare: Updated metadata for collection vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0_v2
-database-browser.js:195 VectHare Database Browser: Closed
-script.js:4232 Generate entered
+Generate entered
 index.js:19 [QR2] calling {args: Array(3), functionToCall: ƒ}
 chat-vectorization.js:1842 🐰 VectHare: rearrangeChat called (type: normal, chat length: 2116)
 eventbase-workflow.js:361 [EventBase] Live collection skipped (not locked to chat): vecthare_eventbase_standard_critblade_chat_60d40b35-fa7a-4f30-8485-805303f4916a
 eventbase-workflow.js:361 [EventBase] Live collection skipped (not locked to chat): vecthare_eventbase_qdrant_critblade_異世界學校_60d40b35-fa7a-4f30-8485-805303f4916a
 eventbase-workflow.js:361 [EventBase] Live collection skipped (not locked to chat): vecthare_eventbase_standard_critblade_異世界學校_60d40b35-fa7a-4f30-8485-805303f4916a
-eventbase-workflow.js:394 [EventBase] Live retrieval: uuid=67d28099-167f-4c07-a7cb-1b62e44f43d0, lockedLiveCollections=2, ids=["vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0","vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0_v2"]
+eventbase-workflow.js:394 [EventBase] Live retrieval: uuid=67d28099-167f-4c07-a7cb-1b62e44f43d0, lockedLiveCollections=1, ids=["vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0"]
 eventbase-workflow.js:407 [EventBase] Phase A: live=true, archiveCollections=0, searchText length=4450
 eventbase-workflow.js:421 [EventBase] Keyword query (user last message, 28 chars): 我對 Mayla 説 "你記得我當時怎樣為你贖身的嗎?"
-eventbase-retrieval.js:124 [EventBase] Retrieval start — topK overfetch=20, minImportance=1, method=bm25, nativePrefer=true, liveCollections=2
-4core-vector-api.js:878 [VectHare] Hybrid search (native), dispatching to hybrid search module
-4hybrid-search.js:48 [HybridSearch] Using native hybrid search (QdrantBackend)
+eventbase-retrieval.js:124 [EventBase] Retrieval start — topK overfetch=20, minImportance=1, method=bm25, nativePrefer=true, liveCollections=1
+2backend-manager.js:274 VectHare: Health cache stale for qdrant, re-verifying...
+core-vector-api.js:878 [VectHare] Hybrid search (native), dispatching to hybrid search module
+hybrid-search.js:48 [HybridSearch] Using native hybrid search (QdrantBackend)
+core-vector-api.js:878 [VectHare] Hybrid search (native), dispatching to hybrid search module
+hybrid-search.js:48 [HybridSearch] Using native hybrid search (QdrantBackend)
 qdrant.js:841 [EventBase] Native hybrid request: collection=vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0, fusionMode=native_rrf, topK=20, sparse=5 tokens, searchTextPreview="我對 Mayla 説 "你記得我當時怎樣為你贖身的嗎?""
-qdrant.js:841 [EventBase] Native hybrid request: collection=vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0_v2, fusionMode=native_rrf, topK=20, sparse=710 tokens, searchTextPreview="我對 Mayla 説 "你記得我當時怎樣為你贖身的嗎?" 好，來仔細思考一下這次的劇情！ - 回顧當前情況 * 時間：20:15，晚上 * 位置：新大陸.流沙之國.扎赫拉巴德.星月綠洲頂層皇家套房，9個人分配好床位（Critblade+Mayla一張，索拉雅單獨，阿斯蒙蒂斯單獨，Kashier+Fern，Valerie單獨，Engni+Lia） * 人物關係：Mayla剛剛崩潰大哭，擔心Critblade會像她父親影翼一樣消失。Critblade現在要鼓勵她，並對房間內所有人喊話 - 當前劇情的主線是？暗線是？ * 主線：Critblade安撫Mayla"
 qdrant.js:841 [EventBase] Native hybrid request: collection=vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0, fusionMode=native_rrf, topK=20, sparse=710 tokens, searchTextPreview="我對 Mayla 説 "你記得我當時怎樣為你贖身的嗎?" 好，來仔細思考一下這次的劇情！ - 回顧當前情況 * 時間：20:15，晚上 * 位置：新大陸.流沙之國.扎赫拉巴德.星月綠洲頂層皇家套房，9個人分配好床位（Critblade+Mayla一張，索拉雅單獨，阿斯蒙蒂斯單獨，Kashier+Fern，Valerie單獨，Engni+Lia） * 人物關係：Mayla剛剛崩潰大哭，擔心Critblade會像她父親影翼一樣消失。Critblade現在要鼓勵她，並對房間內所有人喊話 - 當前劇情的主線是？暗線是？ * 主線：Critblade安撫Mayla"
-qdrant.js:841 [EventBase] Native hybrid request: collection=vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0_v2, fusionMode=native_rrf, topK=20, sparse=5 tokens, searchTextPreview="我對 Mayla 説 "你記得我當時怎樣為你贖身的嗎?""
 character.ts:107  POST https://st.sduteam.com/api/plugins/similharity/chunks/hybrid-query 500 (Internal Server Error)
 (anonymous) @ character.ts:107
-hybridQuery @ qdrant.js:846
+hybridQuery @ qdrant.js:852
 await in hybridQuery
 hybridSearch @ hybrid-search.js:51
 await in hybridSearch
@@ -95,155 +89,8 @@ value @ reactivity.esm-bundler.js:1540
 callWithErrorHandling @ runtime-core.esm-bundler.js:199
 callWithAsyncErrorHandling @ runtime-core.esm-bundler.js:206
 (anonymous) @ runtime-dom.esm-bundler.js:745
-qdrant.js:907 [Qdrant] Hybrid endpoint failed (500), falling back to vector-only search. Server said: {"error":"Qdrant POST /collections/vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0/query failed: 404 "}
-hybridQuery @ qdrant.js:907
-await in hybridQuery
-hybridSearch @ hybrid-search.js:51
-await in hybridSearch
-queryCollection @ core-vector-api.js:882
-await in queryCollection
-retrieveEvents @ eventbase-retrieval.js:144
-runEventBaseRetrieval @ eventbase-workflow.js:452
-await in runEventBaseRetrieval
-rearrangeChat @ chat-vectorization.js:1880
-await in rearrangeChat
-vecthare_rearrangeChat @ index.js:208
-runGenerationInterceptors @ extensions.js:2028
-await in runGenerationInterceptors
-Generate @ script.js:4505
-await in Generate
-triggerRefresh @ PromptViewer.vue:268
-(anonymous) @ PromptViewer.vue:250
-callWithErrorHandling @ runtime-core.esm-bundler.js:199
-(anonymous) @ runtime-core.esm-bundler.js:8133
-(anonymous) @ runtime-core.esm-bundler.js:8095
-(anonymous) @ runtime-core.esm-bundler.js:6018
-(anonymous) @ runtime-core.esm-bundler.js:5984
-(anonymous) @ runtime-core.esm-bundler.js:5483
-(anonymous) @ runtime-core.esm-bundler.js:5734
-(anonymous) @ runtime-core.esm-bundler.js:5914
-(anonymous) @ runtime-core.esm-bundler.js:5457
-(anonymous) @ runtime-core.esm-bundler.js:5734
-(anonymous) @ runtime-core.esm-bundler.js:5650
-(anonymous) @ runtime-core.esm-bundler.js:5605
-(anonymous) @ runtime-core.esm-bundler.js:5471
-(anonymous) @ runtime-core.esm-bundler.js:5734
-(anonymous) @ runtime-core.esm-bundler.js:5650
-(anonymous) @ runtime-core.esm-bundler.js:5605
-(anonymous) @ runtime-core.esm-bundler.js:5471
-(anonymous) @ runtime-core.esm-bundler.js:5734
-(anonymous) @ runtime-core.esm-bundler.js:5650
-(anonymous) @ runtime-core.esm-bundler.js:5605
-(anonymous) @ runtime-core.esm-bundler.js:5471
-(anonymous) @ runtime-core.esm-bundler.js:5734
-(anonymous) @ runtime-core.esm-bundler.js:1000
-(anonymous) @ runtime-core.esm-bundler.js:1026
-process @ runtime-core.esm-bundler.js:1060
-(anonymous) @ runtime-core.esm-bundler.js:5495
-(anonymous) @ runtime-core.esm-bundler.js:6132
-run @ reactivity.esm-bundler.js:250
-(anonymous) @ runtime-core.esm-bundler.js:6260
-(anonymous) @ runtime-core.esm-bundler.js:6032
-(anonymous) @ runtime-core.esm-bundler.js:5984
-(anonymous) @ runtime-core.esm-bundler.js:5483
-(anonymous) @ runtime-core.esm-bundler.js:5856
-(anonymous) @ runtime-core.esm-bundler.js:5932
-(anonymous) @ runtime-core.esm-bundler.js:5457
-(anonymous) @ runtime-core.esm-bundler.js:6212
-run @ reactivity.esm-bundler.js:250
-runIfDirty @ reactivity.esm-bundler.js:288
-callWithErrorHandling @ runtime-core.esm-bundler.js:199
-flushJobs @ runtime-core.esm-bundler.js:408
-Promise.then
-queueFlush @ runtime-core.esm-bundler.js:322
-queueJob @ runtime-core.esm-bundler.js:317
-(anonymous) @ runtime-core.esm-bundler.js:6254
-trigger @ reactivity.esm-bundler.js:278
-endBatch @ reactivity.esm-bundler.js:336
-notify @ reactivity.esm-bundler.js:627
-trigger @ reactivity.esm-bundler.js:601
-value @ reactivity.esm-bundler.js:1540
-(anonymous) @ reactivity.esm-bundler.js:1570
-(anonymous) @ Toolbox.vue:36
-callWithErrorHandling @ runtime-core.esm-bundler.js:199
-callWithAsyncErrorHandling @ runtime-core.esm-bundler.js:206
-(anonymous) @ runtime-dom.esm-bundler.js:745
-character.ts:107  POST https://st.sduteam.com/api/plugins/similharity/chunks/hybrid-query 500 (Internal Server Error)
-(anonymous) @ character.ts:107
-hybridQuery @ qdrant.js:846
-await in hybridQuery
-hybridSearch @ hybrid-search.js:51
-await in hybridSearch
-queryCollection @ core-vector-api.js:882
-await in queryCollection
-retrieveEvents @ eventbase-retrieval.js:144
-runEventBaseRetrieval @ eventbase-workflow.js:452
-await in runEventBaseRetrieval
-rearrangeChat @ chat-vectorization.js:1880
-await in rearrangeChat
-vecthare_rearrangeChat @ index.js:208
-runGenerationInterceptors @ extensions.js:2028
-await in runGenerationInterceptors
-Generate @ script.js:4505
-await in Generate
-triggerRefresh @ PromptViewer.vue:268
-(anonymous) @ PromptViewer.vue:250
-callWithErrorHandling @ runtime-core.esm-bundler.js:199
-(anonymous) @ runtime-core.esm-bundler.js:8133
-(anonymous) @ runtime-core.esm-bundler.js:8095
-(anonymous) @ runtime-core.esm-bundler.js:6018
-(anonymous) @ runtime-core.esm-bundler.js:5984
-(anonymous) @ runtime-core.esm-bundler.js:5483
-(anonymous) @ runtime-core.esm-bundler.js:5734
-(anonymous) @ runtime-core.esm-bundler.js:5914
-(anonymous) @ runtime-core.esm-bundler.js:5457
-(anonymous) @ runtime-core.esm-bundler.js:5734
-(anonymous) @ runtime-core.esm-bundler.js:5650
-(anonymous) @ runtime-core.esm-bundler.js:5605
-(anonymous) @ runtime-core.esm-bundler.js:5471
-(anonymous) @ runtime-core.esm-bundler.js:5734
-(anonymous) @ runtime-core.esm-bundler.js:5650
-(anonymous) @ runtime-core.esm-bundler.js:5605
-(anonymous) @ runtime-core.esm-bundler.js:5471
-(anonymous) @ runtime-core.esm-bundler.js:5734
-(anonymous) @ runtime-core.esm-bundler.js:5650
-(anonymous) @ runtime-core.esm-bundler.js:5605
-(anonymous) @ runtime-core.esm-bundler.js:5471
-(anonymous) @ runtime-core.esm-bundler.js:5734
-(anonymous) @ runtime-core.esm-bundler.js:1000
-(anonymous) @ runtime-core.esm-bundler.js:1026
-process @ runtime-core.esm-bundler.js:1060
-(anonymous) @ runtime-core.esm-bundler.js:5495
-(anonymous) @ runtime-core.esm-bundler.js:6132
-run @ reactivity.esm-bundler.js:250
-(anonymous) @ runtime-core.esm-bundler.js:6260
-(anonymous) @ runtime-core.esm-bundler.js:6032
-(anonymous) @ runtime-core.esm-bundler.js:5984
-(anonymous) @ runtime-core.esm-bundler.js:5483
-(anonymous) @ runtime-core.esm-bundler.js:5856
-(anonymous) @ runtime-core.esm-bundler.js:5932
-(anonymous) @ runtime-core.esm-bundler.js:5457
-(anonymous) @ runtime-core.esm-bundler.js:6212
-run @ reactivity.esm-bundler.js:250
-runIfDirty @ reactivity.esm-bundler.js:288
-callWithErrorHandling @ runtime-core.esm-bundler.js:199
-flushJobs @ runtime-core.esm-bundler.js:408
-Promise.then
-queueFlush @ runtime-core.esm-bundler.js:322
-queueJob @ runtime-core.esm-bundler.js:317
-(anonymous) @ runtime-core.esm-bundler.js:6254
-trigger @ reactivity.esm-bundler.js:278
-endBatch @ reactivity.esm-bundler.js:336
-notify @ reactivity.esm-bundler.js:627
-trigger @ reactivity.esm-bundler.js:601
-value @ reactivity.esm-bundler.js:1540
-(anonymous) @ reactivity.esm-bundler.js:1570
-(anonymous) @ Toolbox.vue:36
-callWithErrorHandling @ runtime-core.esm-bundler.js:199
-callWithAsyncErrorHandling @ runtime-core.esm-bundler.js:206
-(anonymous) @ runtime-dom.esm-bundler.js:745
-qdrant.js:907 [Qdrant] Hybrid endpoint failed (500), falling back to vector-only search. Server said: {"error":"Qdrant POST /collections/vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0/query failed: 404 "}
-hybridQuery @ qdrant.js:907
+qdrant.js:924 [Qdrant] Hybrid endpoint failed (500), falling back to vector-only search. Server said: {"error":"Qdrant POST /collections/vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0/query failed: 404 "}
+hybridQuery @ qdrant.js:924
 await in hybridQuery
 hybridSearch @ hybrid-search.js:51
 await in hybridSearch
@@ -317,7 +164,7 @@ callWithAsyncErrorHandling @ runtime-core.esm-bundler.js:206
 (anonymous) @ runtime-dom.esm-bundler.js:745
 character.ts:107  POST https://st.sduteam.com/api/plugins/similharity/chunks/hybrid-query 500 (Internal Server Error)
 (anonymous) @ character.ts:107
-hybridQuery @ qdrant.js:846
+hybridQuery @ qdrant.js:852
 await in hybridQuery
 hybridSearch @ hybrid-search.js:51
 await in hybridSearch
@@ -389,8 +236,8 @@ value @ reactivity.esm-bundler.js:1540
 callWithErrorHandling @ runtime-core.esm-bundler.js:199
 callWithAsyncErrorHandling @ runtime-core.esm-bundler.js:206
 (anonymous) @ runtime-dom.esm-bundler.js:745
-qdrant.js:907 [Qdrant] Hybrid endpoint failed (500), falling back to vector-only search. Server said: {"error":"Qdrant POST /collections/vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0_v2/query failed: 404 "}
-hybridQuery @ qdrant.js:907
+qdrant.js:924 [Qdrant] Hybrid endpoint failed (500), falling back to vector-only search. Server said: {"error":"Qdrant POST /collections/vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0/query failed: 404 "}
+hybridQuery @ qdrant.js:924
 await in hybridQuery
 hybridSearch @ hybrid-search.js:51
 await in hybridSearch
@@ -462,158 +309,9 @@ value @ reactivity.esm-bundler.js:1540
 callWithErrorHandling @ runtime-core.esm-bundler.js:199
 callWithAsyncErrorHandling @ runtime-core.esm-bundler.js:206
 (anonymous) @ runtime-dom.esm-bundler.js:745
-core-vector-api.js:888 [VectHare] Hybrid search (RRF) response: 0 result(s) in 1567ms, scores=[]
-core-vector-api.js:888 [VectHare] Hybrid search (RRF) response: 20 result(s) in 1772ms, scores=[0.8312, 0.7891, 0.7868, 0.7846, 0.7809, 0.7579, 0.7561, 0.7503, 0.7484, 0.7447, 0.7446, 0.7443, 0.7371, 0.7333, 0.7270, 0.7223, 0.7164, 0.7138, 0.7095, 0.7090]
-core-vector-api.js:888 [VectHare] Hybrid search (RRF) response: 20 result(s) in 2202ms, scores=[0.6329, 0.6237, 0.6235, 0.6192, 0.6120, 0.6052, 0.5985, 0.5840, 0.5631, 0.5604, 0.5596, 0.5584, 0.5545, 0.5526, 0.5484, 0.5432, 0.5378, 0.5367, 0.5357, 0.5342]
-character.ts:107  POST https://st.sduteam.com/api/plugins/similharity/chunks/hybrid-query 500 (Internal Server Error)
-(anonymous) @ character.ts:107
-hybridQuery @ qdrant.js:846
-await in hybridQuery
-hybridSearch @ hybrid-search.js:51
-await in hybridSearch
-queryCollection @ core-vector-api.js:882
-await in queryCollection
-retrieveEvents @ eventbase-retrieval.js:144
-runEventBaseRetrieval @ eventbase-workflow.js:452
-await in runEventBaseRetrieval
-rearrangeChat @ chat-vectorization.js:1880
-await in rearrangeChat
-vecthare_rearrangeChat @ index.js:208
-runGenerationInterceptors @ extensions.js:2028
-await in runGenerationInterceptors
-Generate @ script.js:4505
-await in Generate
-triggerRefresh @ PromptViewer.vue:268
-(anonymous) @ PromptViewer.vue:250
-callWithErrorHandling @ runtime-core.esm-bundler.js:199
-(anonymous) @ runtime-core.esm-bundler.js:8133
-(anonymous) @ runtime-core.esm-bundler.js:8095
-(anonymous) @ runtime-core.esm-bundler.js:6018
-(anonymous) @ runtime-core.esm-bundler.js:5984
-(anonymous) @ runtime-core.esm-bundler.js:5483
-(anonymous) @ runtime-core.esm-bundler.js:5734
-(anonymous) @ runtime-core.esm-bundler.js:5914
-(anonymous) @ runtime-core.esm-bundler.js:5457
-(anonymous) @ runtime-core.esm-bundler.js:5734
-(anonymous) @ runtime-core.esm-bundler.js:5650
-(anonymous) @ runtime-core.esm-bundler.js:5605
-(anonymous) @ runtime-core.esm-bundler.js:5471
-(anonymous) @ runtime-core.esm-bundler.js:5734
-(anonymous) @ runtime-core.esm-bundler.js:5650
-(anonymous) @ runtime-core.esm-bundler.js:5605
-(anonymous) @ runtime-core.esm-bundler.js:5471
-(anonymous) @ runtime-core.esm-bundler.js:5734
-(anonymous) @ runtime-core.esm-bundler.js:5650
-(anonymous) @ runtime-core.esm-bundler.js:5605
-(anonymous) @ runtime-core.esm-bundler.js:5471
-(anonymous) @ runtime-core.esm-bundler.js:5734
-(anonymous) @ runtime-core.esm-bundler.js:1000
-(anonymous) @ runtime-core.esm-bundler.js:1026
-process @ runtime-core.esm-bundler.js:1060
-(anonymous) @ runtime-core.esm-bundler.js:5495
-(anonymous) @ runtime-core.esm-bundler.js:6132
-run @ reactivity.esm-bundler.js:250
-(anonymous) @ runtime-core.esm-bundler.js:6260
-(anonymous) @ runtime-core.esm-bundler.js:6032
-(anonymous) @ runtime-core.esm-bundler.js:5984
-(anonymous) @ runtime-core.esm-bundler.js:5483
-(anonymous) @ runtime-core.esm-bundler.js:5856
-(anonymous) @ runtime-core.esm-bundler.js:5932
-(anonymous) @ runtime-core.esm-bundler.js:5457
-(anonymous) @ runtime-core.esm-bundler.js:6212
-run @ reactivity.esm-bundler.js:250
-runIfDirty @ reactivity.esm-bundler.js:288
-callWithErrorHandling @ runtime-core.esm-bundler.js:199
-flushJobs @ runtime-core.esm-bundler.js:408
-Promise.then
-queueFlush @ runtime-core.esm-bundler.js:322
-queueJob @ runtime-core.esm-bundler.js:317
-(anonymous) @ runtime-core.esm-bundler.js:6254
-trigger @ reactivity.esm-bundler.js:278
-endBatch @ reactivity.esm-bundler.js:336
-notify @ reactivity.esm-bundler.js:627
-trigger @ reactivity.esm-bundler.js:601
-value @ reactivity.esm-bundler.js:1540
-(anonymous) @ reactivity.esm-bundler.js:1570
-(anonymous) @ Toolbox.vue:36
-callWithErrorHandling @ runtime-core.esm-bundler.js:199
-callWithAsyncErrorHandling @ runtime-core.esm-bundler.js:206
-(anonymous) @ runtime-dom.esm-bundler.js:745
-qdrant.js:907 [Qdrant] Hybrid endpoint failed (500), falling back to vector-only search. Server said: {"error":"Qdrant POST /collections/vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0_v2/query failed: 404 "}
-hybridQuery @ qdrant.js:907
-await in hybridQuery
-hybridSearch @ hybrid-search.js:51
-await in hybridSearch
-queryCollection @ core-vector-api.js:882
-await in queryCollection
-retrieveEvents @ eventbase-retrieval.js:144
-runEventBaseRetrieval @ eventbase-workflow.js:452
-await in runEventBaseRetrieval
-rearrangeChat @ chat-vectorization.js:1880
-await in rearrangeChat
-vecthare_rearrangeChat @ index.js:208
-runGenerationInterceptors @ extensions.js:2028
-await in runGenerationInterceptors
-Generate @ script.js:4505
-await in Generate
-triggerRefresh @ PromptViewer.vue:268
-(anonymous) @ PromptViewer.vue:250
-callWithErrorHandling @ runtime-core.esm-bundler.js:199
-(anonymous) @ runtime-core.esm-bundler.js:8133
-(anonymous) @ runtime-core.esm-bundler.js:8095
-(anonymous) @ runtime-core.esm-bundler.js:6018
-(anonymous) @ runtime-core.esm-bundler.js:5984
-(anonymous) @ runtime-core.esm-bundler.js:5483
-(anonymous) @ runtime-core.esm-bundler.js:5734
-(anonymous) @ runtime-core.esm-bundler.js:5914
-(anonymous) @ runtime-core.esm-bundler.js:5457
-(anonymous) @ runtime-core.esm-bundler.js:5734
-(anonymous) @ runtime-core.esm-bundler.js:5650
-(anonymous) @ runtime-core.esm-bundler.js:5605
-(anonymous) @ runtime-core.esm-bundler.js:5471
-(anonymous) @ runtime-core.esm-bundler.js:5734
-(anonymous) @ runtime-core.esm-bundler.js:5650
-(anonymous) @ runtime-core.esm-bundler.js:5605
-(anonymous) @ runtime-core.esm-bundler.js:5471
-(anonymous) @ runtime-core.esm-bundler.js:5734
-(anonymous) @ runtime-core.esm-bundler.js:5650
-(anonymous) @ runtime-core.esm-bundler.js:5605
-(anonymous) @ runtime-core.esm-bundler.js:5471
-(anonymous) @ runtime-core.esm-bundler.js:5734
-(anonymous) @ runtime-core.esm-bundler.js:1000
-(anonymous) @ runtime-core.esm-bundler.js:1026
-process @ runtime-core.esm-bundler.js:1060
-(anonymous) @ runtime-core.esm-bundler.js:5495
-(anonymous) @ runtime-core.esm-bundler.js:6132
-run @ reactivity.esm-bundler.js:250
-(anonymous) @ runtime-core.esm-bundler.js:6260
-(anonymous) @ runtime-core.esm-bundler.js:6032
-(anonymous) @ runtime-core.esm-bundler.js:5984
-(anonymous) @ runtime-core.esm-bundler.js:5483
-(anonymous) @ runtime-core.esm-bundler.js:5856
-(anonymous) @ runtime-core.esm-bundler.js:5932
-(anonymous) @ runtime-core.esm-bundler.js:5457
-(anonymous) @ runtime-core.esm-bundler.js:6212
-run @ reactivity.esm-bundler.js:250
-runIfDirty @ reactivity.esm-bundler.js:288
-callWithErrorHandling @ runtime-core.esm-bundler.js:199
-flushJobs @ runtime-core.esm-bundler.js:408
-Promise.then
-queueFlush @ runtime-core.esm-bundler.js:322
-queueJob @ runtime-core.esm-bundler.js:317
-(anonymous) @ runtime-core.esm-bundler.js:6254
-trigger @ reactivity.esm-bundler.js:278
-endBatch @ reactivity.esm-bundler.js:336
-notify @ reactivity.esm-bundler.js:627
-trigger @ reactivity.esm-bundler.js:601
-value @ reactivity.esm-bundler.js:1540
-(anonymous) @ reactivity.esm-bundler.js:1570
-(anonymous) @ Toolbox.vue:36
-callWithErrorHandling @ runtime-core.esm-bundler.js:199
-callWithAsyncErrorHandling @ runtime-core.esm-bundler.js:206
-(anonymous) @ runtime-dom.esm-bundler.js:745
-core-vector-api.js:888 [VectHare] Hybrid search (RRF) response: 0 result(s) in 5136ms, scores=[]
-eventbase-retrieval.js:172 [EventBase] Live query: 2 collection(s) × 2 query/queries → 32 unique events
+core-vector-api.js:888 [VectHare] Hybrid search (RRF) response: 20 result(s) in 1369ms, scores=[0.8312, 0.7891, 0.7868, 0.7846, 0.7809, 0.7579, 0.7561, 0.7503, 0.7484, 0.7447, 0.7446, 0.7443, 0.7371, 0.7333, 0.7270, 0.7223, 0.7164, 0.7138, 0.7095, 0.7090]
+core-vector-api.js:888 [VectHare] Hybrid search (RRF) response: 20 result(s) in 7861ms, scores=[0.6329, 0.6237, 0.6235, 0.6192, 0.6120, 0.6052, 0.5985, 0.5840, 0.5631, 0.5604, 0.5596, 0.5584, 0.5545, 0.5526, 0.5484, 0.5432, 0.5378, 0.5367, 0.5357, 0.5342]
+eventbase-retrieval.js:172 [EventBase] Live query: 1 collection(s) × 2 query/queries → 32 unique events
 eventbase-retrieval.js:192 [EventBase] After importance filter (>=1): 32 candidates
 eventbase-retrieval.js:271 [EventBase] Dedup-depth skip: event "character_state_change" source_window_end=2113 is within last 50 messages (threshold=2066)
 eventbase-retrieval.js:271 [EventBase] Dedup-depth skip: event "promise_or_oath" source_window_end=2113 is within last 50 messages (threshold=2066)
@@ -640,15 +338,11 @@ event_type: revelation
 importance: 7
 summary: Critblade晚飯後前往Mayla房間，發現她整理行李時反覆撫摸「勾魂」上的藍色寶石以穩定情緒。Mayla表面用理性語氣列舉魔王領行程準備物品，如藥水、法袍、靴子，但內心極度不安。最終轉身坦露對見生父影翼的恐懼：擔心新大陸太大找不到他、找到後不認她、覺得她因枷鎖城妓院過去而骯髒、嫌棄身高僅152公分且母親都不記得。她的青色眼眸直視Critblade，眼眶泛紅但克制不哭，展現新任亞特蘭蒂斯公主身份與過去掙扎的脆弱轉折。
 DateTime: 1577
-chat-vectorization.js:1906 VectHare: Will query 3 collections: (3) ['vectra:vecthare_lorebook_story1_1778288919954', 'vectra:test', 'vectra:vecthare_diag']
+chat-vectorization.js:1906 VectHare: Will query 1 collections: ['vectra:vecthare_lorebook_story1_1778288919954']
 chat-vectorization.js:1925 VectHare: Extracted 8 keywords from query: (8) ['mayla', 'critblade', 'kashier', 'fern', 'engni', 'lia', 'valerie', 'master']
 collection-metadata.js:908 [VectHare Activation Filter] Collection vectra:vecthare_lorebook_story1_1778288919954: hasTriggers=false, hasConditions=false
 collection-metadata.js:945 [VectHare Activation Filter] Collection vectra:vecthare_lorebook_story1_1778288919954: ✗ NOT_ACTIVATED (no trigger match, no condition pass, not locked)
-collection-metadata.js:908 [VectHare Activation Filter] Collection vectra:test: hasTriggers=false, hasConditions=false
-collection-metadata.js:945 [VectHare Activation Filter] Collection vectra:test: ✗ NOT_ACTIVATED (no trigger match, no condition pass, not locked)
-collection-metadata.js:908 [VectHare Activation Filter] Collection vectra:vecthare_diag: hasTriggers=false, hasConditions=false
-collection-metadata.js:945 [VectHare Activation Filter] Collection vectra:vecthare_diag: ✗ NOT_ACTIVATED (no trigger match, no condition pass, not locked)
-collection-metadata.js:965 [VectHare Activation Filter] Summary: 3 collections → 0 active
+collection-metadata.js:965 [VectHare Activation Filter] Summary: 1 collections → 0 active
 chat-vectorization.js:1952 ⚠️ VectHare: No collections passed activation conditions and World Info disabled - chunks cannot be injected!
 chat-vectorization.js:1953    💡 Check your collection activation conditions in VectHare settings
 script.js:4547 Core/all messages: 2116/2116
@@ -659,4 +353,4 @@ world-info.js:5159 [WI] Adding 56 entries to prompt (56) [{…}, {…}, {…}, 
 index.js:19 [QR2] calling {args: Array(1), functionToCall: ƒ}
 script.js:4606 skipWIAN not active, adding WIAN
 handler.ts:225 [Prompt Template] start generate after 20 messages
-handler.ts:395 [Prompt Template] processing 20 messages in 26ms
+handler.ts:395 [Prompt Template] processing 20 messages in 40ms

@@ -1,6 +1,6 @@
 
-[Qdrant] getCollectionMetadata(vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0_v2) failed: Qdrant POST /collections/vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0_v2/points failed: 404 Not found: Collection `vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0_v2` doesn't exist!
-[Qdrant] getCollectionMetadata(vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0_v2) failed: Qdrant POST /collections/vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0_v2/points failed: 404 Not found: Collection `vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0_v2` doesn't exist!
+>>> [Qdrant] Listed 1606 items from vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0
+Discovered Qdrant Collection: vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0 1606 items
 [Qdrant] extractQueryKeywords anchor CJK pass → 5 unique tokens (showing top 5): 我對, 記得, 當時, 為你, 贖身
 [Qdrant] extractQueryKeywords context CJK pass → 5 unique tokens (showing top 0): (none)
 [Qdrant] extractQueryKeywords Latin pass → 1 unique tokens (showing top 1): mayla
@@ -17,26 +17,6 @@
 [Qdrant] extractQueryKeywords final → 60 tokens (fullCJK=true): 單獨, 我對, 記得, 當時, 為你, 贖身, 仔細, 思考, 劇情, 回顧, 當前, 情況, 時間, 晚上, 位置, 帶著, 起身, 兩個, 依然, 眼眸, 父親, 不能, 找到, 新大陸, 房間, 角落, 反應, 你要, 眷屬, 角色, 內心, 軍師, 恐懼, 精明, 忠誠, 方式, 掃過, 女人, 套房, 崩潰, 都會, 點醒, 能力, 整天, 愁眉苦臉, 表面, 內容, 這間, 沒有, 完整, mayla, critblade, engni, kashier, lia, fern, master, valerie, lead, nsfw
 [Qdrant] hybridQueryNative request failed. Body: {"prefetch":[{"query":[0.0025751616340130568,-0.0025910576805472374,0.030901940539479256,-0.02047412469983101,0.027086885645985603,-0.032173626124858856,0.02874007634818554,-0.015705306082963943,-0.013797779567539692,-0.01074573677033186,-0.01920243911445141,-0.030647603794932365,0.03255512937903404,0.007693693041801453,-0.0071532269939780235,0.013352690264582634,0.0018836830276995897,0.035607174038887024,-0.0015896059339866042,0.038913555443286896,-0.004864194430410862,0.02225448377430439,0.025 Error: Qdrant POST /collections/vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0/query failed: 404 
 [similharity] chunks/hybrid-query error: Error: Qdrant POST /collections/vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0/query failed: 404 
-    at QdrantBackend._request (file:///home/node/app/plugins/similharity/qdrant-backend.js:127:27)
-    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-    at async QdrantBackend.hybridQueryNative (file:///home/node/app/plugins/similharity/qdrant-backend.js:1190:20)
-    at async file:///home/node/app/plugins/similharity/index.js:1322:37
-[Qdrant] extractQueryKeywords anchor CJK pass → 35 unique tokens (showing top 15): 單獨, 我對, 記得, 當時, 為你, 贖身, 仔細, 思考, 劇情, 回顧, 當前, 情況, 時間, 晚上, 位置
-[Qdrant] extractQueryKeywords context CJK pass → 564 unique tokens (showing top 35): 帶著, 起身, 兩個, 依然, 眼眸, 父親, 不能, 找到, 新大陸, 房間, 角落, 反應, 你要, 眷屬, 角色, 內心, 軍師, 恐懼, 精明, 忠誠, 方式, 掃過, 女人, 套房, 崩潰, 都會, 點醒, 能力, 整天, 愁眉苦臉, 表面, 內容, 這間, 沒有, 完整
-[Qdrant] extractQueryKeywords Latin pass → 45 unique tokens (showing top 10): mayla, critblade, engni, kashier, lia, fern, master, valerie, lead, nsfw
-[Qdrant] extractQueryKeywords final → 60 tokens (fullCJK=true): 單獨, 我對, 記得, 當時, 為你, 贖身, 仔細, 思考, 劇情, 回顧, 當前, 情況, 時間, 晚上, 位置, 帶著, 起身, 兩個, 依然, 眼眸, 父親, 不能, 找到, 新大陸, 房間, 角落, 反應, 你要, 眷屬, 角色, 內心, 軍師, 恐懼, 精明, 忠誠, 方式, 掃過, 女人, 套房, 崩潰, 都會, 點醒, 能力, 整天, 愁眉苦臉, 表面, 內容, 這間, 沒有, 完整, mayla, critblade, engni, kashier, lia, fern, master, valerie, lead, nsfw
-[Qdrant] hybridQueryNative request failed. Body: {"prefetch":[{"query":[0.0025751616340130568,-0.0025910576805472374,0.030901940539479256,-0.02047412469983101,0.027086885645985603,-0.032173626124858856,0.02874007634818554,-0.015705306082963943,-0.013797779567539692,-0.01074573677033186,-0.01920243911445141,-0.030647603794932365,0.03255512937903404,0.007693693041801453,-0.0071532269939780235,0.013352690264582634,0.0018836830276995897,0.035607174038887024,-0.0015896059339866042,0.038913555443286896,-0.004864194430410862,0.02225448377430439,0.025 Error: Qdrant POST /collections/vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0_v2/query failed: 404 
-[similharity] chunks/hybrid-query error: Error: Qdrant POST /collections/vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0_v2/query failed: 404 
-    at QdrantBackend._request (file:///home/node/app/plugins/similharity/qdrant-backend.js:127:27)
-    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-    at async QdrantBackend.hybridQueryNative (file:///home/node/app/plugins/similharity/qdrant-backend.js:1190:20)
-    at async file:///home/node/app/plugins/similharity/index.js:1322:37
-[Qdrant] extractQueryKeywords anchor CJK pass → 5 unique tokens (showing top 5): 我對, 記得, 當時, 為你, 贖身
-[Qdrant] extractQueryKeywords context CJK pass → 5 unique tokens (showing top 0): (none)
-[Qdrant] extractQueryKeywords Latin pass → 1 unique tokens (showing top 1): mayla
-[Qdrant] extractQueryKeywords final → 6 tokens (fullCJK=false): 我對, 記得, 當時, 為你, 贖身, mayla
-[Qdrant] hybridQueryNative request failed. Body: {"prefetch":[{"query":[0.03954482078552246,-0.0040143984369933605,0.016536924988031387,-0.03738783299922943,-0.027681374922394753,-0.028999537229537964,0.008508128114044666,-0.012043195776641369,-0.030557362362742424,0.0013930562417954206,-0.016536924988031387,0.00034077450982294977,0.011683697812259197,-0.024565722793340683,0.01629726029932499,0.01503901556134224,0.016177427023649216,-0.00832837913185358,0.0059317233972251415,0.02983836643397808,-0.010784951969981194,0.007669298909604549,0.0381 Error: Qdrant POST /collections/vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0_v2/query failed: 404 
-[similharity] chunks/hybrid-query error: Error: Qdrant POST /collections/vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0_v2/query failed: 404 
     at QdrantBackend._request (file:///home/node/app/plugins/similharity/qdrant-backend.js:127:27)
     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
     at async QdrantBackend.hybridQueryNative (file:///home/node/app/plugins/similharity/qdrant-backend.js:1190:20)
