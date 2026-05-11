@@ -780,6 +780,11 @@ class QdrantBackend {
                 });
             }
 
+            // Always exclude the VectHare sentinel metadata point — it has no `hash` field,
+            // and surfacing it in chunk listings breaks delete-by-hash flows (chunk.hash is
+            // undefined → Qdrant rejects the delete with 400 PointsSelector format error).
+            const must_not = [{ key: 'type', match: { value: '_vecthare_meta' } }];
+
             // Scroll through all points
             const items = [];
             let offset = null;
@@ -795,10 +800,7 @@ class QdrantBackend {
                     scrollPayload.offset = offset;
                 }
 
-                // Add filters if any
-                if (must.length > 0) {
-                    scrollPayload.filter = { must };
-                }
+                scrollPayload.filter = must.length > 0 ? { must, must_not } : { must_not };
 
                 const response = await this._request('POST', `/collections/${mainCollection}/points/scroll`, scrollPayload);
 
@@ -900,18 +902,32 @@ class QdrantBackend {
         collectionName = this._parseCollectionName(collectionName);
         const mainCollection = collectionName;
 
-        try {
-            // Delete points by ID (hash)
-            // Ensure hashes are numbers - Qdrant requires unsigned integers or UUID strings
-            const numericHashes = hashes.map(h => typeof h === 'string' ? parseInt(h, 10) : h);
-            await this._request('POST', `/collections/${mainCollection}/points/delete?wait=true`, {
-                points: numericHashes,
-            });
-
-            console.log(`[Qdrant] Deleted ${hashes.length} items from ${mainCollection}`);
-        } catch (error) {
-            console.error(`[Qdrant] Delete failed for ${mainCollection}:`, error.message);
+        // Validate: Qdrant point IDs must be uint or UUID string. Drop null/undefined/NaN
+        // hashes before sending; surface them as an error so the client knows the delete
+        // never reached Qdrant for those items (previously: 400 from Qdrant + silent catch).
+        const numericHashes = [];
+        const invalidHashes = [];
+        for (const h of hashes) {
+            const n = typeof h === 'string' ? parseInt(h, 10) : h;
+            if (typeof n === 'number' && Number.isFinite(n) && n >= 0) {
+                numericHashes.push(n);
+            } else {
+                invalidHashes.push(h);
+            }
         }
+        if (invalidHashes.length > 0) {
+            throw new Error(`[Qdrant] Cannot delete: ${invalidHashes.length} item(s) have invalid hashes (${JSON.stringify(invalidHashes.slice(0, 3))}). These items likely have no \`hash\` payload field — e.g. the VectHare sentinel point. Listing now filters the sentinel out, so this should not happen for normal chunks.`);
+        }
+        if (numericHashes.length === 0) {
+            throw new Error(`[Qdrant] Cannot delete: all ${hashes.length} hash(es) were invalid.`);
+        }
+
+        // Throw on failure so the route returns 500 and the client UI sees the error.
+        await this._request('POST', `/collections/${mainCollection}/points/delete?wait=true`, {
+            points: numericHashes,
+        });
+
+        console.log(`[Qdrant] Deleted ${numericHashes.length} items from ${mainCollection}`);
     }
 
     /**
