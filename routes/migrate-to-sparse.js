@@ -168,22 +168,53 @@ export function registerMigrationRoutes(router, pluginName = 'similharity') {
                 }
             } catch (e) { /* no sentinel yet — fine */ }
 
-            // 0. Defensive: if a residual alias `sourceCollection` exists (from a previous
-            //    attempt that used the alias-based finalize), remove the alias entry first.
-            //    Otherwise a subsequent DELETE on the alias name would also drop the underlying
-            //    target collection (Qdrant alias-delete-by-DELETE-name is destructive).
+            // 0. Defensive: a residual alias may exist with `sourceCollection` as the alias
+            //    name (from a prior version of this code). Diagnose + unconditionally try to
+            //    delete it, because Qdrant refuses `PUT /collections/<name>` when `<name>` is
+            //    an alias.
             try {
-                const aliasList = await qdrantBackend._request('GET', '/collections/aliases');
-                const aliases = aliasList.result?.aliases || [];
-                const found = aliases.find(a => a.alias_name === sourceCollection);
-                if (found) {
-                    console.warn(`[${pluginName}] migrate/finalize: removing residual alias ${found.alias_name} → ${found.collection_name}`);
-                    await qdrantBackend._request('POST', '/collections/aliases', {
-                        actions: [{ delete_alias: { alias_name: sourceCollection } }],
-                    });
+                const globalAliasList = await qdrantBackend._request('GET', '/collections/aliases');
+                const globalAliases = globalAliasList.result?.aliases || [];
+                console.log(`[${pluginName}] migrate/finalize: GET /collections/aliases →`, JSON.stringify(globalAliases));
+
+                // Also check per-collection aliases on the target — these are what `create_alias`
+                // attached to v2.
+                let targetAliases = [];
+                try {
+                    const t = await qdrantBackend._request('GET', `/collections/${targetCollection}/aliases`);
+                    targetAliases = t.result?.aliases || [];
+                    console.log(`[${pluginName}] migrate/finalize: GET /collections/${targetCollection}/aliases →`, JSON.stringify(targetAliases));
+                } catch (e) {
+                    console.warn(`[${pluginName}] migrate/finalize: per-collection alias list failed:`, e.message);
                 }
             } catch (e) {
-                console.warn(`[${pluginName}] migrate/finalize: alias pre-check skipped:`, e.message);
+                console.warn(`[${pluginName}] migrate/finalize: global alias list failed:`, e.message);
+            }
+
+            // Build a set of alias names to delete. Three sources, deduped:
+            //   - The literal sourceCollection name (most likely culprit)
+            //   - Any alias from the global list whose alias_name equals sourceCollection
+            //     (handles Unicode-normalization edge cases — uses Qdrant's own copy of the name)
+            //   - Any alias pointing TO the target collection
+            const aliasNamesToDelete = new Set([sourceCollection]);
+            try {
+                const globalAliasList = await qdrantBackend._request('GET', '/collections/aliases');
+                for (const a of (globalAliasList.result?.aliases || [])) {
+                    if (a.alias_name === sourceCollection || a.collection_name === targetCollection || a.collection_name === sourceCollection) {
+                        aliasNamesToDelete.add(a.alias_name);
+                    }
+                }
+            } catch { /* already logged above */ }
+
+            for (const aliasName of aliasNamesToDelete) {
+                try {
+                    await qdrantBackend._request('POST', '/collections/aliases', {
+                        actions: [{ delete_alias: { alias_name: aliasName } }],
+                    });
+                    console.log(`[${pluginName}] migrate/finalize: delete_alias('${aliasName}') OK`);
+                } catch (e) {
+                    console.warn(`[${pluginName}] migrate/finalize: delete_alias('${aliasName}') failed:`, e.message);
+                }
             }
 
             // 1. Drop the original source collection IFF it actually exists as a real collection
