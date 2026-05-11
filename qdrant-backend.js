@@ -1123,8 +1123,9 @@ class QdrantBackend {
     /**
      * Build a Qdrant filter object from VectHare's filter shape. Shared by all hybrid paths.
      * Always excludes the `_vecthare_meta` sentinel point.
+     * Returns `null` when there are no must clauses (only sentinel exclusion stays).
      * @private
-     * @returns {{ must: Array, must_not: Array }}
+     * @returns {object|null}
      */
     _buildHybridFilter(filters) {
         const must = [];
@@ -1140,7 +1141,11 @@ class QdrantBackend {
         if (filters.content_type)       add('content_type',    { match: { value: filters.content_type } });
         // Always exclude the sentinel metadata point.
         const must_not = [{ key: 'type', match: { value: '_vecthare_meta' } }];
-        return { must, must_not };
+
+        const out = {};
+        if (must.length > 0) out.must = must;
+        out.must_not = must_not;
+        return out;
     }
 
     /**
@@ -1168,17 +1173,26 @@ class QdrantBackend {
         const prefetchLimit = options.prefetchLimit || topK * 4;
         const filter = this._buildHybridFilter(filters);
 
+        // For the default (unnamed) dense vector Qdrant expects `using` to be OMITTED, not "".
+        const densePrefetch  = { query: denseVector,  limit: prefetchLimit };
+        const sparsePrefetch = { query: sparseVector, using: 'text_sparse', limit: prefetchLimit };
+        if (filter) { densePrefetch.filter = filter; sparsePrefetch.filter = filter; }
+
         const body = {
-            prefetch: [
-                { query: denseVector,  using: '',           limit: prefetchLimit, filter },
-                { query: sparseVector, using: 'text_sparse', limit: prefetchLimit, filter },
-            ],
+            prefetch: [densePrefetch, sparsePrefetch],
             query: { fusion },
             limit: topK,
             with_payload: true,
         };
 
-        const resp = await this._request('POST', `/collections/${collectionName}/query`, body);
+        let resp;
+        try {
+            resp = await this._request('POST', `/collections/${collectionName}/query`, body);
+        } catch (err) {
+            // Surface the full Qdrant error so the route can include it in the 500 response.
+            console.error('[Qdrant] hybridQueryNative request failed. Body:', JSON.stringify(body).slice(0, 500), 'Error:', err.message);
+            throw err;
+        }
         const points = resp.result?.points || [];
 
         console.log(`[Qdrant] Native hybrid (fusion=${fusion}) returned ${points.length} results from ${collectionName}`);
@@ -1215,20 +1229,21 @@ class QdrantBackend {
         const prefetchLimit = options.prefetchLimit || topK * 4;
         const filter = this._buildHybridFilter(filters);
 
+        // Default (unnamed) dense vector: omit `using` entirely.
         const denseBody = {
             query: denseVector,
-            using: '',
             limit: prefetchLimit,
-            filter,
             with_payload: true,
         };
+        if (filter) denseBody.filter = filter;
+
         const sparseBody = {
             query: sparseVector,
             using: 'text_sparse',
             limit: prefetchLimit,
-            filter,
             with_payload: true,
         };
+        if (filter) sparseBody.filter = filter;
 
         const [denseResp, sparseResp] = await Promise.all([
             this._request('POST', `/collections/${collectionName}/query`, denseBody),
