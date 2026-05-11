@@ -902,8 +902,9 @@ export class QdrantBackend extends VectorBackend {
                 };
             }
 
-            // If hybrid endpoint returns 404 or similar, fall back
-            console.warn(`[Qdrant] Hybrid endpoint not available (${response.status}), falling back to vector-only search`);
+            // Surface the server-side error before falling back, so 500s aren't silent.
+            const errorBody = await response.text().catch(() => '(no body)');
+            console.warn(`[Qdrant] Hybrid endpoint failed (${response.status}), falling back to vector-only search. Server said: ${errorBody.slice(0, 500)}`);
         } catch (error) {
             console.warn(`[Qdrant] Hybrid search failed:`, error.message);
         }

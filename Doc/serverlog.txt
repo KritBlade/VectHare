@@ -1,0 +1,61 @@
+>>> [Qdrant] Listed 1605 items from vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0
+Discovered Qdrant Collection: vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0 1605 items
+New connection from 10.0.1.249 (forwarded: 172.68.186.98); User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36
+
+New connection from 10.0.1.249 (forwarded: 172.70.160.234); User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36
+
+New connection from 10.0.1.249 (forwarded: 141.101.98.226); User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36
+
+New connection from 10.0.1.249 (forwarded: 172.70.163.47); User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36
+
+[Qdrant] Created collection: vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0_v2 (dim=4096, +text_sparse[idf])
+[Qdrant] Created index for type (keyword (tenant))
+[Qdrant] Created index for sourceId (keyword (tenant))
+[Qdrant] Created index for embeddingSource (keyword)
+[Qdrant] Created index for embeddingModel (keyword)
+[Qdrant] Created index for characterName (keyword)
+[Qdrant] Created index for chatId (keyword)
+[Qdrant] Created index for keywords (keyword)
+[Qdrant] Created index for text (text)
+[Qdrant] Created index for hash (integer)
+[Qdrant] Created index for timestamp (integer)
+[Qdrant] Created index for importance (integer)
+[Qdrant] Wrote sentinel for vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0_v2: {
+  cjk_tokenizer_mode: 'jieba_tw',
+  migrated_from: 'vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0'
+}
+New connection from 10.0.1.249 (forwarded: 172.68.229.23); User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36
+
+New connection from 10.0.1.249 (forwarded: 162.158.216.189); User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36
+
+New connection from 10.0.1.249 (forwarded: 172.64.192.32); User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36
+
+New connection from 10.0.1.249 (forwarded: 172.69.224.146); User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36
+
+New connection from 10.0.1.249 (forwarded: 172.64.192.91); User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36
+
+Instantiated the tokenizer for gpt-3.5-turbo
+New connection from 10.0.1.249 (forwarded: 172.71.241.106); User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36
+
+New connection from 10.0.1.249 (forwarded: 172.70.85.86); User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36
+
+>>> [Qdrant] Listed 1606 items from vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0_v2
+Discovered Qdrant Collection: vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0_v2 1606 items
+New connection from 10.0.1.249 (forwarded: 172.69.195.156); User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36
+
+New connection from 10.0.1.249 (forwarded: 162.158.216.67); User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36
+
+New connection from 10.0.1.249 (forwarded: 172.64.192.73); User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36
+
+New connection from 10.0.1.249 (forwarded: 172.68.186.103); User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36
+
+New connection from 10.0.1.249 (forwarded: 141.101.98.157); User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36
+
+[Qdrant] extractQueryKeywords anchor CJK pass → 35 unique tokens (showing top 15): 單獨, 我對, 記得, 當時, 為你, 贖身, 仔細, 思考, 劇情, 回顧, 當前, 情況, 時間, 晚上, 位置
+[Qdrant] extractQueryKeywords context CJK pass → 564 unique tokens (showing top 35): 帶著, 起身, 兩個, 依然, 眼眸, 父親, 不能, 找到, 新大陸, 房間, 角落, 反應, 你要, 眷屬, 角色, 內心, 軍師, 恐懼, 精明, 忠誠, 方式, 掃過, 女人, 套房, 崩潰, 都會, 點醒, 能力, 整天, 愁眉苦臉, 表面, 內容, 這間, 沒有, 完整
+[Qdrant] extractQueryKeywords Latin pass → 45 unique tokens (showing top 10): mayla, critblade, engni, kashier, lia, fern, master, valerie, lead, nsfw
+[Qdrant] extractQueryKeywords final → 60 tokens (fullCJK=true): 單獨, 我對, 記得, 當時, 為你, 贖身, 仔細, 思考, 劇情, 回顧, 當前, 情況, 時間, 晚上, 位置, 帶著, 起身, 兩個, 依然, 眼眸, 父親, 不能, 找到, 新大陸, 房間, 角落, 反應, 你要, 眷屬, 角色, 內心, 軍師, 恐懼, 精明, 忠誠, 方式, 掃過, 女人, 套房, 崩潰, 都會, 點醒, 能力, 整天, 愁眉苦臉, 表面, 內容, 這間, 沒有, 完整, mayla, critblade, engni, kashier, lia, fern, master, valerie, lead, nsfw
+[Qdrant] extractQueryKeywords anchor CJK pass → 5 unique tokens (showing top 5): 我對, 記得, 當時, 為你, 贖身
+[Qdrant] extractQueryKeywords context CJK pass → 5 unique tokens (showing top 0): (none)
+[Qdrant] extractQueryKeywords Latin pass → 1 unique tokens (showing top 1): mayla
+[Qdrant] extractQueryKeywords final → 6 tokens (fullCJK=false): 我對, 記得, 當時, 為你, 贖身, mayla

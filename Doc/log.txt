@@ -1,240 +1,339 @@
-Generate entered
-index.js:19 [QR2] calling {args: Array(3), functionToCall: ƒ}
-index.js:19 [QR2] Before-generation hook skipped due to dryRun.
-script.js:4547 Core/all messages: 14/731
+VectHare: hybrid_fusion_mode = native_rrf
 world-info.js:5159 [WI] Hypothetically adding 56 entries to prompt (56) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
 script.js:4606 skipWIAN not active, adding WIAN
-ui-manager.js:2298 VectHare: Keyword scoring method changed to bm25
-ui-manager.js:2298 VectHare: Keyword scoring method changed to hybrid
 script.js:4232 Generate entered
 index.js:19 [QR2] calling {args: Array(3), functionToCall: ƒ}
-chat-vectorization.js:1841 🐰 VectHare: rearrangeChat called (type: normal, chat length: 14)
-eventbase-workflow.js:344 [EventBase] Live collection skipped (not locked to chat): vecthare_eventbase_qdrant_critblade_異世界學校_60d40b35-fa7a-4f30-8485-805303f4916a
-eventbase-workflow.js:344 [EventBase] Live collection skipped (not locked to chat): vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0
-eventbase-workflow.js:377 [EventBase] Live retrieval: uuid=60d40b35-fa7a-4f30-8485-805303f4916a, lockedLiveCollections=2, ids=["vecthare_eventbase_standard_critblade_chat_60d40b35-fa7a-4f30-8485-805303f4916a","vecthare_eventbase_standard_critblade_異世界學校_60d40b35-fa7a-4f30-8485-805303f4916a"]
-eventbase-workflow.js:390 [EventBase] Phase A: live=true, archiveCollections=0, searchText length=2311
-eventbase-workflow.js:404 [EventBase] Keyword query (user last message, 385 chars): 我説 "Alpha, 你的分析沒有錯.  不過, 我有一個你不知道的資訊可以跟你分享.  我們跟5龍族有很大的關聯, 我的龍脈之氣, 有2脈 (黃, 赤) 都是來自2個龍族公主, 御膳是跟Nikita.  而5龍族的守護神是一個深不可測的老
-eventbase-retrieval.js:124 [EventBase] Retrieval start — topK overfetch=20, minImportance=1, method=bm25, nativePrefer=false, liveCollections=2
-2standard.js:373 [VectHare] queryCollection via plugin: collectionId=vecthare_eventbase_standard_critblade_chat_60d40b35-fa7a-4f30-8485-805303f4916a, source=openrouter, model=qwen/qwen3-embedding-8b, topK=40, threshold=0.25, hasQueryVector=false
-2standard.js:373 [VectHare] queryCollection via plugin: collectionId=vecthare_eventbase_standard_critblade_異世界學校_60d40b35-fa7a-4f30-8485-805303f4916a, source=openrouter, model=qwen/qwen3-embedding-8b, topK=40, threshold=0.25, hasQueryVector=false
-standard.js:381 [VectHare] plugin query response: status=200 ok=true
-standard.js:390 [VectHare] plugin query result: count=40, results.length=40, error=none
-core-vector-api.js:912 [EventBase] Embedding search response: 40 result(s) in 1975ms, scores=[0.8740, 0.6789, 0.6766, 0.6692, 0.6684, 0.6499, 0.6329, 0.6311, 0.6305, 0.6294, 0.6280, 0.6256, 0.6201, 0.6172, 0.6148, 0.6147, 0.6146, 0.6112, 0.6111, 0.6104, 0.6064, 0.6064, 0.6061, 0.6054, 0.6018, 0.6017, 0.6013, 0.5998, 0.5992, 0.5966, 0.5962, 0.5952, 0.5929, 0.5918, 0.5912, 0.5906, 0.5902, 0.5883, 0.5871, 0.5869]
-query-keyword-extractor.js:115 [VectHare] extractQueryKeywords anchor CJK -> 33 unique (top 15): 老人家, 笑着, 着説, 不要, 我説, 分析, 沒有, 我有, 不知道, 資訊, 分享, 很大, 關聯, 龍脈, 都是
-query-keyword-extractor.js:116 [VectHare] extractQueryKeywords context CJK -> 58 unique (top 35): 輸入, 接下來, 劇情, 相關, 記憶, 公主, 御膳, 守護神, 深不可測, 老頑童, 雪兎, 有沒有, 打贏, 魔王, 光笑, 最好, 魔女, 也沒有, 必勝, 機會, 我笑, 對對, 就好, 今天, 晚上, 休息, 明天, 才會, 使用者, 以下, 代碼, 目的, 對應, 索引, 編碼
-query-keyword-extractor.js:117 [VectHare] extractQueryKeywords Latin -> 5 unique (top 5): alpha, nikita, best_candidate_id, am01, am02
-query-keyword-extractor.js:118 [VectHare] extractQueryKeywords final -> 55 tokens (fullCJK=true): 老人家, 笑着, 着説, 不要, 我説, 分析, 沒有, 我有, 不知道, 資訊, 分享, 很大, 關聯, 龍脈, 都是, 輸入, 接下來, 劇情, 相關, 記憶, 公主, 御膳, 守護神, 深不可測, 老頑童, 雪兎, 有沒有, 打贏, 魔王, 光笑, 最好, 魔女, 也沒有, 必勝, 機會, 我笑, 對對, 就好, 今天, 晚上, 休息, 明天, 才會, 使用者, 以下, 代碼, 目的, 對應, 索引, 編碼, alpha, nikita, best_candidate_id, am01, am02
-bm25-scorer.js:650 [BM25] Applying BM25 scoring to 40 results (k1=1.5, b=0.75, α=0.5, β=0.5)
-bm25-scorer.js:497 [BM25+] Indexed 40 documents, avg length: 58.6 tokens, sublinearTf=true, fieldBoosting=false
-bm25-scorer.js:689 [BM25] Top result: vector=0.8740, bm25=34.8450, combined=0.9370
-core-vector-api.js:932 [VectHare] #1 final=0.9370 vector=0.8740 bm25=34.8450 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #2 final=0.4154 vector=0.6684 bm25=5.6604 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #3 final=0.4114 vector=0.6789 bm25=5.0163 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #4 final=0.3799 vector=0.6147 bm25=5.0546 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #5 final=0.3757 vector=0.6112 bm25=4.8859 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #6 final=0.3748 vector=0.6329 bm25=4.0652 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #7 final=0.3741 vector=0.6692 bm25=2.7522 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #8 final=0.3704 vector=0.6499 bm25=3.1691 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #9 final=0.3657 vector=0.6280 bm25=3.6024 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #10 final=0.3653 vector=0.6146 bm25=4.0396 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #11 final=0.3649 vector=0.6201 bm25=3.8202 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #12 final=0.3622 vector=0.5902 bm25=4.6794 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #13 final=0.3618 vector=0.6013 bm25=4.2652 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #14 final=0.3591 vector=0.6305 bm25=3.0538 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #15 final=0.3533 vector=0.5869 bm25=4.1704 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #16 final=0.3524 vector=0.6064 bm25=3.4268 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #17 final=0.3503 vector=0.6766 bm25=0.8405 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #18 final=0.3498 vector=0.5906 bm25=3.8005 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #19 final=0.3478 vector=0.6054 bm25=3.1439 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #20 final=0.3450 vector=0.5966 bm25=3.2563 (A1 BM25 re-rank)
-standard.js:381 [VectHare] plugin query response: status=200 ok=true
-standard.js:390 [VectHare] plugin query result: count=28, results.length=28, error=none
-core-vector-api.js:912 [EventBase] Embedding search response: 28 result(s) in 2020ms, scores=[0.8727, 0.7467, 0.7349, 0.7028, 0.6872, 0.6853, 0.6796, 0.6777, 0.6777, 0.6774, 0.6709, 0.6706, 0.6650, 0.6558, 0.6494, 0.6391, 0.6358, 0.6246, 0.6239, 0.6045, 0.5896, 0.5732, 0.5485, 0.5215, 0.4785, 0.4720, 0.4308, 0.4125]
-query-keyword-extractor.js:115 [VectHare] extractQueryKeywords anchor CJK -> 56 unique (top 15): 雪兔, 兔姬, 龍脈, 守護神, 聽完, 描述, 藍色, 眸子, 收縮, 伸出, 食指, 虛空, 代表, 能量, 數據
-query-keyword-extractor.js:116 [VectHare] extractQueryKeywords context CJK -> 395 unique (top 35): 感度, 職位, 眷屬, 明天, 魔女, 長髮, 正式, 主人, 語氣, 客廳, 休息, 那位, 老人家, 核心, 代碼, 看向, 校園, 都市, 九条, 一抹, 狸貓, 眼眸, 關懷, 準備, 今晚, 帶著, 紫羅蘭, 看著, 色慾, 魅惑, 魔羅, 安靜, 沒有, 精靈, 策略
-query-keyword-extractor.js:117 [VectHare] extractQueryKeywords Latin -> 12 unique (top 10): cup, alpha, best_candidate_id, echidna, kamira, satella, ooc, vex, critblade, nikita
-query-keyword-extractor.js:118 [VectHare] extractQueryKeywords final -> 60 tokens (fullCJK=true): 雪兔, 兔姬, 龍脈, 守護神, 聽完, 描述, 藍色, 眸子, 收縮, 伸出, 食指, 虛空, 代表, 能量, 數據, 感度, 職位, 眷屬, 明天, 魔女, 長髮, 正式, 主人, 語氣, 客廳, 休息, 那位, 老人家, 核心, 代碼, 看向, 校園, 都市, 九条, 一抹, 狸貓, 眼眸, 關懷, 準備, 今晚, 帶著, 紫羅蘭, 看著, 色慾, 魅惑, 魔羅, 安靜, 沒有, 精靈, 策略, cup, alpha, best_candidate_id, echidna, kamira, satella, ooc, vex, critblade, nikita
-bm25-scorer.js:650 [BM25] Applying BM25 scoring to 28 results (k1=1.5, b=0.75, α=0.5, β=0.5)
-bm25-scorer.js:497 [BM25+] Indexed 28 documents, avg length: 67.2 tokens, sublinearTf=true, fieldBoosting=false
-bm25-scorer.js:689 [BM25] Top result: vector=0.8727, bm25=24.5326, combined=0.9363
-core-vector-api.js:932 [VectHare] #1 final=0.9363 vector=0.8727 bm25=24.5326 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #2 final=0.5938 vector=0.7467 bm25=10.8163 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #3 final=0.5195 vector=0.7349 bm25=7.4599 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #4 final=0.5082 vector=0.6853 bm25=8.1210 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #5 final=0.4816 vector=0.6706 bm25=7.1764 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #6 final=0.4781 vector=0.5896 bm25=8.9957 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #7 final=0.4660 vector=0.6709 bm25=6.4048 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #8 final=0.4566 vector=0.6872 bm25=5.5475 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #9 final=0.4434 vector=0.7028 bm25=4.5124 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #10 final=0.4405 vector=0.6796 bm25=4.9382 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #11 final=0.4395 vector=0.6777 bm25=4.9373 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #12 final=0.4329 vector=0.6558 bm25=5.1536 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #13 final=0.4192 vector=0.6358 bm25=4.9684 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #14 final=0.4161 vector=0.6777 bm25=3.7886 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #15 final=0.3988 vector=0.5215 bm25=6.7742 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #16 final=0.3906 vector=0.6650 bm25=2.8504 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #17 final=0.3882 vector=0.6391 bm25=3.3704 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #18 final=0.3842 vector=0.6774 bm25=2.2344 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #19 final=0.3678 vector=0.6246 bm25=2.7231 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #20 final=0.3661 vector=0.6045 bm25=3.1312 (A1 BM25 re-rank)
-standard.js:381 [VectHare] plugin query response: status=200 ok=true
-standard.js:390 [VectHare] plugin query result: count=28, results.length=28, error=none
-core-vector-api.js:912 [EventBase] Embedding search response: 28 result(s) in 4540ms, scores=[0.8232, 0.6927, 0.6838, 0.6308, 0.6298, 0.6258, 0.6217, 0.6094, 0.5996, 0.5962, 0.5952, 0.5943, 0.5908, 0.5712, 0.5705, 0.5502, 0.5486, 0.5437, 0.5403, 0.5291, 0.5135, 0.5104, 0.5025, 0.5013, 0.4861, 0.4794, 0.4486, 0.4191]
-query-keyword-extractor.js:115 [VectHare] extractQueryKeywords anchor CJK -> 33 unique (top 15): 老人家, 笑着, 着説, 不要, 我説, 分析, 沒有, 我有, 不知道, 資訊, 分享, 很大, 關聯, 龍脈, 都是
-query-keyword-extractor.js:116 [VectHare] extractQueryKeywords context CJK -> 58 unique (top 35): 輸入, 接下來, 劇情, 相關, 記憶, 公主, 御膳, 守護神, 深不可測, 老頑童, 雪兎, 有沒有, 打贏, 魔王, 光笑, 最好, 魔女, 也沒有, 必勝, 機會, 我笑, 對對, 就好, 今天, 晚上, 休息, 明天, 才會, 使用者, 以下, 代碼, 目的, 對應, 索引, 編碼
-query-keyword-extractor.js:117 [VectHare] extractQueryKeywords Latin -> 5 unique (top 5): alpha, nikita, best_candidate_id, am01, am02
-query-keyword-extractor.js:118 [VectHare] extractQueryKeywords final -> 55 tokens (fullCJK=true): 老人家, 笑着, 着説, 不要, 我説, 分析, 沒有, 我有, 不知道, 資訊, 分享, 很大, 關聯, 龍脈, 都是, 輸入, 接下來, 劇情, 相關, 記憶, 公主, 御膳, 守護神, 深不可測, 老頑童, 雪兎, 有沒有, 打贏, 魔王, 光笑, 最好, 魔女, 也沒有, 必勝, 機會, 我笑, 對對, 就好, 今天, 晚上, 休息, 明天, 才會, 使用者, 以下, 代碼, 目的, 對應, 索引, 編碼, alpha, nikita, best_candidate_id, am01, am02
-bm25-scorer.js:650 [BM25] Applying BM25 scoring to 28 results (k1=1.5, b=0.75, α=0.5, β=0.5)
-bm25-scorer.js:497 [BM25+] Indexed 28 documents, avg length: 67.2 tokens, sublinearTf=true, fieldBoosting=false
-bm25-scorer.js:689 [BM25] Top result: vector=0.8232, bm25=30.0664, combined=0.9116
-core-vector-api.js:932 [VectHare] #1 final=0.9116 vector=0.8232 bm25=30.0664 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #2 final=0.3958 vector=0.6094 bm25=5.4744 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #3 final=0.3865 vector=0.5952 bm25=5.3469 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #4 final=0.3793 vector=0.6927 bm25=1.9818 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #5 final=0.3723 vector=0.6217 bm25=3.6955 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #6 final=0.3712 vector=0.6838 bm25=1.7613 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #7 final=0.3695 vector=0.6308 bm25=3.2542 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #8 final=0.3669 vector=0.6258 bm25=3.2490 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #9 final=0.3667 vector=0.6298 bm25=3.1191 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #10 final=0.3435 vector=0.5908 bm25=2.8897 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #11 final=0.3331 vector=0.5996 bm25=2.0048 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #12 final=0.3268 vector=0.5943 bm25=1.7809 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #13 final=0.3183 vector=0.5712 bm25=1.9647 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #14 final=0.3066 vector=0.4861 bm25=3.8231 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #15 final=0.3053 vector=0.5962 bm25=0.4360 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #16 final=0.3024 vector=0.5502 bm25=1.6397 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #17 final=0.2993 vector=0.5403 bm25=1.7534 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #18 final=0.2956 vector=0.5291 bm25=1.8686 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #19 final=0.2948 vector=0.5135 bm25=2.2857 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #20 final=0.2938 vector=0.5705 bm25=0.5099 (A1 BM25 re-rank)
-standard.js:381 [VectHare] plugin query response: status=200 ok=true
-standard.js:390 [VectHare] plugin query result: count=40, results.length=40, error=none
-core-vector-api.js:912 [EventBase] Embedding search response: 40 result(s) in 4739ms, scores=[0.8208, 0.7482, 0.7417, 0.7140, 0.7017, 0.7004, 0.6985, 0.6950, 0.6727, 0.6658, 0.6647, 0.6574, 0.6569, 0.6568, 0.6559, 0.6549, 0.6479, 0.6462, 0.6460, 0.6459, 0.6435, 0.6419, 0.6417, 0.6410, 0.6403, 0.6393, 0.6366, 0.6357, 0.6353, 0.6302, 0.6285, 0.6282, 0.6278, 0.6270, 0.6268, 0.6263, 0.6263, 0.6257, 0.6225, 0.6224]
-query-keyword-extractor.js:115 [VectHare] extractQueryKeywords anchor CJK -> 56 unique (top 15): 雪兔, 兔姬, 龍脈, 守護神, 聽完, 描述, 藍色, 眸子, 收縮, 伸出, 食指, 虛空, 代表, 能量, 數據
-query-keyword-extractor.js:116 [VectHare] extractQueryKeywords context CJK -> 395 unique (top 35): 感度, 職位, 眷屬, 明天, 魔女, 長髮, 正式, 主人, 語氣, 客廳, 休息, 那位, 老人家, 核心, 代碼, 看向, 校園, 都市, 九条, 一抹, 狸貓, 眼眸, 關懷, 準備, 今晚, 帶著, 紫羅蘭, 看著, 色慾, 魅惑, 魔羅, 安靜, 沒有, 精靈, 策略
-query-keyword-extractor.js:117 [VectHare] extractQueryKeywords Latin -> 12 unique (top 10): cup, alpha, best_candidate_id, echidna, kamira, satella, ooc, vex, critblade, nikita
-query-keyword-extractor.js:118 [VectHare] extractQueryKeywords final -> 60 tokens (fullCJK=true): 雪兔, 兔姬, 龍脈, 守護神, 聽完, 描述, 藍色, 眸子, 收縮, 伸出, 食指, 虛空, 代表, 能量, 數據, 感度, 職位, 眷屬, 明天, 魔女, 長髮, 正式, 主人, 語氣, 客廳, 休息, 那位, 老人家, 核心, 代碼, 看向, 校園, 都市, 九条, 一抹, 狸貓, 眼眸, 關懷, 準備, 今晚, 帶著, 紫羅蘭, 看著, 色慾, 魅惑, 魔羅, 安靜, 沒有, 精靈, 策略, cup, alpha, best_candidate_id, echidna, kamira, satella, ooc, vex, critblade, nikita
-bm25-scorer.js:650 [BM25] Applying BM25 scoring to 40 results (k1=1.5, b=0.75, α=0.5, β=0.5)
-bm25-scorer.js:497 [BM25+] Indexed 40 documents, avg length: 61.6 tokens, sublinearTf=true, fieldBoosting=false
-bm25-scorer.js:689 [BM25] Top result: vector=0.8208, bm25=21.5798, combined=0.9104
-core-vector-api.js:932 [VectHare] #1 final=0.9104 vector=0.8208 bm25=21.5798 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #2 final=0.7636 vector=0.7417 bm25=16.9514 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #3 final=0.6604 vector=0.7482 bm25=12.3548 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #4 final=0.5850 vector=0.6417 bm25=11.4021 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #5 final=0.5760 vector=0.6285 bm25=11.2995 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #6 final=0.5660 vector=0.6569 bm25=10.2529 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #7 final=0.5239 vector=0.6419 bm25=8.7601 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #8 final=0.5190 vector=0.6549 bm25=8.2672 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #9 final=0.5094 vector=0.6393 bm25=8.1897 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #10 final=0.5074 vector=0.7004 bm25=6.7846 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #11 final=0.4968 vector=0.6950 bm25=6.4423 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #12 final=0.4892 vector=0.6658 bm25=6.7468 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #13 final=0.4846 vector=0.6574 bm25=6.7281 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #14 final=0.4789 vector=0.6410 bm25=6.8370 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #15 final=0.4673 vector=0.6282 bm25=6.6115 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #16 final=0.4653 vector=0.6268 bm25=6.5563 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #17 final=0.4493 vector=0.6460 bm25=5.4521 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #18 final=0.4486 vector=0.6985 bm25=4.2874 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #19 final=0.4336 vector=0.6270 bm25=5.1839 (A1 BM25 re-rank)
-core-vector-api.js:932 [VectHare] #20 final=0.4296 vector=0.6403 bm25=4.7212 (A1 BM25 re-rank)
-eventbase-retrieval.js:172 [EventBase] Live query: 2 collection(s) × 2 query/queries → 55 unique events
-eventbase-retrieval.js:192 [EventBase] After importance filter (>=1): 55 candidates
-2eventbase-retrieval.js:271 [EventBase] Dedup-depth skip: event "revelation" source_window_end=729 is within last 50 messages (threshold=681)
-eventbase-retrieval.js:271 [EventBase] Dedup-depth skip: event "main_quest_update" source_window_end=717 is within last 50 messages (threshold=681)
-eventbase-retrieval.js:271 [EventBase] Dedup-depth skip: event "revelation" source_window_end=713 is within last 50 messages (threshold=681)
-eventbase-retrieval.js:271 [EventBase] Dedup-depth skip: event "main_quest_update" source_window_end=713 is within last 50 messages (threshold=681)
-eventbase-retrieval.js:271 [EventBase] Dedup-depth skip: event "revelation" source_window_end=725 is within last 50 messages (threshold=681)
-eventbase-retrieval.js:271 [EventBase] Dedup-depth skip: event "revelation" source_window_end=685 is within last 50 messages (threshold=681)
-eventbase-retrieval.js:271 [EventBase] Dedup-depth skip: event "revelation" source_window_end=709 is within last 50 messages (threshold=681)
-eventbase-retrieval.js:271 [EventBase] Dedup-depth skip: event "revelation" source_window_end=695 is within last 50 messages (threshold=681)
-eventbase-retrieval.js:271 [EventBase] Dedup-depth skip: event "dialogue_significant" source_window_end=727 is within last 50 messages (threshold=681)
-eventbase-retrieval.js:271 [EventBase] Dedup-depth skip: event "revelation" source_window_end=721 is within last 50 messages (threshold=681)
-eventbase-retrieval.js:271 [EventBase] Dedup-depth skip: event "main_quest_update" source_window_end=703 is within last 50 messages (threshold=681)
-eventbase-retrieval.js:271 [EventBase] Dedup-depth skip: event "revelation" source_window_end=703 is within last 50 messages (threshold=681)
-eventbase-retrieval.js:271 [EventBase] Dedup-depth skip: event "dialogue_significant" source_window_end=711 is within last 50 messages (threshold=681)
-eventbase-retrieval.js:271 [EventBase] Dedup-depth skip: event "revelation" source_window_end=723 is within last 50 messages (threshold=681)
-eventbase-retrieval.js:271 [EventBase] Dedup-depth skip: event "character_state_change" source_window_end=719 is within last 50 messages (threshold=681)
-eventbase-retrieval.js:271 [EventBase] Dedup-depth skip: event "promise_or_oath" source_window_end=715 is within last 50 messages (threshold=681)
-eventbase-retrieval.js:271 [EventBase] Dedup-depth skip: event "character_introduction" source_window_end=721 is within last 50 messages (threshold=681)
-eventbase-retrieval.js:271 [EventBase] Dedup-depth skip: event "relationship_change" source_window_end=707 is within last 50 messages (threshold=681)
-eventbase-retrieval.js:271 [EventBase] Dedup-depth skip: event "revelation" source_window_end=701 is within last 50 messages (threshold=681)
-eventbase-retrieval.js:277 [EventBase] Dedup depth (50) removed 20 event(s) already visible in context
-eventbase-retrieval.js:285 [EventBase] Final events after dedup + trim: 10
-eventbase-retrieval.js:287   [0] type=main_quest_update imp=9 score=1.064 persist=true
-eventbase-retrieval.js:287   [1] type=character_state_change imp=10 score=0.937 persist=true
-eventbase-retrieval.js:287   [2] type=revelation imp=9 score=0.933 persist=true
-eventbase-retrieval.js:287   [3] type=revelation imp=9 score=0.911 persist=true
-eventbase-retrieval.js:287   [4] type=dialogue_significant imp=6 score=0.904 persist=true
-eventbase-retrieval.js:287   [5] type=character_state_change imp=7 score=0.899 persist=true
-eventbase-retrieval.js:287   [6] type=dialogue_significant imp=7 score=0.889 persist=true
-eventbase-retrieval.js:287   [7] type=revelation imp=7 score=0.886 persist=true
-eventbase-retrieval.js:287   [8] type=character_introduction imp=6 score=0.875 persist=true
-eventbase-retrieval.js:287   [9] type=character_state_change imp=7 score=0.869 persist=true
-eventbase-workflow.js:447 [EventBase] Retrieval debug: {dualQuery: true, keywordScoringMethod: 'bm25', nativeHybridPrefer: false, fusionMethod: 'rrf', rawCount: 55, …}
-eventbase-workflow.js:491 [EventBase] Injected 10 event(s) (requested 10), text length: 4398
-eventbase-workflow.js:492 [EventBase] setExtensionPrompt tag="3_vecthare_eventbase" position=0 depth=2
-eventbase-workflow.js:495 [EventBase] Slot verification — key exists: true, value type: string, length: 4398
-eventbase-workflow.js:496 [EventBase] extension_prompts keys: (13) ['1_memory', '2_floating_prompt', 'QUIET_PROMPT', 'customDepthWI_9999_0', 'customDepthWI_10000_0', 'customDepthWI_9998_0', 'customDepthWI_1_1', 'customDepthWI_2_1', 'PERSONA_DESCRIPTION', '__STORY_STRING__', 'DEPTH_PROMPT', '3_vecthare', '3_vecthare_eventbase']
-eventbase-workflow.js:497 [EventBase] Injection preview: <VectHareMemory>
-# Event 1
-event_type: main_quest_update
-importance: 9
-summary: 勇希分享與五龍族之深厚關聯，其龍脈之氣來自兩龍族公主及御膳Nikita，五龍族守護神為雪兔姬，可求教打贏魔王族之法。光警告勿直呼其老人家否則難勝。眾人決定今晚休息，明日先見雪兔姬。阿爾法納入計算，將其視為底層代碼守護者並標註關鍵轉折點。
-DateTime: -
-cause: 阿爾法分析後，勇希提供未知資訊補充。
-result: 緊張氣氛消解，眾女散去休息，為明日旅程及測試做準備。
-characters: 勇希, 阿爾法, 光, 九条光,
-chat-vectorization.js:1905 VectHare: Will query 1 collections: ['vectra:vecthare_lorebook_story1_1778288919954']
-chat-vectorization.js:1924 VectHare: Extracted 8 keywords from query: (8) ['cup', 'echidna', 'kamira', 'satella', 'vex', 'alpha', '阿爾法', '聽完']
+chat-vectorization.js:1842 🐰 VectHare: rearrangeChat called (type: normal, chat length: 2116)
+eventbase-workflow.js:361 [EventBase] Live collection skipped (not locked to chat): vecthare_eventbase_standard_critblade_chat_60d40b35-fa7a-4f30-8485-805303f4916a
+eventbase-workflow.js:361 [EventBase] Live collection skipped (not locked to chat): vecthare_eventbase_qdrant_critblade_異世界學校_60d40b35-fa7a-4f30-8485-805303f4916a
+eventbase-workflow.js:361 [EventBase] Live collection skipped (not locked to chat): vecthare_eventbase_standard_critblade_異世界學校_60d40b35-fa7a-4f30-8485-805303f4916a
+eventbase-workflow.js:361 [EventBase] Live collection skipped (not locked to chat): vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0_v2
+eventbase-workflow.js:394 [EventBase] Live retrieval: uuid=67d28099-167f-4c07-a7cb-1b62e44f43d0, lockedLiveCollections=1, ids=["vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0"]
+eventbase-workflow.js:407 [EventBase] Phase A: live=true, archiveCollections=0, searchText length=4450
+eventbase-workflow.js:421 [EventBase] Keyword query (user last message, 28 chars): 我對 Mayla 説 "你記得我當時怎樣為你贖身的嗎?"
+eventbase-retrieval.js:124 [EventBase] Retrieval start — topK overfetch=20, minImportance=1, method=bm25, nativePrefer=true, liveCollections=1
+2core-vector-api.js:878 [VectHare] Hybrid search (native), dispatching to hybrid search module
+2hybrid-search.js:48 [HybridSearch] Using native hybrid search (QdrantBackend)
+qdrant.js:841 [EventBase] Native hybrid request: collection=vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0, fusionMode=native_rrf, topK=20, sparse=710 tokens, searchTextPreview="我對 Mayla 説 "你記得我當時怎樣為你贖身的嗎?" 好，來仔細思考一下這次的劇情！ - 回顧當前情況 * 時間：20:15，晚上 * 位置：新大陸.流沙之國.扎赫拉巴德.星月綠洲頂層皇家套房，9個人分配好床位（Critblade+Mayla一張，索拉雅單獨，阿斯蒙蒂斯單獨，Kashier+Fern，Valerie單獨，Engni+Lia） * 人物關係：Mayla剛剛崩潰大哭，擔心Critblade會像她父親影翼一樣消失。Critblade現在要鼓勵她，並對房間內所有人喊話 - 當前劇情的主線是？暗線是？ * 主線：Critblade安撫Mayla"
+qdrant.js:841 [EventBase] Native hybrid request: collection=vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0, fusionMode=native_rrf, topK=20, sparse=5 tokens, searchTextPreview="我對 Mayla 説 "你記得我當時怎樣為你贖身的嗎?""
+character.ts:107  POST https://st.sduteam.com/api/plugins/similharity/chunks/hybrid-query 500 (Internal Server Error)
+(anonymous) @ character.ts:107
+hybridQuery @ qdrant.js:846
+await in hybridQuery
+hybridSearch @ hybrid-search.js:51
+await in hybridSearch
+queryCollection @ core-vector-api.js:882
+await in queryCollection
+retrieveEvents @ eventbase-retrieval.js:144
+runEventBaseRetrieval @ eventbase-workflow.js:452
+await in runEventBaseRetrieval
+rearrangeChat @ chat-vectorization.js:1880
+await in rearrangeChat
+vecthare_rearrangeChat @ index.js:208
+runGenerationInterceptors @ extensions.js:2028
+await in runGenerationInterceptors
+Generate @ script.js:4505
+await in Generate
+triggerRefresh @ PromptViewer.vue:268
+(anonymous) @ PromptViewer.vue:250
+callWithErrorHandling @ runtime-core.esm-bundler.js:199
+(anonymous) @ runtime-core.esm-bundler.js:8133
+(anonymous) @ runtime-core.esm-bundler.js:8095
+(anonymous) @ runtime-core.esm-bundler.js:6018
+(anonymous) @ runtime-core.esm-bundler.js:5984
+(anonymous) @ runtime-core.esm-bundler.js:5483
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:5914
+(anonymous) @ runtime-core.esm-bundler.js:5457
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:5650
+(anonymous) @ runtime-core.esm-bundler.js:5605
+(anonymous) @ runtime-core.esm-bundler.js:5471
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:5650
+(anonymous) @ runtime-core.esm-bundler.js:5605
+(anonymous) @ runtime-core.esm-bundler.js:5471
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:5650
+(anonymous) @ runtime-core.esm-bundler.js:5605
+(anonymous) @ runtime-core.esm-bundler.js:5471
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:1000
+(anonymous) @ runtime-core.esm-bundler.js:1026
+process @ runtime-core.esm-bundler.js:1060
+(anonymous) @ runtime-core.esm-bundler.js:5495
+(anonymous) @ runtime-core.esm-bundler.js:6132
+run @ reactivity.esm-bundler.js:250
+(anonymous) @ runtime-core.esm-bundler.js:6260
+(anonymous) @ runtime-core.esm-bundler.js:6032
+(anonymous) @ runtime-core.esm-bundler.js:5984
+(anonymous) @ runtime-core.esm-bundler.js:5483
+(anonymous) @ runtime-core.esm-bundler.js:5856
+(anonymous) @ runtime-core.esm-bundler.js:5932
+(anonymous) @ runtime-core.esm-bundler.js:5457
+(anonymous) @ runtime-core.esm-bundler.js:6212
+run @ reactivity.esm-bundler.js:250
+runIfDirty @ reactivity.esm-bundler.js:288
+callWithErrorHandling @ runtime-core.esm-bundler.js:199
+flushJobs @ runtime-core.esm-bundler.js:408
+Promise.then
+queueFlush @ runtime-core.esm-bundler.js:322
+queueJob @ runtime-core.esm-bundler.js:317
+(anonymous) @ runtime-core.esm-bundler.js:6254
+trigger @ reactivity.esm-bundler.js:278
+endBatch @ reactivity.esm-bundler.js:336
+notify @ reactivity.esm-bundler.js:627
+trigger @ reactivity.esm-bundler.js:601
+value @ reactivity.esm-bundler.js:1540
+(anonymous) @ reactivity.esm-bundler.js:1570
+(anonymous) @ Toolbox.vue:36
+callWithErrorHandling @ runtime-core.esm-bundler.js:199
+callWithAsyncErrorHandling @ runtime-core.esm-bundler.js:206
+(anonymous) @ runtime-dom.esm-bundler.js:745
+qdrant.js:906 [Qdrant] Hybrid endpoint not available (500), falling back to vector-only search
+hybridQuery @ qdrant.js:906
+await in hybridQuery
+hybridSearch @ hybrid-search.js:51
+await in hybridSearch
+queryCollection @ core-vector-api.js:882
+await in queryCollection
+retrieveEvents @ eventbase-retrieval.js:144
+runEventBaseRetrieval @ eventbase-workflow.js:452
+await in runEventBaseRetrieval
+rearrangeChat @ chat-vectorization.js:1880
+await in rearrangeChat
+vecthare_rearrangeChat @ index.js:208
+runGenerationInterceptors @ extensions.js:2028
+await in runGenerationInterceptors
+Generate @ script.js:4505
+await in Generate
+triggerRefresh @ PromptViewer.vue:268
+(anonymous) @ PromptViewer.vue:250
+callWithErrorHandling @ runtime-core.esm-bundler.js:199
+(anonymous) @ runtime-core.esm-bundler.js:8133
+(anonymous) @ runtime-core.esm-bundler.js:8095
+(anonymous) @ runtime-core.esm-bundler.js:6018
+(anonymous) @ runtime-core.esm-bundler.js:5984
+(anonymous) @ runtime-core.esm-bundler.js:5483
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:5914
+(anonymous) @ runtime-core.esm-bundler.js:5457
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:5650
+(anonymous) @ runtime-core.esm-bundler.js:5605
+(anonymous) @ runtime-core.esm-bundler.js:5471
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:5650
+(anonymous) @ runtime-core.esm-bundler.js:5605
+(anonymous) @ runtime-core.esm-bundler.js:5471
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:5650
+(anonymous) @ runtime-core.esm-bundler.js:5605
+(anonymous) @ runtime-core.esm-bundler.js:5471
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:1000
+(anonymous) @ runtime-core.esm-bundler.js:1026
+process @ runtime-core.esm-bundler.js:1060
+(anonymous) @ runtime-core.esm-bundler.js:5495
+(anonymous) @ runtime-core.esm-bundler.js:6132
+run @ reactivity.esm-bundler.js:250
+(anonymous) @ runtime-core.esm-bundler.js:6260
+(anonymous) @ runtime-core.esm-bundler.js:6032
+(anonymous) @ runtime-core.esm-bundler.js:5984
+(anonymous) @ runtime-core.esm-bundler.js:5483
+(anonymous) @ runtime-core.esm-bundler.js:5856
+(anonymous) @ runtime-core.esm-bundler.js:5932
+(anonymous) @ runtime-core.esm-bundler.js:5457
+(anonymous) @ runtime-core.esm-bundler.js:6212
+run @ reactivity.esm-bundler.js:250
+runIfDirty @ reactivity.esm-bundler.js:288
+callWithErrorHandling @ runtime-core.esm-bundler.js:199
+flushJobs @ runtime-core.esm-bundler.js:408
+Promise.then
+queueFlush @ runtime-core.esm-bundler.js:322
+queueJob @ runtime-core.esm-bundler.js:317
+(anonymous) @ runtime-core.esm-bundler.js:6254
+trigger @ reactivity.esm-bundler.js:278
+endBatch @ reactivity.esm-bundler.js:336
+notify @ reactivity.esm-bundler.js:627
+trigger @ reactivity.esm-bundler.js:601
+value @ reactivity.esm-bundler.js:1540
+(anonymous) @ reactivity.esm-bundler.js:1570
+(anonymous) @ Toolbox.vue:36
+callWithErrorHandling @ runtime-core.esm-bundler.js:199
+callWithAsyncErrorHandling @ runtime-core.esm-bundler.js:206
+(anonymous) @ runtime-dom.esm-bundler.js:745
+character.ts:107  POST https://st.sduteam.com/api/plugins/similharity/chunks/hybrid-query 500 (Internal Server Error)
+(anonymous) @ character.ts:107
+hybridQuery @ qdrant.js:846
+await in hybridQuery
+hybridSearch @ hybrid-search.js:51
+await in hybridSearch
+queryCollection @ core-vector-api.js:882
+await in queryCollection
+retrieveEvents @ eventbase-retrieval.js:144
+runEventBaseRetrieval @ eventbase-workflow.js:452
+await in runEventBaseRetrieval
+rearrangeChat @ chat-vectorization.js:1880
+await in rearrangeChat
+vecthare_rearrangeChat @ index.js:208
+runGenerationInterceptors @ extensions.js:2028
+await in runGenerationInterceptors
+Generate @ script.js:4505
+await in Generate
+triggerRefresh @ PromptViewer.vue:268
+(anonymous) @ PromptViewer.vue:250
+callWithErrorHandling @ runtime-core.esm-bundler.js:199
+(anonymous) @ runtime-core.esm-bundler.js:8133
+(anonymous) @ runtime-core.esm-bundler.js:8095
+(anonymous) @ runtime-core.esm-bundler.js:6018
+(anonymous) @ runtime-core.esm-bundler.js:5984
+(anonymous) @ runtime-core.esm-bundler.js:5483
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:5914
+(anonymous) @ runtime-core.esm-bundler.js:5457
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:5650
+(anonymous) @ runtime-core.esm-bundler.js:5605
+(anonymous) @ runtime-core.esm-bundler.js:5471
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:5650
+(anonymous) @ runtime-core.esm-bundler.js:5605
+(anonymous) @ runtime-core.esm-bundler.js:5471
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:5650
+(anonymous) @ runtime-core.esm-bundler.js:5605
+(anonymous) @ runtime-core.esm-bundler.js:5471
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:1000
+(anonymous) @ runtime-core.esm-bundler.js:1026
+process @ runtime-core.esm-bundler.js:1060
+(anonymous) @ runtime-core.esm-bundler.js:5495
+(anonymous) @ runtime-core.esm-bundler.js:6132
+run @ reactivity.esm-bundler.js:250
+(anonymous) @ runtime-core.esm-bundler.js:6260
+(anonymous) @ runtime-core.esm-bundler.js:6032
+(anonymous) @ runtime-core.esm-bundler.js:5984
+(anonymous) @ runtime-core.esm-bundler.js:5483
+(anonymous) @ runtime-core.esm-bundler.js:5856
+(anonymous) @ runtime-core.esm-bundler.js:5932
+(anonymous) @ runtime-core.esm-bundler.js:5457
+(anonymous) @ runtime-core.esm-bundler.js:6212
+run @ reactivity.esm-bundler.js:250
+runIfDirty @ reactivity.esm-bundler.js:288
+callWithErrorHandling @ runtime-core.esm-bundler.js:199
+flushJobs @ runtime-core.esm-bundler.js:408
+Promise.then
+queueFlush @ runtime-core.esm-bundler.js:322
+queueJob @ runtime-core.esm-bundler.js:317
+(anonymous) @ runtime-core.esm-bundler.js:6254
+trigger @ reactivity.esm-bundler.js:278
+endBatch @ reactivity.esm-bundler.js:336
+notify @ reactivity.esm-bundler.js:627
+trigger @ reactivity.esm-bundler.js:601
+value @ reactivity.esm-bundler.js:1540
+(anonymous) @ reactivity.esm-bundler.js:1570
+(anonymous) @ Toolbox.vue:36
+callWithErrorHandling @ runtime-core.esm-bundler.js:199
+callWithAsyncErrorHandling @ runtime-core.esm-bundler.js:206
+(anonymous) @ runtime-dom.esm-bundler.js:745
+qdrant.js:906 [Qdrant] Hybrid endpoint not available (500), falling back to vector-only search
+hybridQuery @ qdrant.js:906
+await in hybridQuery
+hybridSearch @ hybrid-search.js:51
+await in hybridSearch
+queryCollection @ core-vector-api.js:882
+await in queryCollection
+retrieveEvents @ eventbase-retrieval.js:144
+runEventBaseRetrieval @ eventbase-workflow.js:452
+await in runEventBaseRetrieval
+rearrangeChat @ chat-vectorization.js:1880
+await in rearrangeChat
+vecthare_rearrangeChat @ index.js:208
+runGenerationInterceptors @ extensions.js:2028
+await in runGenerationInterceptors
+Generate @ script.js:4505
+await in Generate
+triggerRefresh @ PromptViewer.vue:268
+(anonymous) @ PromptViewer.vue:250
+callWithErrorHandling @ runtime-core.esm-bundler.js:199
+(anonymous) @ runtime-core.esm-bundler.js:8133
+(anonymous) @ runtime-core.esm-bundler.js:8095
+(anonymous) @ runtime-core.esm-bundler.js:6018
+(anonymous) @ runtime-core.esm-bundler.js:5984
+(anonymous) @ runtime-core.esm-bundler.js:5483
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:5914
+(anonymous) @ runtime-core.esm-bundler.js:5457
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:5650
+(anonymous) @ runtime-core.esm-bundler.js:5605
+(anonymous) @ runtime-core.esm-bundler.js:5471
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:5650
+(anonymous) @ runtime-core.esm-bundler.js:5605
+(anonymous) @ runtime-core.esm-bundler.js:5471
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:5650
+(anonymous) @ runtime-core.esm-bundler.js:5605
+(anonymous) @ runtime-core.esm-bundler.js:5471
+(anonymous) @ runtime-core.esm-bundler.js:5734
+(anonymous) @ runtime-core.esm-bundler.js:1000
+(anonymous) @ runtime-core.esm-bundler.js:1026
+process @ runtime-core.esm-bundler.js:1060
+(anonymous) @ runtime-core.esm-bundler.js:5495
+(anonymous) @ runtime-core.esm-bundler.js:6132
+run @ reactivity.esm-bundler.js:250
+(anonymous) @ runtime-core.esm-bundler.js:6260
+(anonymous) @ runtime-core.esm-bundler.js:6032
+(anonymous) @ runtime-core.esm-bundler.js:5984
+(anonymous) @ runtime-core.esm-bundler.js:5483
+(anonymous) @ runtime-core.esm-bundler.js:5856
+(anonymous) @ runtime-core.esm-bundler.js:5932
+(anonymous) @ runtime-core.esm-bundler.js:5457
+(anonymous) @ runtime-core.esm-bundler.js:6212
+run @ reactivity.esm-bundler.js:250
+runIfDirty @ reactivity.esm-bundler.js:288
+callWithErrorHandling @ runtime-core.esm-bundler.js:199
+flushJobs @ runtime-core.esm-bundler.js:408
+Promise.then
+queueFlush @ runtime-core.esm-bundler.js:322
+queueJob @ runtime-core.esm-bundler.js:317
+(anonymous) @ runtime-core.esm-bundler.js:6254
+trigger @ reactivity.esm-bundler.js:278
+endBatch @ reactivity.esm-bundler.js:336
+notify @ reactivity.esm-bundler.js:627
+trigger @ reactivity.esm-bundler.js:601
+value @ reactivity.esm-bundler.js:1540
+(anonymous) @ reactivity.esm-bundler.js:1570
+(anonymous) @ Toolbox.vue:36
+callWithErrorHandling @ runtime-core.esm-bundler.js:199
+callWithAsyncErrorHandling @ runtime-core.esm-bundler.js:206
+(anonymous) @ runtime-dom.esm-bundler.js:745
+core-vector-api.js:888 [VectHare] Hybrid search (RRF) response: 0 result(s) in 2688ms, scores=[]
+core-vector-api.js:888 [VectHare] Hybrid search (RRF) response: 0 result(s) in 3386ms, scores=[]
+eventbase-retrieval.js:172 [EventBase] Live query: 1 collection(s) × 2 query/queries → 0 unique events
+eventbase-retrieval.js:192 [EventBase] After importance filter (>=1): 0 candidates
+eventbase-retrieval.js:285 [EventBase] Final events after dedup + trim: 0
+eventbase-workflow.js:464 [EventBase] Retrieval debug: {dualQuery: true, keywordScoringMethod: 'bm25', nativeHybridPrefer: true, fusionMethod: 'rrf', rawCount: 0, …}
+eventbase-workflow.js:468 [EventBase] No events to inject
+chat-vectorization.js:1906 VectHare: Will query 3 collections: (3) ['vectra:vecthare_lorebook_story1_1778288919954', 'vectra:test', 'vectra:vecthare_diag']
+chat-vectorization.js:1925 VectHare: Extracted 8 keywords from query: (8) ['mayla', 'critblade', 'kashier', 'fern', 'engni', 'lia', 'valerie', 'master']
 collection-metadata.js:908 [VectHare Activation Filter] Collection vectra:vecthare_lorebook_story1_1778288919954: hasTriggers=false, hasConditions=false
-collection-metadata.js:934 [VectHare Activation Filter] Collection vectra:vecthare_lorebook_story1_1778288919954: ✓ LOCKED_TO_CURRENT_CHAT (異世界學校 - 2025-12-16@09h56m28s)
-collection-metadata.js:965 [VectHare Activation Filter] Summary: 1 collections → 1 active
-collection-metadata.js:967 [VectHare Activation Filter] Active collections: ['vectra:vecthare_lorebook_story1_1778288919954']
-chat-vectorization.js:1956 ✅ VectHare: 1 collections passed activation filters: ['vectra:vecthare_lorebook_story1_1778288919954']
-core-vector-api.js:878 [VectHare] Hybrid search (client-side), dispatching to hybrid search module
-hybrid-search.js:67 [HybridSearch] Using client-side RRF fusion
-hybrid-search.js:103 [HybridSearch] Fetching 21 vector results from collection: vectra:vecthare_lorebook_story1_1778288919954
-hybrid-search.js:104 [HybridSearch] Backend: StandardBackend, Source: openrouter
-standard.js:373 [VectHare] queryCollection via plugin: collectionId=vecthare_lorebook_story1_1778288919954, source=openrouter, model=qwen/qwen3-embedding-8b, topK=21, threshold=0.25, hasQueryVector=false
-standard.js:381 [VectHare] plugin query response: status=200 ok=true
-standard.js:390 [VectHare] plugin query result: count=21, results.length=21, error=none
-hybrid-search.js:115 [HybridSearch] Raw vector results: hashes=21, metadata=21
-hybrid-search.js:140 [HybridSearch] Computing BM25 scores for 21 results...
-bm25-scorer.js:497 [BM25+] Indexed 21 documents, avg length: 92.7 tokens, sublinearTf=true, fieldBoosting=true
-query-keyword-extractor.js:115 [VectHare] extractQueryKeywords anchor CJK -> 56 unique (top 15): 雪兔, 兔姬, 龍脈, 守護神, 聽完, 描述, 藍色, 眸子, 收縮, 伸出, 食指, 虛空, 代表, 能量, 數據
-query-keyword-extractor.js:116 [VectHare] extractQueryKeywords context CJK -> 395 unique (top 35): 感度, 職位, 眷屬, 明天, 魔女, 長髮, 正式, 主人, 語氣, 客廳, 休息, 那位, 老人家, 核心, 代碼, 看向, 校園, 都市, 九条, 一抹, 狸貓, 眼眸, 關懷, 準備, 今晚, 帶著, 紫羅蘭, 看著, 色慾, 魅惑, 魔羅, 安靜, 沒有, 精靈, 策略
-query-keyword-extractor.js:117 [VectHare] extractQueryKeywords Latin -> 12 unique (top 10): cup, alpha, best_candidate_id, echidna, kamira, satella, ooc, vex, critblade, nikita
-query-keyword-extractor.js:118 [VectHare] extractQueryKeywords final -> 60 tokens (fullCJK=true): 雪兔, 兔姬, 龍脈, 守護神, 聽完, 描述, 藍色, 眸子, 收縮, 伸出, 食指, 虛空, 代表, 能量, 數據, 感度, 職位, 眷屬, 明天, 魔女, 長髮, 正式, 主人, 語氣, 客廳, 休息, 那位, 老人家, 核心, 代碼, 看向, 校園, 都市, 九条, 一抹, 狸貓, 眼眸, 關懷, 準備, 今晚, 帶著, 紫羅蘭, 看著, 色慾, 魅惑, 魔羅, 安靜, 沒有, 精靈, 策略, cup, alpha, best_candidate_id, echidna, kamira, satella, ooc, vex, critblade, nikita
-hybrid-search.js:151 [HybridSearch] Applying RRF fusion (k=60)...
-hybrid-search.js:169 [HybridSearch] Returning 7 fused results
-hybrid-search.js:173 [HybridSearch] Score distribution: min=0.6766, max=0.7519
-hybrid-search.js:174 [HybridSearch] Top 3 results:
-hybrid-search.js:181   [1] finalScore=0.7519, vectorRank=4, textRank=1, vectorScore=0.6477, textScore=0.7970
-hybrid-search.js:181   [2] finalScore=0.7060, vectorRank=7, textRank=2, vectorScore=0.6300, textScore=0.7260
-hybrid-search.js:181   [3] finalScore=0.7041, vectorRank=3, textRank=5, vectorScore=0.6477, textScore=0.6977
-core-vector-api.js:888 [VectHare] Hybrid search (RRF) response: 7 result(s) in 1374ms, scores=[0.7519, 0.7060, 0.7041, 0.6881, 0.6858, 0.6850, 0.6766]
-chat-vectorization.js:863 VectHare: Retrieved 7 chunks from vectra:vecthare_lorebook_story1_1778288919954
-chat-vectorization.js:2025 VectHare: Boosted 2/7 chunks with matching keywords to 100% score
-chat-vectorization.js:2076 VectHare: Retrieved 7 total chunks from 1 collections
-chat-vectorization.js:2129 VectHare: Stored 7 chunks for visualizer
-chat-vectorization.js:2132 [VectHare Deduplication] Starting with 7 chunks before deduplication
-chat-vectorization.js:2133 [VectHare Deduplication] Current chat has 14 messages
-chat-vectorization.js:1493 [VectHare Dedup] Building hash set from 14 recent messages (depth: 50)
-chat-vectorization.js:1494 [VectHare Dedup] Total chat length: 14, checking duplicates in last 14 messages
-chat-vectorization.js:1520 [VectHare Dedup] Built hash set with 10 unique message hashes from recent context
-chat-vectorization.js:1558 [VectHare Dedup] FINAL: 7 will inject, 0 skipped as duplicates
-chat-vectorization.js:2137 [VectHare Deduplication] After deduplication: 7 to inject, 0 skipped
-chat-vectorization.js:2160 [VectHare Deduplication] ✅ 7 chunks will proceed to injection
-chat-vectorization.js:2165 
-✅ VectHare: Successfully injected 7 chunk(s) into prompt
-chat-vectorization.js:2166    Verification: ✓ PASSED
-chat-vectorization.js:2167    Total characters injected: 2451
-
-search-debug.js:148 VectHare Debug: Stored search debug data {query: '.\n阿爾法聽完關於「雪兔姬」的描述，那雙冰藍色的眸子微微收縮。她伸出食指，在虛空中輕點，幾條代表龍脈...', stages: {…}, historyCount: 1}
-chat-vectorization.js:2193 VectHare: ✅ Injected 7 chunks (0 skipped - already in context)
-script.js:4547 Core/all messages: 14/731
+collection-metadata.js:945 [VectHare Activation Filter] Collection vectra:vecthare_lorebook_story1_1778288919954: ✗ NOT_ACTIVATED (no trigger match, no condition pass, not locked)
+collection-metadata.js:908 [VectHare Activation Filter] Collection vectra:test: hasTriggers=false, hasConditions=false
+collection-metadata.js:945 [VectHare Activation Filter] Collection vectra:test: ✗ NOT_ACTIVATED (no trigger match, no condition pass, not locked)
+collection-metadata.js:908 [VectHare Activation Filter] Collection vectra:vecthare_diag: hasTriggers=false, hasConditions=false
+collection-metadata.js:945 [VectHare Activation Filter] Collection vectra:vecthare_diag: ✗ NOT_ACTIVATED (no trigger match, no condition pass, not locked)
+collection-metadata.js:965 [VectHare Activation Filter] Summary: 3 collections → 0 active
+chat-vectorization.js:1952 ⚠️ VectHare: No collections passed activation conditions and World Info disabled - chunks cannot be injected!
+chat-vectorization.js:1953    💡 Check your collection activation conditions in VectHare settings
+script.js:4547 Core/all messages: 2116/2116
+world-info.js:623 [WI] Processing sticky entry ArtificRealm創世域.42 {hash: 5608283655957508, start: 2116, end: 2117, protected: false}
+world-info.js:627 [WI] Removing sticky entry ArtificRealm創世域.42 from timedWorldInfo: chat not advanced {hash: 5608283655957508, start: 2116, end: 2117, protected: false}
+world-info.js:722 [WI] Adding sticky entry ArtificRealm創世域.42: start=2116, end=2117, protected=false
 world-info.js:5159 [WI] Adding 56 entries to prompt (56) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
 index.js:19 [QR2] calling {args: Array(1), functionToCall: ƒ}
 script.js:4606 skipWIAN not active, adding WIAN
 handler.ts:225 [Prompt Template] start generate after 20 messages
-handler.ts:395 [Prompt Template] processing 20 messages in 4ms
+handler.ts:395 [Prompt Template] processing 20 messages in 28ms
