@@ -751,7 +751,7 @@ class QdrantBackend {
         if (debug) {
             points.slice(0, 10).forEach((p, i) => {
                 const text = p.payload?.text ? String(p.payload.text).slice(0, 80).replace(/\n/g, ' ') : '';
-                console.log(`[Qdrant-debug] [${i + 1}] score=${p.score?.toFixed(4)}, hash=${(p.payload?.hash || '').slice(0, 8)}, text="${text}"`);
+                console.log(`[Qdrant-debug] [${i + 1}] score=${p.score?.toFixed(4)}, hash=${String(p.payload?.hash ?? '').slice(0, 8)}, text="${text}"`);
             });
         }
 
