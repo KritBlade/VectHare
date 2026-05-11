@@ -23,6 +23,7 @@ import {
     deleteCollectionMeta,
     ensureCollectionMeta,
     getCollectionMeta,
+    setCollectionMeta,
 } from './collection-metadata.js';
 import { purgeVectorIndex } from './core-vector-api.js';
 // Import from collection-ids.js - single source of truth for collection ID operations
@@ -93,15 +94,58 @@ export function getCollectionRegistry() {
  * Registers a collection in the registry (idempotent)
  * @param {string} collectionId Collection identifier
  */
+/**
+ * Sanitize a persona name into the handleId form used by collection-ID builders.
+ * Must match buildChatCollectionId / buildEventBaseCollectionId / buildArchiveEventCollectionId.
+ */
+function _sanitizeHandleId(name) {
+    return String(name || 'user')
+        .toLowerCase()
+        .replace(/[^\p{L}\p{N}]+/gu, '_')
+        .replace(/^_|_$/g, '')
+        .substring(0, 30) || 'user';
+}
+
 export function registerCollection(collectionId) {
     if (!collectionId) {
         console.warn('VectHare: Attempted to register null/undefined collectionId, skipping');
         return;
     }
     const registry = getCollectionRegistry();
-    if (!registry.includes(collectionId)) {
+    const isNew = !registry.includes(collectionId);
+    if (isNew) {
         registry.push(collectionId);
         console.log(`VectHare: Registered collection: ${collectionId}`);
+    }
+
+    // Stamp the creator's persona handle on the collection metadata so the DB Browser can
+    // filter by current persona without parsing the collection name (which is ambiguous when
+    // handle / charName contain underscores).
+    //
+    // Two safety conditions:
+    //   (a) Don't overwrite an existing creatorHandle — first stamper wins, so a later
+    //       discovery on a different persona's machine can't claim someone else's collection.
+    //   (b) Only stamp when the collection name actually contains the current persona's
+    //       handle. Auto-discovery registers ALL collections on the server, including ones
+    //       belonging to other personas; those names won't contain our handle, so we skip
+    //       them. This means foreign collections stay unstamped → DB browser falls back to
+    //       name-parse filter for them (which correctly hides them from the current persona).
+    try {
+        const meta = getCollectionMeta(collectionId);
+        if (!meta?.creatorHandle) {
+            const ctx = getContext();
+            const handle = _sanitizeHandleId(ctx?.name1);
+            const idLower = String(collectionId).toLowerCase();
+            if (idLower.includes(`_${handle}_`)) {
+                setCollectionMeta(collectionId, { creatorHandle: handle });
+                console.log(`VectHare: Stamped creatorHandle="${handle}" on ${collectionId}`);
+            }
+        }
+    } catch (e) {
+        console.warn('VectHare: failed to stamp creatorHandle:', e?.message);
+    }
+
+    if (isNew) {
         saveSettingsDebounced(); // Persist to disk!
     }
 }

@@ -686,10 +686,15 @@ const _PERSONA_SCOPED_PREFIXES = [
  * Filter collections to only the current persona's chat-scoped collections.
  * Global-scope collections (lorebook, document, character) are always kept.
  *
- * Persona-based filtering: collections whose name encodes a handleId
- * (chat / eventbase / archiveevent) are kept only when that handleId
- * matches the active persona's sanitized name1. Switching personas changes
- * which collections appear.
+ * Resolution order for chat-scoped collections:
+ *   1. Read `creatorHandle` from collection metadata (stamped at registerCollection time).
+ *      This is the authoritative answer and is collision-proof regardless of underscores
+ *      in handleId or charName.
+ *   2. Fallback for legacy collections without `creatorHandle`: parse from collection ID
+ *      using `_<handle>_` substring match. Imperfect when handles share prefixes (e.g.
+ *      handles "my" vs "my_user" — `_my_` matches both), but acceptable for cosmetic UI
+ *      filtering of older collections. Newly-registered collections always carry
+ *      `creatorHandle` and bypass this branch.
  *
  * UI-only filter — not access control. The server still stores everything;
  * a determined user could load another persona's collection by knowing its ID.
@@ -701,10 +706,7 @@ const _PERSONA_SCOPED_PREFIXES = [
 function _filterCollectionsByCurrentPersona(collections) {
   const personaName = getContext()?.name1;
   const ownHandle = _sanitizeHandleForFilter(personaName);
-
-  // The handleId appears between underscores in the collection name. Match
-  // `_<handle>_` to avoid prefix-collisions (e.g. handle "rab" matching "rabbit").
-  const needle = `_${ownHandle}_`;
+  const needle = `_${ownHandle}_`; // fallback only
 
   return collections.filter((c) => {
     const idLower = String(c.id || "").toLowerCase();
@@ -717,7 +719,17 @@ function _filterCollectionsByCurrentPersona(collections) {
     // Keep global collections (lorebooks, documents, characters) unconditionally.
     if (!isPersonaScoped) return true;
 
-    // Persona-scoped: keep only if its name carries the current persona's handle.
+    // Authoritative: check the stamped creatorHandle on the collection metadata.
+    // Try both the registry-key form ("backend:id") and the bare id, since
+    // setCollectionMeta is called with whichever was passed to registerCollection.
+    const meta =
+      getCollectionMeta(c.registryKey || `${c.backend}:${c.id}`) ||
+      getCollectionMeta(c.id);
+    if (meta?.creatorHandle) {
+      return String(meta.creatorHandle).toLowerCase() === ownHandle;
+    }
+
+    // Legacy fallback: parse handle from the collection name.
     return idLower.includes(needle);
   });
 }
