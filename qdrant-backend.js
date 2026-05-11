@@ -1187,7 +1187,7 @@ class QdrantBackend {
 
         let resp;
         try {
-            resp = await this._request('POST', `/collections/${collectionName}/query`, body);
+            resp = await this._request('POST', `/collections/${collectionName}/points/query`, body);
         } catch (err) {
             // Surface the full Qdrant error so the route can include it in the 500 response.
             console.error('[Qdrant] hybridQueryNative request failed. Body:', JSON.stringify(body).slice(0, 500), 'Error:', err.message);
@@ -1246,8 +1246,8 @@ class QdrantBackend {
         if (filter) sparseBody.filter = filter;
 
         const [denseResp, sparseResp] = await Promise.all([
-            this._request('POST', `/collections/${collectionName}/query`, denseBody),
-            this._request('POST', `/collections/${collectionName}/query`, sparseBody),
+            this._request('POST', `/collections/${collectionName}/points/query`, denseBody),
+            this._request('POST', `/collections/${collectionName}/points/query`, sparseBody),
         ]);
 
         const toItem = (p) => ({
