@@ -464,10 +464,14 @@ describe('QdrantBackend', () => {
     let backend;
     let fetchMock;
 
-    beforeEach(() => {
+    beforeEach(async () => {
         backend = new QdrantBackend();
         fetchMock = vi.fn();
         global.fetch = fetchMock;
+        // tokenizer-lock caches sentinel metadata per-collection; clear between tests so
+        // each hybridQuery test starts with a clean sentinel state.
+        const { invalidateCollectionMetadata } = await import('../core/tokenizer-lock.js');
+        invalidateCollectionMetadata('test-collection');
     });
 
     afterEach(() => {
@@ -611,9 +615,13 @@ describe('QdrantBackend', () => {
 
     describe('hybridQuery', () => {
         it('should call hybrid endpoint with options', async () => {
-            fetchMock.mockResolvedValueOnce(mockFetchResponse({
-                results: [{ hash: 12345, text: 'Result', score: 0.9 }],
-            }));
+            // hybridQuery now makes a sentinel-metadata fetch first (tokenizer-lock check),
+            // then the hybrid-query fetch.
+            fetchMock
+                .mockResolvedValueOnce(mockFetchResponse({ payload: null, supported: true })) // sentinel: no lock
+                .mockResolvedValueOnce(mockFetchResponse({
+                    results: [{ hash: 12345, text: 'Result', score: 0.9 }],
+                }));
 
             const result = await backend.hybridQuery('test-collection', 'search', 5, defaultSettings, {
                 vectorWeight: 0.7,
@@ -630,8 +638,9 @@ describe('QdrantBackend', () => {
 
         it('should fallback to regular query on hybrid failure', async () => {
             fetchMock
-                .mockResolvedValueOnce(mockFetchError(404, 'Hybrid not available'))
-                .mockResolvedValueOnce(mockFetchResponse({
+                .mockResolvedValueOnce(mockFetchResponse({ payload: null, supported: true })) // sentinel
+                .mockResolvedValueOnce(mockFetchError(404, 'Hybrid not available'))            // hybrid fails
+                .mockResolvedValueOnce(mockFetchResponse({                                     // queryCollection fallback
                     results: [{ hash: 12345, text: 'Result', score: 0.9 }],
                 }));
 

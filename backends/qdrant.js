@@ -284,13 +284,10 @@ export class QdrantBackend extends VectorBackend {
         const strippedCollectionId = this._stripRegistryPrefix(collectionId);
         const actualCollectionId = getActualCollectionId(strippedCollectionId, settings);
 
-        // Phase 2: compute sparse vectors when native sparse path is enabled. The browser owns
-        // tokenization (CJK pipeline lives here), so we encode each item's text into Qdrant's
-        // {indices, values} format and ship it as opaque payload to the plugin.
-        let encodeSparseVector = null;
-        if (settings.qdrant_native_sparse_enabled) {
-            ({ encodeSparseVector } = await import('../core/sparse-vector-encoder.js'));
-        }
+        // Compute sparse vectors per item. The browser owns tokenization (CJK pipeline lives
+        // here), so we encode each item's text into Qdrant's {indices, values} format and
+        // ship it as opaque payload to the plugin. Single path for Qdrant.
+        const { encodeSparseVector } = await import('../core/sparse-vector-encoder.js');
 
         // Batch items to avoid exceeding Qdrant's 32MB payload limit
         // Qdrant's default limit is 33554432 bytes (32MB)
@@ -342,26 +339,21 @@ export class QdrantBackend extends VectorBackend {
                             metadata.content_type = strippedCollectionId;
                         }
 
-                        const out = {
+                        // Tokenize the same text we use for the dense embed (textWithKeywords)
+                        // so BM25 hits include the [KEYWORDS: ...] suffix terms.
+                        return {
                             hash: item.hash,
                             text: textWithKeywords,
                             index: item.index,
                             vector: item.vector,
                             metadata,
+                            sparseVector: encodeSparseVector(textWithKeywords),
                         };
-
-                        if (encodeSparseVector) {
-                            // Tokenize the same text we use for the dense embed (textWithKeywords)
-                            // so BM25 hits include the [KEYWORDS: ...] suffix terms.
-                            out.sparseVector = encodeSparseVector(textWithKeywords);
-                        }
-
-                        return out;
                     }),
                     source: settings.source || 'transformers',
                     model: getModelFromSettings(settings),
-                    nativeSparse: !!settings.qdrant_native_sparse_enabled,
-                    cjkTokenizerMode: settings.qdrant_native_sparse_enabled ? settings.cjk_tokenizer_mode : null,
+                    nativeSparse: true,
+                    cjkTokenizerMode: settings.cjk_tokenizer_mode,
                     ...getPluginProviderParams(settings),
                 }),
             });
@@ -769,38 +761,34 @@ export class QdrantBackend extends VectorBackend {
         const strippedCollectionId = this._stripRegistryPrefix(collectionId);
         const actualCollectionId = getActualCollectionId(strippedCollectionId, settings);
 
-        // Phase 3 — determine fusion mode. ABC-DELETE: collapse to a single mode after winner picked.
-        // Sparse modes are only available when the user has explicitly enabled native sparse and
-        // selected one of the sparse fusion modes.
-        const requestedMode = settings.hybrid_fusion_mode || 'legacy';
-        const useSparse = !!settings.qdrant_native_sparse_enabled && requestedMode !== 'legacy';
-        const fusionMode = useSparse ? requestedMode : 'legacy';
-
-        // Tokenizer-mode lock check (only meaningful in sparse modes).
-        let sparseQueryVector = null;
-        if (useSparse) {
-            try {
-                const { detectTokenizerMismatch, showTokenizerMismatchModal } = await import('../core/tokenizer-lock.js');
-                const mismatch = await detectTokenizerMismatch(settings, actualCollectionId);
-                if (mismatch) {
-                    const choice = await showTokenizerMismatchModal(mismatch, actualCollectionId);
-                    if (choice === 'revert') {
-                        settings.cjk_tokenizer_mode = mismatch.saved;
-                        // Propagate the revert to bm25-scorer's runtime mode too.
-                        try {
-                            const { setCjkTokenizerMode } = await import('../core/bm25-scorer.js');
-                            setCjkTokenizerMode(mismatch.saved);
-                        } catch { /* tolerate */ }
-                    } else if (choice === 'settings' || choice === 'cancel') {
-                        // User declined to revert — abort the query rather than return noise.
-                        return { hashes: [], metadata: [] };
-                    }
+        // Native sparse vectors + Qdrant-server-side RRF. Single path for Qdrant.
+        // (See plans/qdrant-native-sparse-hybrid-rrf.md — winner of the A/B/C, others removed.)
+        //
+        // Tokenizer-mode lock: indexed sparse vectors carry the CJK tokenizer mode that was
+        // active at upsert. A mode change between upsert and query silently breaks BM25
+        // matching, so we read the collection's sentinel and prompt the user to revert if
+        // they differ.
+        let sparseQueryVector;
+        try {
+            const { detectTokenizerMismatch, showTokenizerMismatchModal } = await import('../core/tokenizer-lock.js');
+            const mismatch = await detectTokenizerMismatch(settings, actualCollectionId);
+            if (mismatch) {
+                const choice = await showTokenizerMismatchModal(mismatch, actualCollectionId);
+                if (choice === 'revert') {
+                    settings.cjk_tokenizer_mode = mismatch.saved;
+                    try {
+                        const { setCjkTokenizerMode } = await import('../core/bm25-scorer.js');
+                        setCjkTokenizerMode(mismatch.saved);
+                    } catch { /* tolerate */ }
+                } else if (choice === 'settings' || choice === 'cancel') {
+                    return { hashes: [], metadata: [] };
                 }
-                const { encodeSparseQuery } = await import('../core/sparse-vector-encoder.js');
-                sparseQueryVector = encodeSparseQuery(searchText);
-            } catch (error) {
-                console.warn('[Qdrant] sparse query setup failed, falling back to legacy:', error?.message);
             }
+            const { encodeSparseQuery } = await import('../core/sparse-vector-encoder.js');
+            sparseQueryVector = encodeSparseQuery(searchText);
+        } catch (error) {
+            console.warn('[Qdrant] sparse query setup failed:', error?.message);
+            return this.queryCollection(collectionId, searchText, topK, settings);
         }
 
         const body = {
@@ -811,7 +799,6 @@ export class QdrantBackend extends VectorBackend {
             threshold: 0.0,
             source: settings.source || 'transformers',
             model: getModelFromSettings(settings),
-            // Hybrid-specific parameters
             hybrid: true,
             hybridOptions: {
                 vectorWeight,
@@ -819,15 +806,11 @@ export class QdrantBackend extends VectorBackend {
                 fusionMethod,
                 rrfK,
                 eventbaseDebug: !!settings.eventbase_debug_qdrant_backend,
-                qdrantSparseFusion: settings.qdrant_sparse_fusion || 'rrf',
-                prefetchLimit: topK * (settings.qdrant_sparse_query_limit_multiplier || 4),
+                prefetchLimit: topK * 4,
             },
-            // ABC-DELETE: fusion-mode routing for A/B/C testing.
-            fusionMode,
-            sparseQueryVector: sparseQueryVector,  // null in legacy mode
+            sparseQueryVector,
         };
 
-        // Add content_type filter for multitenancy mode
         if (settings.qdrant_multitenancy) {
             body.filter = {
                 must: [
@@ -838,17 +821,12 @@ export class QdrantBackend extends VectorBackend {
 
         if (settings.eventbase_debug_logging) {
             const preview = String(searchText || '').replace(/\s+/g, ' ').slice(0, 280);
-            console.log(`[EventBase] Native hybrid request: collection=${body.collectionId}, fusionMode=${fusionMode}, topK=${topK}, sparse=${sparseQueryVector ? sparseQueryVector.indices.length + ' tokens' : 'n/a'}, searchTextPreview="${preview}"`);
+            console.log(`[EventBase] Hybrid request: collection=${body.collectionId}, topK=${topK}, sparse=${sparseQueryVector.indices.length} tokens, preview="${preview}"`);
         }
 
-        // ABC-DELETE: end-to-end timing for A/B/C fusion-mode comparison.
-        // tNetStart  - just before fetch()
-        // tNetEnd    - immediately after the response body is read (server time + network round-trip)
-        // tFuseEnd   - after browser-side fusion (legacy fusion mode only; for the other two = tNetEnd)
         const tNetStart = performance.now();
 
         try {
-            // Try the hybrid endpoint first
             const response = await fetch('/api/plugins/similharity/chunks/hybrid-query', {
                 method: 'POST',
                 headers: getRequestHeaders(),
@@ -857,48 +835,8 @@ export class QdrantBackend extends VectorBackend {
 
             if (response.ok) {
                 const data = await response.json();
-                const tNetEnd = performance.now();
-                const netMs = (tNetEnd - tNetStart).toFixed(1);
-
-                // ABC-DELETE: native_sparse_legacy_fusion returns unfused prefetch lists; fuse here.
-                if (data.fusionMode === 'native_sparse_legacy_fusion' && data.unfused) {
-                    const { fuseUnfusedSparseResults } = await import('../core/hybrid-fusion-legacy.js');
-                    const fused = fuseUnfusedSparseResults(data.unfused.vector, data.unfused.keyword, {
-                        topK,
-                        vectorWeight,
-                        textWeight,
-                        fusionMethod,
-                        rrfK,
-                    });
-                    const tFuseEnd = performance.now();
-                    const fuseMs = (tFuseEnd - tNetEnd).toFixed(1);
-                    const totalMs = (tFuseEnd - tNetStart).toFixed(1);
-                    console.log(
-                        `[Qdrant timing] mode=native_sparse_legacy_fusion total=${totalMs}ms (network+server=${netMs}ms + js-fusion=${fuseMs}ms), ` +
-                        `unfused=${data.unfused.vector.length}+${data.unfused.keyword.length}, fused=${fused.length}`
-                    );
-                    return {
-                        hashes: fused.map(r => r.hash),
-                        metadata: fused.map(r => ({
-                            hash: r.hash,
-                            text: r.text,
-                            score: r.score,
-                            vectorScore: r.vectorScore,
-                            textScore: r.bm25Score,
-                            fusionMethod: fusionMethod,
-                            hybridSearch: true,
-                            vectorRank: r.vectorRank,
-                            keywordRank: r.keywordRank,
-                            nativeSparse: true,
-                            ...r.metadata,
-                        })),
-                    };
-                }
-
-                console.log(
-                    `[Qdrant timing] mode=${data.fusionMode || 'legacy'} total=${netMs}ms (network+server, no js-fusion), ` +
-                    `results=${data.results?.length || 0}`
-                );
+                const totalMs = (performance.now() - tNetStart).toFixed(1);
+                console.log(`[Qdrant timing] total=${totalMs}ms, results=${data.results?.length || 0}`);
 
                 return {
                     hashes: data.results.map(r => r.hash),
@@ -906,29 +844,24 @@ export class QdrantBackend extends VectorBackend {
                         hash: r.hash,
                         text: r.text,
                         score: r.score,
-                        vectorScore: r.vectorScore || r.debug?.vectorScore,
-                        textScore: r.textScore || r.debug?.keywordScore,
-                        fusionMethod: r.debug?.fusionMethod || r.fusionMethod || fusionMethod,
+                        vectorScore: r.vectorScore,
+                        textScore: r.textScore,
+                        fusionMethod: r.fusionMethod || 'rrf',
                         hybridSearch: true,
-                        vectorRank: r.debug?.vectorRank,
-                        keywordRank: r.debug?.keywordRank,
-                        matchedKeywordWeight: r.debug?.matchedKeywordWeight,
-                        nativeSparse: !!r.nativeSparse,
+                        nativeSparse: true,
                         ...r.metadata,
                     }))
                 };
             }
 
-            // Surface the server-side error before falling back, so 500s aren't silent.
             const errorBody = await response.text().catch(() => '(no body)');
             const failMs = (performance.now() - tNetStart).toFixed(1);
-            console.warn(`[Qdrant timing] mode=${fusionMode} FAILED after ${failMs}ms (HTTP ${response.status}), falling back to vector-only search. Server said: ${errorBody.slice(0, 500)}`);
+            console.warn(`[Qdrant timing] FAILED after ${failMs}ms (HTTP ${response.status}), falling back to vector-only. Server said: ${errorBody.slice(0, 500)}`);
         } catch (error) {
             const failMs = (performance.now() - tNetStart).toFixed(1);
-            console.warn(`[Qdrant timing] mode=${fusionMode} FAILED after ${failMs}ms (exception):`, error.message);
+            console.warn(`[Qdrant timing] FAILED after ${failMs}ms (exception):`, error.message);
         }
 
-        // Fallback to regular vector search
         return this.queryCollection(collectionId, searchText, topK, settings);
     }
 }

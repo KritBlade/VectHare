@@ -119,18 +119,14 @@ const defaultSettings = {
     summarize_vllm_api_key: '',       // vLLM API key (stored in extension settings, not ST secrets)
     summarize_prompt: '',             // Custom prompt template (empty = use built-in default)
 
-    // Hybrid Search fusion settings (apply to A2 client-side hybrid and A3 native hybrid)
-    hybrid_fusion_method: 'rrf',        // 'rrf' (Reciprocal Rank Fusion) or 'weighted'
-    hybrid_vector_weight: 0.5,          // Weight for vector scores (0-1) — used in weighted mode
-    hybrid_text_weight: 0.5,            // Weight for text/BM25 scores (0-1) — used in weighted mode
-    hybrid_rrf_k: 60,                   // RRF constant (higher = more weight to top results)
-    hybrid_native_prefer: true,         // Prefer native backend hybrid if available (Qdrant default: A3)
-
-    // Qdrant native sparse vectors (Phase 2+). Requires Qdrant 1.10+.
-    qdrant_native_sparse_enabled: false,        // Master switch for native sparse vector path
-    qdrant_sparse_query_limit_multiplier: 4,    // prefetch.limit = topK * this
-    hybrid_fusion_mode: 'legacy',               // ABC-DELETE: 'legacy' | 'native_sparse_legacy_fusion' | 'native_rrf'
-    qdrant_sparse_fusion: 'rrf',                // 'rrf' | 'dbsf' (only used when hybrid_fusion_mode == 'native_rrf')
+    // Hybrid Search fusion settings.
+    // A1 (BM25 re-rank, Vectra) reads hybrid_fusion_method/weights when invoked via A2 client-side hybrid.
+    // A3 (Qdrant native sparse + RRF) ignores them — fusion is server-side via Qdrant /points/query.
+    hybrid_fusion_method: 'rrf',        // 'rrf' (Reciprocal Rank Fusion) or 'weighted' — A2 only
+    hybrid_vector_weight: 0.5,          // Weight for vector scores (0-1) — A2 weighted mode only
+    hybrid_text_weight: 0.5,            // Weight for text/BM25 scores (0-1) — A2 weighted mode only
+    hybrid_rrf_k: 60,                   // RRF constant — A2 only (Qdrant uses its own default)
+    hybrid_native_prefer: true,         // KEPT (no UI): A3 vs A2 selector for backends that support both. Default = prefer native.
 
     // Advanced features
     temporal_decay: getDefaultDecaySettings(),

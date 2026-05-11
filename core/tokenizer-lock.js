@@ -11,7 +11,7 @@
  *   - Compares the saved mode against the current setting
  *   - Shows a blocking modal so the user can revert the mode or accept the cost
  *
- * Only used when `settings.qdrant_native_sparse_enabled` is true.
+ * Returns null when the collection has no sentinel (legacy / non-migrated collections).
  *
  * @author VectHare
  * @since Phase 2 — Qdrant native sparse vectors
@@ -72,9 +72,8 @@ export function invalidateCollectionMetadata(actualCollectionId) {
  * @returns {Promise<{saved: string, current: string} | null>}
  */
 export async function detectTokenizerMismatch(settings, actualCollectionId) {
-    if (!settings.qdrant_native_sparse_enabled) return null;
     const payload = await fetchCollectionMetadata(actualCollectionId);
-    if (!payload || !payload.cjk_tokenizer_mode) return null; // not migrated / sparse never used
+    if (!payload || !payload.cjk_tokenizer_mode) return null; // collection has no sentinel (legacy / non-sparse)
     const current = settings.cjk_tokenizer_mode;
     if (payload.cjk_tokenizer_mode === current) return null;
     return { saved: payload.cjk_tokenizer_mode, current };

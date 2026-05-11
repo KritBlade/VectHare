@@ -531,15 +531,6 @@ export function renderSettings(containerId, settings, callbacks) {
                                     <p class="vecthare-card-subtitle">Keyword scoring and result fusion</p>
                                 </div>
 
-                                <!-- Only shown when backend supports native hybrid (Qdrant) -->
-                                <div id="vecthare_native_prefer_section" class="vecthare-form-group" style="display: none; margin-top: 8px;">
-                                    <label class="checkbox_label" for="vecthare_hybrid_native_prefer">
-                                        <input id="vecthare_hybrid_native_prefer" type="checkbox" checked />
-                                        <span>Prefer Native Backend Hybrid</span>
-                                    </label>
-                                    <small class="vecthare_hint">Use backend-native hybrid search (Qdrant). When active, keyword scoring method and budget are handled server-side.</small>
-                                </div>
-
                                 <!-- Keyword Scoring Method (hidden when native hybrid active) -->
                                 <div id="vecthare_keyword_method_section" style="margin-top: 8px;">
                                     <label>
@@ -606,27 +597,6 @@ export function renderSettings(containerId, settings, callbacks) {
                                     </div>
                                 </div>
 
-                                <!-- ABC-DELETE: Qdrant native sparse vectors + A/B/C fusion mode (Phase 3) -->
-                                <div style="margin-top: 16px; padding: 12px; background: rgba(120,0,180,0.1); border-radius: 8px; border: 1px solid rgba(120,0,180,0.25);">
-                                    <div style="font-weight: 600; margin-bottom: 8px;">Qdrant Native Sparse Vectors (experimental)</div>
-                                    <label class="checkbox_label" for="vecthare_qdrant_native_sparse_enabled">
-                                        <input id="vecthare_qdrant_native_sparse_enabled" type="checkbox" />
-                                        <span>Enable native sparse vectors (requires Qdrant 1.10+)</span>
-                                    </label>
-                                    <small class="vecthare_hint">Existing collections must be migrated via Action → Dev Tools.</small>
-
-                                    <div id="vecthare_hybrid_fusion_mode_wrapper" style="margin-top: 12px;">
-                                        <label>
-                                            <small>Hybrid Fusion Mode (A/B/C — pick one for production)</small>
-                                        </label>
-                                        <select id="vecthare_hybrid_fusion_mode" class="vecthare-select">
-                                            <option value="legacy">Legacy (plugin-side BM25 + bonuses)</option>
-                                            <option value="native_sparse_legacy_fusion">Native sparse + legacy fusion (best of both)</option>
-                                            <option value="native_rrf">Native sparse + native RRF (cleanest)</option>
-                                        </select>
-                                        <small class="vecthare_hint">Legacy works without sparse vectors. The two native modes require sparse vectors enabled and a migrated collection.</small>
-                                    </div>
-                                </div>
                             </div>
 
                             <!-- ═══════════════════════════════════════════════════════ -->
@@ -2201,9 +2171,6 @@ function bindSettingsEvents(settings, callbacks) {
         const isHybridMode  = !nativeActive && method === 'hybrid';  // A2 (or Qdrant+prefer=false fallback)
         const isBM25Mode    = !nativeActive && method === 'bm25';    // A1
 
-        // Native-prefer toggle: only when backend supports it (Qdrant)
-        $('#vecthare_native_prefer_section').toggle(supportsNative);
-
         // Keyword scoring method dropdown vs static "native active" notice
         $('#vecthare_keyword_method_section').toggle(!nativeActive);
         $('#vecthare_native_hybrid_info').toggle(nativeActive);
@@ -2234,7 +2201,6 @@ function bindSettingsEvents(settings, callbacks) {
             settings.hybrid_fusion_method = settings.hybrid_fusion_method || 'rrf';
         }
         // Sync UI controls
-        $('#vecthare_hybrid_native_prefer').prop('checked', settings.hybrid_native_prefer);
         $('#vecthare_keyword_scoring_method').val(settings.keyword_scoring_method || 'bm25');
         $('#vecthare_hybrid_fusion_method').val(settings.hybrid_fusion_method || 'rrf');
         Object.assign(extension_settings.vecthareplus, settings);
@@ -2492,37 +2458,8 @@ function bindSettingsEvents(settings, callbacks) {
         });
     $('#vecthare_hybrid_rrf_k_value').text(settings.hybrid_rrf_k || 60);
 
-    // Prefer native backend hybrid checkbox
-    $('#vecthare_hybrid_native_prefer')
-        .prop('checked', settings.hybrid_native_prefer !== false)
-        .on('change', function() {
-            settings.hybrid_native_prefer = $(this).prop('checked');
-            Object.assign(extension_settings.vecthareplus, settings);
-            saveSettingsDebounced();
-            updateNativeHybridUI();
-        });
-
     // Initialize native-hybrid-dependent visibility
     updateNativeHybridUI();
-
-    // ABC-DELETE: Qdrant native sparse vectors enable toggle
-    $('#vecthare_qdrant_native_sparse_enabled')
-        .prop('checked', !!settings.qdrant_native_sparse_enabled)
-        .on('change', function() {
-            settings.qdrant_native_sparse_enabled = $(this).prop('checked');
-            Object.assign(extension_settings.vecthareplus, settings);
-            saveSettingsDebounced();
-        });
-
-    // ABC-DELETE: hybrid fusion mode (A/B/C — pick winner, delete losers + this block)
-    $('#vecthare_hybrid_fusion_mode')
-        .val(settings.hybrid_fusion_mode || 'legacy')
-        .on('change', function() {
-            settings.hybrid_fusion_mode = String($(this).val());
-            Object.assign(extension_settings.vecthareplus, settings);
-            saveSettingsDebounced();
-            console.log(`VectHare: hybrid_fusion_mode = ${settings.hybrid_fusion_mode}`);
-        });
 
     // Query depth (how many recent messages to include in search query)
     $('#vecthare_query_depth')
