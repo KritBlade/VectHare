@@ -168,12 +168,38 @@ export function registerMigrationRoutes(router, pluginName = 'similharity') {
                 }
             } catch (e) { /* no sentinel yet — fine */ }
 
-            // 1. Drop the original source collection.
+            // 0. Defensive: if a residual alias `sourceCollection` exists (from a previous
+            //    attempt that used the alias-based finalize), remove the alias entry first.
+            //    Otherwise a subsequent DELETE on the alias name would also drop the underlying
+            //    target collection (Qdrant alias-delete-by-DELETE-name is destructive).
             try {
-                await qdrantBackend._request('DELETE', `/collections/${sourceCollection}`);
-                console.log(`[${pluginName}] migrate/finalize: dropped source ${sourceCollection}`);
+                const aliasList = await qdrantBackend._request('GET', '/collections/aliases');
+                const aliases = aliasList.result?.aliases || [];
+                const found = aliases.find(a => a.alias_name === sourceCollection);
+                if (found) {
+                    console.warn(`[${pluginName}] migrate/finalize: removing residual alias ${found.alias_name} → ${found.collection_name}`);
+                    await qdrantBackend._request('POST', '/collections/aliases', {
+                        actions: [{ delete_alias: { alias_name: sourceCollection } }],
+                    });
+                }
             } catch (e) {
-                console.warn(`[${pluginName}] migrate/finalize: source drop failed (already gone?):`, e.message);
+                console.warn(`[${pluginName}] migrate/finalize: alias pre-check skipped:`, e.message);
+            }
+
+            // 1. Drop the original source collection IFF it actually exists as a real collection
+            //    (after the alias scrub above, source-name now refers only to a real collection
+            //    or to nothing).
+            try {
+                const collections = await qdrantBackend._request('GET', '/collections');
+                const sourceExists = !!collections.result?.collections?.some(c => c.name === sourceCollection);
+                if (sourceExists) {
+                    await qdrantBackend._request('DELETE', `/collections/${sourceCollection}`);
+                    console.log(`[${pluginName}] migrate/finalize: dropped source ${sourceCollection}`);
+                } else {
+                    console.log(`[${pluginName}] migrate/finalize: source ${sourceCollection} does not exist — skipping drop`);
+                }
+            } catch (e) {
+                console.warn(`[${pluginName}] migrate/finalize: source drop failed:`, e.message);
             }
 
             // 2. Recreate source with the sparse schema.
