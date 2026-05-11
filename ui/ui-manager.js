@@ -2087,7 +2087,9 @@ function bindSettingsEvents(settings, callbacks) {
 
     $('#vecthare_summarize_model')
         .val(settings.summarize_model || '')
-        .on('change', function() {
+        .on('input change', function() {
+            // Bind 'input' too — 'change' alone only fires on blur, so clicking Vectorize
+            // immediately after typing would skip the save.
             settings.summarize_model = String($(this).val()).trim();
             Object.assign(extension_settings.vecthareplus, settings);
             saveSettingsDebounced();
