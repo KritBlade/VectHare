@@ -18,6 +18,7 @@ import {
   clearCollectionRegistry,
   deleteCollection,
 } from "../core/collection-loader.js";
+import { parseCollectionId, COLLECTION_SCOPES } from "../core/collection-ids.js";
 import {
   purgeVectorIndex,
   queryMultipleCollections,
@@ -654,12 +655,70 @@ function switchTab(tabName) {
 /**
  * Refreshes collections from storage
  */
+/**
+ * Sanitize a persona name into a handleId — must match the logic used by collection-ids.js
+ * builders (buildEventBaseCollectionId, buildArchiveEventCollectionId, buildChatCollectionId).
+ * @param {string} name
+ * @returns {string}
+ */
+function _sanitizeHandleForFilter(name) {
+  return String(name || "user")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, "_")
+    .replace(/^_|_$/g, "")
+    .substring(0, 30) || "user";
+}
+
+/**
+ * Filter collections to only the current persona's chat-scoped collections.
+ * Global-scope collections (lorebook, document, character) are always kept.
+ *
+ * Persona-based filtering: collections whose name encodes a handleId
+ * (chat / eventbase / archiveevent) are kept only when that handleId
+ * matches the active persona's sanitized name1. Switching personas changes
+ * which collections appear.
+ *
+ * UI-only filter — not access control. The server still stores everything;
+ * a determined user could load another persona's collection by knowing its ID.
+ * Real isolation lives at the plugin / Qdrant layer.
+ *
+ * @param {object[]} collections
+ * @returns {object[]}
+ */
+function _filterCollectionsByCurrentPersona(collections) {
+  const personaName = getContext()?.name1;
+  const ownHandle = _sanitizeHandleForFilter(personaName);
+
+  // The handleId appears between underscores in the collection name. Match
+  // `_<handle>_` to avoid prefix-collisions (e.g. handle "rab" matching "rabbit").
+  const needle = `_${ownHandle}_`;
+
+  return collections.filter((c) => {
+    const parsed = parseCollectionId(c.id);
+    // Keep global collections (lorebooks, documents, characters) unconditionally.
+    if (parsed.scope !== COLLECTION_SCOPES.CHAT) return true;
+
+    // Chat-scoped collection: keep only if its name carries the current persona's handle.
+    return String(c.id).toLowerCase().includes(needle);
+  });
+}
+
 async function refreshCollections() {
   try {
-    browserState.collections = await loadAllCollections(browserState.settings);
+    const allCollections = await loadAllCollections(browserState.settings);
+    browserState.collections = _filterCollectionsByCurrentPersona(allCollections);
 
-    // Clean up orphaned metadata entries (collections that no longer exist)
-    const actualIds = browserState.collections.map((c) => c.id);
+    if (allCollections.length !== browserState.collections.length) {
+      const hidden = allCollections.length - browserState.collections.length;
+      console.log(
+        `VectHare DB Browser: Hiding ${hidden} chat-scoped collection(s) from other personas (current: ${_sanitizeHandleForFilter(getContext()?.name1)})`,
+      );
+    }
+
+    // Clean up orphaned metadata entries (collections that no longer exist).
+    // IMPORTANT: pass the *unfiltered* list so we don't wipe metadata for other
+    // personas' collections when this persona opens the browser.
+    const actualIds = allCollections.map((c) => c.id);
     const cleanupResult = cleanupOrphanedMeta(actualIds);
     if (cleanupResult.removed > 0) {
       console.log(

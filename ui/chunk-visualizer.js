@@ -40,7 +40,7 @@ import {
     getGroupStats,
 } from '../core/chunk-groups.js';
 import { getContext } from '../../../../extensions.js';
-import { eventSource } from '../../../../../script.js';
+import { eventSource, getRequestHeaders } from '../../../../../script.js';
 
 // ============================================================================
 // STATE
@@ -289,6 +289,58 @@ export function openVisualizer(results, collectionId, settings, onReload = null)
     bindEvents();
 
     $('#vecthare_visualizer_modal').fadeIn(200);
+
+    // Async fetch collection-level metadata (sentinel point) and render in footer.
+    // Read-only — surfaces internal lock state without making it look editable.
+    _loadAndRenderCollectionMetaFooter(collectionId, settings).catch(err => {
+        console.debug('[VectHare] Collection metadata footer load skipped:', err?.message);
+    });
+}
+
+async function _loadAndRenderCollectionMetaFooter(collectionId, settings) {
+    // Only Qdrant collections carry the sentinel today.
+    if ((settings?.vector_backend || 'standard') !== 'qdrant') return;
+    const backend = 'qdrant';
+
+    // Strip any registry prefix (e.g. "qdrant:foo:bar" → "foo:bar") and resolve actual collection name.
+    const stripped = String(collectionId).startsWith('qdrant:')
+        ? String(collectionId).substring(7)
+        : String(collectionId);
+    const actualCollectionId = stripped.includes(':') ? stripped.split(':')[1] : stripped;
+
+    let resp;
+    try {
+        resp = await fetch('/api/plugins/similharity/chunks/collection-metadata', {
+            method: 'POST',
+            headers: getRequestHeaders(),
+            body: JSON.stringify({ backend, collectionId: actualCollectionId }),
+        });
+    } catch {
+        return;
+    }
+    if (!resp.ok) return;
+    const data = await resp.json().catch(() => null);
+    const payload = data?.payload;
+    if (!payload || typeof payload !== 'object') return;
+
+    // Surface only the keys that matter for diagnostics. Skip vector/zero junk.
+    const interesting = {};
+    if (payload.cjk_tokenizer_mode) interesting.cjk_tokenizer_mode = payload.cjk_tokenizer_mode;
+    if (payload.migrated_at)        interesting.migrated_at        = new Date(payload.migrated_at).toISOString();
+    if (payload.updated_at)         interesting.updated_at         = new Date(payload.updated_at).toISOString();
+    if (payload.migrated_from)      interesting.migrated_from      = payload.migrated_from;
+
+    if (Object.keys(interesting).length === 0) return;
+
+    const escapeHtml = (s) => String(s ?? '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const lines = Object.entries(interesting)
+        .map(([k, v]) => `<span style="margin-right:1.2em;"><b>${escapeHtml(k)}</b>: ${escapeHtml(v)}</span>`)
+        .join('');
+
+    $('#vecthare_collection_meta_footer')
+        .html(`<span style="margin-right:0.8em;">🔒 Collection metadata (read-only, internal — do not delete the sentinel point in Qdrant):</span>${lines}`)
+        .show();
 }
 
 export function closeVisualizer() {
@@ -494,6 +546,9 @@ function createModal() {
                         </div>
                     </div>
                 </div>
+
+                <!-- Read-only collection metadata footer (sentinel point). Populated async after modal opens. -->
+                <div class="vecthare-visualizer-meta-footer" id="vecthare_collection_meta_footer" style="display:none; padding: 8px 16px; border-top: 1px solid var(--grey30); font-size: 0.78em; color: var(--SmartThemeBodyColor); opacity: 0.7; font-family: monospace;"></div>
             </div>
         </div>
     `;
