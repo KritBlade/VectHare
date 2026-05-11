@@ -117,13 +117,26 @@ export function getChatUUID() {
 // COLLECTION ID BUILDERS
 // ============================================================================
 
+// ============================================================================
+// DEAD-CHUNK-CHAT — disabled for good
+// ============================================================================
+// Chat history is hard-routed through the EventBase pipeline (see dev_helper.md §1).
+// The legacy chunk-based chat format `vecthare_chat_{handle}_{char}_{uuid}` is no
+// longer produced or queried anywhere. These builders return null so any leftover
+// callers degrade gracefully (no fake IDs leaking into the registry / Qdrant).
+//
+// Search tag: DEAD-CHUNK-CHAT — used at every callsite that previously built or
+// consumed `vecthare_chat_*` IDs. Remove entirely once the codebase is fully audited.
+// ============================================================================
+
 /**
- * Builds a chat collection ID using UUID for uniqueness
- * Format: vecthare_chat_{handleId}_{charName}_{uuid}
- * @param {string} [chatUUID] Optional UUID override
- * @returns {string|null} Collection ID or null if no chat
+ * @deprecated DEAD-CHUNK-CHAT. Chat history uses EventBase (`vecthare_eventbase_*`).
+ * Returns null to disable any leftover callers.
  */
 export function buildChatCollectionId(chatUUID) {
+    console.warn('VectHare: buildChatCollectionId() called but chunk-based chat is disabled (use EventBase). Returning null. Stack:', new Error().stack);
+    return null;
+    /* DEAD-CHUNK-CHAT — original implementation:
     const uuid = chatUUID || getChatUUID();
     if (!uuid) {
         return null;
@@ -133,7 +146,6 @@ export function buildChatCollectionId(chatUUID) {
     const handleId = context?.name1 || 'user';
     const charName = context?.name2 || 'chat';
 
-    // Sanitize handle/character names (lowercase, alphanumeric only)
     const sanitizedHandle = handleId
         .toLowerCase()
         .replace(/[^\p{L}\p{N}]+/gu, '_')
@@ -147,20 +159,22 @@ export function buildChatCollectionId(chatUUID) {
         .substring(0, 30) || 'chat';
 
     return `${COLLECTION_PREFIXES.VECTHARE_CHAT}${sanitizedHandle}_${sanitizedChar}_${uuid}`;
+    */
 }
 
 /**
- * Builds a legacy chat collection ID (for backwards compatibility checks)
- * Format: vecthare_chat_{chatId}
- * @param {string} [chatId] Optional chatId override
- * @returns {string|null} Legacy collection ID or null
+ * @deprecated DEAD-CHUNK-CHAT. Legacy chunk-based chat collections are not used anywhere.
  */
 export function buildLegacyChatCollectionId(chatId) {
+    console.warn('VectHare: buildLegacyChatCollectionId() called but chunk-based chat is disabled. Returning null.');
+    return null;
+    /* DEAD-CHUNK-CHAT — original implementation:
     const id = chatId || getCurrentChatId();
     if (!id) {
         return null;
     }
     return `${COLLECTION_PREFIXES.VECTHARE_CHAT}${id}`;
+    */
 }
 
 /**
@@ -319,10 +333,8 @@ export function buildArchiveEventCollectionId({ filenameCharName, archiveUUID, b
 }
 
 /**
- * Gets all possible collection IDs for the current chat (for discovery)
- * @param {string} [chatId] Optional chatId override
- * @param {string} [chatUUID] Optional UUID override
- * @returns {{current: string|null, legacy: string|null}} Both format IDs
+ * @deprecated DEAD-CHUNK-CHAT. Both inner builders are dead; this helper now returns
+ * `{current: null, legacy: null}` so leftover callers see nothing-to-discover.
  */
 export function getAllChatCollectionIds(chatId, chatUUID) {
     return {

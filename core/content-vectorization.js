@@ -817,6 +817,17 @@ function generateCollectionId(contentType, source, settings) {
     const timestamp = Date.now();
 
     switch (contentType) {
+        // DEAD-CHUNK-CHAT — disabled for good.
+        // Chat history is hard-routed through the EventBase pipeline; non-chat
+        // content types (lorebook/character/document/url/wiki/youtube) are the only
+        // valid inputs to this function. If contentType === 'chat' reaches here, it's
+        // a bug — fail loudly rather than silently produce a vecthare_chat_* ID.
+        case 'chat':
+            throw new Error(
+                'VectHare: generateCollectionId(contentType="chat") is disabled. ' +
+                'Chat history must go through eventbase-workflow.js, not the chunk content pipeline.'
+            );
+        /* DEAD-CHUNK-CHAT — original 'chat' branch:
         case 'chat':
             // Use UUID-based ID (single source of truth)
             const chatCollectionId = buildChatCollectionId();
@@ -826,6 +837,7 @@ function generateCollectionId(contentType, source, settings) {
             // Fall through to legacy generation if UUID not available
             console.warn('VectHare: Chat UUID not available, using legacy ID generation');
             break;
+        */
 
         case 'lorebook':
             return buildLorebookCollectionId(sourceName, settings.vector_backend, timestamp);

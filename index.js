@@ -450,7 +450,17 @@ jQuery(async () => {
     eventSource.on(event_types.MESSAGE_SENT, onChatEvent);
     eventSource.on(event_types.MESSAGE_RECEIVED, onChatEvent);
     eventSource.on(event_types.MESSAGE_SWIPED, onChatEvent);
-    // When a chat is deleted, purge its vectors (not full purge, just that chat)
+    // DEAD-CHUNK-CHAT — disabled for good.
+    // These handlers used to purge `vecthare_chat_*` collections on chat deletion.
+    // Chat history now lives in `vecthare_eventbase_*` collections, which use a
+    // UUID-based ID that survives the chat-file deletion (and the chat UUID isn't
+    // recoverable once the chat is gone). EventBase collections need to be cleaned
+    // up via the Database Browser, not auto-purged on chat delete.
+    //
+    // TODO: implement EventBase-aware chat-delete cleanup if/when we want it back.
+    // The hard part is mapping the deleted chatId → chatUUID → eventbase collection
+    // ID, since chat_metadata.integrity is gone after deletion.
+    /* DEAD-CHUNK-CHAT — original handlers:
     eventSource.on(event_types.CHAT_DELETED, async (chatId) => {
         if (chatId) {
             const collectionId = getChatCollectionId(chatId);
@@ -469,6 +479,7 @@ jQuery(async () => {
             }
         }
     });
+    */
 
     // When WebLLM extension is loaded, refresh the model list
     eventSource.on(event_types.EXTENSION_SETTINGS_LOADED, async (manifest) => {

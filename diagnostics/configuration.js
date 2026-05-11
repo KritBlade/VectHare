@@ -7,6 +7,19 @@
  * @author Coneja Chibi
  * @version 2.2.0-alpha
  * ============================================================================
+ *
+ * NOTE — DEAD-CHUNK-CHAT branches present in this file:
+ * Several checks below call `getChatCollectionId()`, which is now disabled (returns
+ * null). Chat history runs through the EventBase pipeline; there are no more
+ * `vecthare_chat_*` collections to validate. The conditional branches that depend
+ * on `chatCollectionId` are effectively skipped at runtime.
+ *
+ * These diagnostics need to be rewritten to inspect EventBase collections instead.
+ * Until then, the no-op behavior is harmless — diagnostics that previously reported
+ * "chat collection healthy" will silently skip.
+ *
+ * Search tag: DEAD-CHUNK-CHAT
+ * ============================================================================
  */
 
 import { getCurrentChatId, chat_metadata } from '../../../../../script.js';

@@ -71,23 +71,23 @@ let summarizationFailureLatch = null;
 // Re-export getChatUUID (already imported above)
 export { getChatUUID };
 
-/**
- * Builds chat collection ID using the chat's unique UUID
- * Format: vecthare_chat_{handleId}_{charName}_{uuid}
- * @param {string} [chatUUID] Optional UUID override, otherwise uses current chat
- * @returns {string|null} Collection ID or null if no chat
- */
+// ============================================================================
+// DEAD-CHUNK-CHAT — disabled for good
+// ============================================================================
+// These wrappers used to build legacy chunk-based chat collection IDs
+// (vecthare_chat_*). Chat history now goes exclusively through EventBase,
+// so both wrappers return null. The underlying builders also no-op + warn.
+// Callers should be audited and removed (search tag: DEAD-CHUNK-CHAT).
+// ============================================================================
+
+/** @deprecated DEAD-CHUNK-CHAT. Returns null. Use EventBase for chat. */
 export function getChatCollectionId(chatUUID) {
-    return buildChatCollectionId(chatUUID);
+    return buildChatCollectionId(chatUUID); // builder is also DEAD-CHUNK-CHAT (returns null + warn)
 }
 
-/**
- * Gets the legacy format collection ID for backwards compatibility
- * @param {string} [chatId] Optional chatId override, otherwise uses current chat
- * @returns {string|null} Legacy collection ID or null if no chat
- */
+/** @deprecated DEAD-CHUNK-CHAT. Returns null. Use EventBase for chat. */
 export function getLegacyChatCollectionId(chatId) {
-    return buildLegacyChatCollectionId(chatId);
+    return buildLegacyChatCollectionId(chatId); // builder is also DEAD-CHUNK-CHAT
 }
 
 // Re-export getAllChatCollectionIds with adapted return format for backwards compat

@@ -7,6 +7,15 @@
  * @author Coneja Chibi
  * @version 2.2.0-alpha
  * ============================================================================
+ *
+ * NOTE — DEAD-CHUNK-CHAT branches present in this file:
+ * Some tests call `getChatCollectionId()`, which is now disabled (returns null).
+ * Chat history runs through the EventBase pipeline; there are no more
+ * `vecthare_chat_*` collections to test against. The dependent branches no-op.
+ * These tests should be rewritten to target EventBase collections.
+ *
+ * Search tag: DEAD-CHUNK-CHAT
+ * ============================================================================
  */
 
 import { getCurrentChatId, getRequestHeaders } from '../../../../../script.js';
