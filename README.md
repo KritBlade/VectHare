@@ -20,7 +20,7 @@ Ordinary SillyTavern memory extensions completely buckle under this load, especi
 
 Most memory extensions are designed for chats with 100 messages or fewer, and they work perfectly well at that scale. But as the chat grows past that, they're forced to summarize older messages more and more aggressively. You end up with full detail on recent history and a heavily compressed blur for everything older — and there's no real way around it, because you simply can't fit 100+ messages worth of raw context into the prompt. Old memory *has* to be compressed, which means detail is lost.
 
-To tackle this, VectHarePlus uses a dedicated vector database that stores **every single meaningful event** from the chat. Whether it's the first message or the 2,000th, every meaningful event stays in the database and is always available for SillyTavern to search.  I want a production grade memory vector system for SillyTavern which is scalable to 10k+ messages and round trip time within 3 seconds.
+To tackle this, VectHarePlus uses a dedicated vector database that stores **every single meaningful event** from the chat. Whether it's the first message or the 2,000th, every meaningful event stays in the database and is always available for SillyTavern to search.  I want a production grade memory vector system for SillyTavern which is scalable to 10k+ messages and round trip time within seconds.
 
 ### The Problem It Solves
 
@@ -214,7 +214,7 @@ With half-life = 50: a message 50 ago is at 50% relevance, 100 ago at 25%, 150 a
 | **Standard (Vectra - SillyTavern default vector format)** | Small datasets, multilingual, getting started | No dependencies. Limited to A1/A2 hybrid. |
 | **Qdrant** | Large chats, multilingual, production | A3 hybrid (best accuracy). Requires Qdrant + Similharity plugin (installation below). |
 
-Use **Qdrant vector database** for any ultra fast and accurate delopment — A3 is materially more accurate than A1/A2, especially for CJK, and it is free and opensource.  2000+ events in the database takes less than 1 seconds round trip search.
+Use **Qdrant vector database** for any ultra fast and accurate delopment — A3 is materially more accurate than A1/A2, especially for CJK, and it is free and opensource.  2000+ events in the database takes less than 3 seconds round trip search.
 
 ---
 
