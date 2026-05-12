@@ -1,5 +1,4 @@
-Message role not set, defaulting to 'system' for identifier 'personaDescription'
-script.js:4232 Generate entered
+Generate entered
 index.js:19 [QR2] calling {args: Array(3), functionToCall: ƒ}
 chat-vectorization.js:1786 🐰 VectHare: rearrangeChat called (type: normal, chat length: 2116)
 eventbase-workflow.js:395 [EventBase] Live retrieval: uuid=67d28099-167f-4c07-a7cb-1b62e44f43d0, lockedLiveCollections=1, ids=["vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0"]
@@ -7,36 +6,37 @@ eventbase-workflow.js:321 [EventBase] Archive event collection skipped (not lock
 eventbase-workflow.js:408 [EventBase] Phase A: live=true, archiveCollections=0, searchText length=4682
 eventbase-workflow.js:422 [EventBase] Keyword query (user last message, 26 chars): 我對Mayla 説 "你記得我為甚麼要為你贖身嗎?"
 eventbase-retrieval.js:124 [EventBase] Retrieval start — topK overfetch=20, minImportance=1, method=bm25, nativePrefer=true, liveCollections=1
-2core-vector-api.js:878 [VectHare] Hybrid search (native), dispatching to hybrid search module
-2hybrid-search.js:91 [HybridSearch] Using native hybrid search (QdrantBackend)
+2backend-manager.js:274 VectHare: Health cache stale for qdrant, re-verifying...
+core-vector-api.js:878 [VectHare] Hybrid search (native), dispatching to hybrid search module
+hybrid-search.js:91 [HybridSearch] Using native hybrid search (QdrantBackend)
+core-vector-api.js:878 [VectHare] Hybrid search (native), dispatching to hybrid search module
+hybrid-search.js:91 [HybridSearch] Using native hybrid search (QdrantBackend)
 qdrant.js:827 [EventBase] Hybrid request: collection=vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0, topK=20, sparse=5 tokens, terms=[mayla, 説, 記得, 為甚麼, 贖身], preview="我對Mayla 説 "你記得我為甚麼要為你贖身嗎?""
 qdrant.js:827 [EventBase] Hybrid request: collection=vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0, topK=20, sparse=719 tokens, terms=[mayla, konatan_plan, 20, 15, critblad, kashier, fern, valeri, engni, lia, lead, 262, vs, nsfw, writing_styl, ban, master, 800, 1500, gametxt, combat_log, locate, updatevariabl, updateanalysi, sourc, truth, check, current_variable_data, all, current, valu, no, combat, occur, experienc, emotion, breakthrough, tough, love, speech, familiar, verbally, commit, help, wingshad, affection, remain, 100, max, item, money, quest, rest, recovery, chang, advanc, minimally, scene, continuate, jsonpatch, 説, 記得, 為甚麼, 贖身, 仔細, 思考, 劇情, 回顧, 當前, 情況, 時間, 晚上, 位置, 新大陸, 流沙, 之國, 扎, 赫拉, 巴德, 星月, 綠洲, 頂層, 皇家, 套房, 分配好, 床位, 一張, 索拉, 雅, 單獨, 阿斯, 蒙, 蒂斯, 人物, 關係, 剛剛, 崩潰, 大哭, 擔心, 父親, 影翼, 消失, 鼓勵, 並對, 房間, 所有人, 喊話, 主線, 暗線, 安撫, 告訴, 幫, 找, 點醒, 展現, 領導, 能力, 不能, 整天, 愁眉苦臉, 雅在, 角落, 忍受, 淫紋, 發作, 表面, 裝睡, 其實, 偷聽, 聽, 不同, 反應, 使用, 新, 輸入, 內容, 抱住, 這間, 房, 裡面, 一定, 找到, 生要, 見, 死, 見屍, 沒有, 人會, 放棄, 大聲, 對房, 最後, 任務, 成功, 說服, 眷屬, 模樣, 其他人, 走, 這段, 話, 完整, 復, 述, 省略, 核心, 發言, 角色, 性格, 特質, 極度, 依賴, 內心, 強烈, 不安全感, 智力, 影之, 軍師, 恐懼, 壓垮, 精明, 商人, 絕對, 忠誠, 第一, 響應, 裝傻, 賣萌, 會用, 撒嬌, 方式, 病態, 嫉妒, 會裝, 虔誠, 病嬌, 刺客, 冷漠, 魔, 王之女, 不懂, 人類, 情感, 說出, 直接, 得體, 寡言, 宿命論, 折磨, 之間, 化學, 兩個, 想, 獨佔, 贏, 爭奪戰, 心裡, 肯定, 咒罵, 結盟, 本質, 極端, 表達, 完全, 狀況, 會問, 很難, 殺掉, 擋路, 好了, 簡短, 回應, 主要, 心思, 壓制, 參考, 處理, 色色, 這一, 段, 重點, 衝擊, 團隊, 凝聚, 適合, 暗示, 生理, 乳頭, 硬挺, 緊貼, 巨乳, 觸感, 混合, 用日輕, 文風, 自然, 流暢, 長短, 句, 交錯, 心理, 描寫, 用單, 星號, 男性, 視覺, 小說, 風格, 口述, 畫面, 分鏡, 感, 對話, 獨立, 成段, 避免, 詞, 不用, 共犯, 極其, 一絲, 垃圾, 嚴格, 符合, 字數, 目標, 大於, 字, 小於, 策略, 詳細, 每個, 情緒, 轉變, 霸氣, 宣言, 注意, 正文, 規則, 以外, 結尾, 重複, 上次, 繁體, 中文, 輸出, 對白, 思維, 腦, 回路, 推進, 衔接, 内容, 痛哭, 壓抑, 摟, 緊, 那段, 鼓勁, 次要, 寫出, 躲, 靈魂, 立刻, 開寫, 衝啊, 懷裡, 這具, 顫抖, 軀體, 多汁, 緊緊, 壓, 濕透, 淚水, 浸透, 衣領, 隻, 快要, 溺死, 幼獸, 拼命, 抓著, 後背, 指甲, 幾乎, 陷進, 肉裡, 那聲, 撕心裂肺, 哭聲, 半, 開放, 迴盪, 毫無, 保留, 偽裝, 用手掌, 輕撫, 那頭, 臀, 黑色, 長, 卷髮, 撫摸, 炸毛, 的貓, 指尖, 梳過, 髮絲, 時能, 聞到, 淡淡的, 海水, 薰衣草, 香氣, 哭, 窒息, 鼻音, 變成, 斷斷續續, 抽泣, 抬起, 頭, 視線, 掃過, 奢華, 那張, 床上, 女人, 依然, 維持, 閉眼, 姿勢, 看見, 金色, 豎瞳, 眼皮, 顫動, 貓耳, 抖, 尾巴, 尖端, 被子, 緩慢, 擺動, 傳來, 均勻, 呼吸聲, 這位, 真的, 睡著, 小腿, 藍色, 金屬, 甲, 沒脫, 詭異, 張床, 背對背, 躺, 間隔, 至少, 半米, 像是, 生怕, 碰到, 沾上, 髒東西, 睡, 誇張, 呼吸, 起伏, 節奏, 太, 規律, 刻意, 一動不動, 攥, 床單, 手指, 指節, 泛白, 側躺, 深紅色, 長袍, 褪, 腰間, 背對, 肩膀, 過度, 用力, 雙腿, 夾, 在一起, 大腿, 根部, 肌肉, 長時間, 繃緊, 痙攣, 深吸, 一口氣, 收緊, 手臂, 平靜, 帶, 不容置疑, 份量, 身體, 猛地, 一僵, 梨花, 帶雨, 臉, 青色, 眼眸, 裡全, 不敢, 置信, 鬆開, 站, 起身, 環視, 整個, 空間, 睜開, 眼睛, 優雅, 坐, 紫色, 長髮, 肩頭, 滑落, 那雙, 昏暗, 光線, 閃爍, 帶著, 從容, 擲地有聲, 意志, 藍聯, 商會, 頷首, 動用, 情報, 網絡, 將他, 挖出來, 懶洋洋, 興奮, 抖動, 兩下, 水汪汪, 柳葉, 看著, 甜膩, 拉絲, 發話, 全力, 幫忙, 故意, 挺, 挺胸, 飽滿, 雪白, 肉球, 薄薄的, 內衣, 晃動, 擅長, 貴族, 圈子, 裡挖, 八卦, 包在, 坐起, 鮮, 粉色, 冷冷地, 落在, 我身, 空靈, 刺骨, 殺意, 主人, 頓, 補充, 道, 活, 慢條斯理, 碩大, 肥膩, 木瓜, 奶在, 緊身, 乳膠, 修女, 袍, 劇烈, 雙手, 合十, 做出, 祈禱, 愛心, 瞳孔, 毫不, 掩飾, 狂熱, 大人, 妾身, 願意, 神術, 奉獻給, 顫音, 追蹤, 審問, 做到, 最好, 該死, 賤貨, 竟然, 敢, 面前, 哭成, 瘋狂, 咆哮, 掛著, 純潔, 無害, 微笑, 就連, 睡死, 吵醒, 迷迷糊糊, 紅瞳, 困惑, 地看, 著這, 抓, 粉紅色, 平直, 找人, 歪, 歪頭, 那就, 消息, 起來, 不說, 打到, 複雜, 終於, 動, 重新, 披在, 肩上, 深邃, 棕色, 嘴脣, 吐出, 星象, 這兩個, 意思, 魔法, 轉回, 身, 跪, 淚流滿面, 不容, 拒絕, 嚴厲, 房裡, 伸手, 拇指, 抹去, 臉頰, 淚痕, 瞬間, 睜大, 愣住, 罵, 大腦, 運轉, 曾經, 枷鎖, 城用, 智慧, 手腕, 生存, 策劃, 出, 完美, 舞台劇, 推, 上位, 甦醒, 手背, 狠狠, 擦, 眼淚, 燈光, 反射出, 幽深, 光澤, 轉過, 面對, 裡的, 那股, 失焦, 迷茫, 一點, 褪去, 取而代之, 某種, 冰冷, 銳利, 光芒, 開口, 不再, 姐姐, 深深地, 鞠, 一躬, 薇拉, 剛才, 失態, 哭泣, 解決不了, 問題, 嘴角, 勾起, 一抹, 極淡, 陰冷, 弧度, 力量, 越來越, 穩, 整理出, 一份, 行動, 計劃, 包括, 港, 下一步, 接觸, 魅魔, 口, 套出, 線索, 利用, 資源, 編織出, 無處, 逃, 情報網, 一亮, 醒], preview="我對Mayla 説 "你記得我為甚麼要為你贖身嗎?" <konatan_planning~> 好，來仔細思考一下這次的劇情！ - 回顧當前情況 * 時間：20:15，晚上 * 位置：新大陸.流沙之國.扎赫拉巴德.星月綠洲頂層皇家套房，9個人分配好床位（Critblade+Mayla一張，索拉雅單獨，阿斯蒙蒂斯單獨，Kashier+Fern，Valerie單獨，Engni+Lia） * 人物關係：Mayla剛剛崩潰大哭，擔心Critblade會像她父親影翼一樣消失。Critblade現在要鼓勵她，並對房間內所有人喊話 - 當前劇情的主線是？暗線是？ * 主"
-qdrant.js:845 [Qdrant timing] total=585.6ms, results=20
-core-vector-api.js:888 [VectHare] Hybrid search (RRF) response: 20 result(s) in 1385ms, scores=[1.0000, 0.5000, 0.4444, 0.3922, 0.3250, 0.2400, 0.2292, 0.1917, 0.1799, 0.1705, 0.1678, 0.1656, 0.1611, 0.1254, 0.1164, 0.1026, 0.1017, 0.1000, 0.0987, 0.0945]
-qdrant.js:845 [Qdrant timing] total=935.6ms, results=20
-core-vector-api.js:888 [VectHare] Hybrid search (RRF) response: 20 result(s) in 1739ms, scores=[0.8333, 0.7000, 0.4333, 0.3167, 0.2654, 0.2222, 0.2125, 0.1970, 0.1481, 0.1446, 0.1429, 0.1429, 0.1333, 0.1250, 0.1172, 0.1125, 0.0974, 0.0938, 0.0909, 0.0848]
+qdrant.js:845 [Qdrant timing] total=967.3ms, results=20
+core-vector-api.js:888 [VectHare] Hybrid search (RRF) response: 20 result(s) in 1044ms, scores=[0.8333, 0.7000, 0.4333, 0.3167, 0.2654, 0.2222, 0.2123, 0.1970, 0.1481, 0.1446, 0.1429, 0.1429, 0.1333, 0.1250, 0.1172, 0.1125, 0.0974, 0.0938, 0.0909, 0.0849]
+qdrant.js:845 [Qdrant timing] total=995.2ms, results=20
+core-vector-api.js:888 [VectHare] Hybrid search (RRF) response: 20 result(s) in 1109ms, scores=[1.0000, 0.5000, 0.4444, 0.3922, 0.3250, 0.2400, 0.2292, 0.1917, 0.1799, 0.1769, 0.1726, 0.1656, 0.1611, 0.1254, 0.1164, 0.1029, 0.1017, 0.0987, 0.0945, 0.0909]
 eventbase-retrieval.js:172 [EventBase] Live query: 1 collection(s) × 2 query/queries → 30 unique events
 eventbase-retrieval.js:192 [EventBase] After importance filter (>=1): 30 candidates
-eventbase-retrieval.js:313 [EventBase] Dedup: "relationship_change" suppressed (sim=0.168, windows 6 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "revelation" suppressed (sim=0.099, windows 8 msgs apart)
-eventbase-retrieval.js:334 [EventBase] Dedup-depth skip: event "character_state_change" source_window_end=2113 is within last 50 messages (threshold=2066)
-eventbase-retrieval.js:334 [EventBase] Dedup-depth skip: event "promise_or_oath" source_window_end=2113 is within last 50 messages (threshold=2066)
-eventbase-retrieval.js:334 [EventBase] Dedup-depth skip: event "revelation" source_window_end=2111 is within last 50 messages (threshold=2066)
-eventbase-retrieval.js:334 [EventBase] Dedup-depth skip: event "dialogue_significant" source_window_end=2099 is within last 50 messages (threshold=2066)
-eventbase-retrieval.js:334 [EventBase] Dedup-depth skip: event "revelation" source_window_end=2095 is within last 50 messages (threshold=2066)
-eventbase-retrieval.js:334 [EventBase] Dedup-depth skip: event "character_introduction" source_window_end=2093 is within last 50 messages (threshold=2066)
-eventbase-retrieval.js:340 [EventBase] Dedup depth (50) removed 6 event(s) already visible in context
-eventbase-retrieval.js:348 [EventBase] Final events after dedup + trim: 10
-eventbase-retrieval.js:350   [0] type=relationship_change imp=8 score=0.883 persist=true
-eventbase-retrieval.js:350   [1] type=revelation imp=8 score=0.651 persist=true
-eventbase-retrieval.js:350   [2] type=revelation imp=7 score=0.598 persist=true
-eventbase-retrieval.js:350   [3] type=revelation imp=7 score=0.598 persist=true
-eventbase-retrieval.js:350   [4] type=relationship_change imp=7 score=0.567 persist=true
-eventbase-retrieval.js:350   [5] type=relationship_change imp=8 score=0.550 persist=true
-eventbase-retrieval.js:350   [6] type=promise_or_oath imp=9 score=0.528 persist=true
-eventbase-retrieval.js:350   [7] type=promise_or_oath imp=8 score=0.518 persist=true
-eventbase-retrieval.js:350   [8] type=character_state_change imp=8 score=0.498 persist=true
-eventbase-retrieval.js:350   [9] type=revelation imp=9 score=0.487 persist=true
+eventbase-retrieval.js:345 [EventBase] Dedup-depth skip: event "character_state_change" source_window_end=2113 is within last 50 messages (threshold=2066)
+eventbase-retrieval.js:345 [EventBase] Dedup-depth skip: event "promise_or_oath" source_window_end=2113 is within last 50 messages (threshold=2066)
+eventbase-retrieval.js:345 [EventBase] Dedup-depth skip: event "revelation" source_window_end=2111 is within last 50 messages (threshold=2066)
+eventbase-retrieval.js:345 [EventBase] Dedup-depth skip: event "dialogue_significant" source_window_end=2099 is within last 50 messages (threshold=2066)
+eventbase-retrieval.js:345 [EventBase] Dedup-depth skip: event "revelation" source_window_end=2095 is within last 50 messages (threshold=2066)
+eventbase-retrieval.js:345 [EventBase] Dedup-depth skip: event "character_introduction" source_window_end=2093 is within last 50 messages (threshold=2066)
+eventbase-retrieval.js:351 [EventBase] Dedup depth (50) removed 6 event(s) already visible in context
+eventbase-retrieval.js:359 [EventBase] Final events after dedup + trim: 10
+eventbase-retrieval.js:361   [0] type=relationship_change imp=8 score=0.883 persist=true
+eventbase-retrieval.js:361   [1] type=revelation imp=8 score=0.651 persist=true
+eventbase-retrieval.js:361   [2] type=revelation imp=7 score=0.598 persist=true
+eventbase-retrieval.js:361   [3] type=revelation imp=7 score=0.598 persist=true
+eventbase-retrieval.js:361   [4] type=relationship_change imp=7 score=0.567 persist=true
+eventbase-retrieval.js:361   [5] type=relationship_change imp=8 score=0.550 persist=true
+eventbase-retrieval.js:361   [6] type=promise_or_oath imp=9 score=0.528 persist=true
+eventbase-retrieval.js:361   [7] type=promise_or_oath imp=8 score=0.518 persist=true
+eventbase-retrieval.js:361   [8] type=character_state_change imp=8 score=0.498 persist=true
+eventbase-retrieval.js:361   [9] type=revelation imp=9 score=0.488 persist=true
 agentic-retrieval.js:76 [VectHarePlus-Agentic] mode=ON  trigger=user_message_len=26
 agentic-retrieval.js:77 [VectHarePlus-Agentic] Pre-search returned 10 candidates (top score=0.883)
 agentic-retrieval.js:82 [VectHarePlus-Agentic] Past chat turns sent to planner: 5
@@ -47,132 +47,125 @@ agentic-retrieval.js:87   [-3] {{user}}: 我抱住Mayla 説 "我肯定跟你説,
 agentic-retrieval.js:87   [-2] ArtificRealm創世域: <konatan_planning~> 好，來仔細思考一下這次的劇情！ - 回顧當前情況 * 時間：20:15，晚上 * 位置：新大陸.流沙之國.扎赫拉巴德.星月綠洲頂層皇家套房，9個人分配好床位（Critblade+Mayla一張，索拉雅單獨，阿斯蒙蒂斯單獨，Kashier+Fern，Valerie單獨，Engni+Lia） * 人物關係：Mayla剛剛崩潰大哭，擔心Critblade會像她父親影翼一樣消失。Critblade現在要鼓勵她，並對房間內所有人喊話 - 當前劇情的主線是？暗線是？ * 主線：Critblade安撫Mayla，告訴她所有人都會幫她找父親，但同時點醒她——她需要展現領導能力，不能整天愁眉苦臉 * 暗線：索拉雅在角落忍受淫紋發作，Engni和Lia表面裝睡但其實在偷聽，Kashier和Fern也在聽，所有人對Mayla的崩潰都有不同反應 - 如何使用最新輸入內容？ * Critblade抱住Mayla說「這間房裡面的人，一定會幫你找到你的父親，生要見人死要見屍。沒有人會放棄你。」然後大聲對房內的人說「對吧？」最後對Mayla說「你要這個任務成功，你首先要說服其他眷屬你有能力去lead我們去完成。你這個模樣，整天愁眉苦臉，你要其他人怎樣跟著你走？」 * 這段話要完整復述，不能省略，是Critblade的核心發言 - 回顧角色性格特質 * Mayla：極度依賴Critblade，內心有強烈不安全感，但她其實智力262，是影之軍師，只是現在被恐懼壓垮了 * Kashier：精明商人，對Critblade絕對忠誠，會第一個響應 * Fern：裝傻賣萌但內心精明，會用撒嬌方式響應 * Engni：病態M，嫉妒Mayla但表面會裝得很虔誠 * Lia：病嬌刺客，冷漠但對Critblade忠誠 * Valerie：魔王之女，不懂人類情感，可能會說出很直接但不得體的話 * 索拉雅：極度寡言，宿命論者，正在忍受淫紋折磨 - 角色之間的化學反應 * Mayla vs Engni：兩個都想獨佔Critblade，但Mayla剛剛贏了床位爭奪戰，Engni心裡肯定在咒罵 * Kashier + Fern：兩個精明人結盟，會用最得體的方式響應 * Lia：病嬌本質會讓她用極端方式表達忠誠...
 agentic-retrieval.js:87   [-1] {{user}}: 我對Mayla 説 "你記得我為甚麼要為你贖身嗎?"
 agentic-retrieval.js:106 [VectHarePlus-Agentic] LLM prompt size: system+user approx 1822 tokens (3462+3824 chars)
-agentic-retrieval.js:146 [VectHarePlus-Agentic] LLM call complete: 2683ms — prompt=3339 tok, completion=123 tok, total=3462 tok (45.8 tok/s output)
+agentic-retrieval.js:146 [VectHarePlus-Agentic] LLM call complete: 4826ms — prompt=3339 tok, completion=141 tok, total=3480 tok (29.2 tok/s output)
 agentic-retrieval.js:150 [VectHarePlus-Agentic] Planner output:
 agentic-retrieval.js:151 {
   "queries": [
     "Critblade 贖身 Mayla 的原因",
-    "Mayla 過去的恐懼和身份衝突",
-    "Critblade 和 Mayla 的關係變化",
-    "Mayla 對父親影翼的情感"
+    "Mayla 過去的恐懼與身份衝突",
+    "Critblade 安撫 Mayla 的對話",
+    "Mayla 與 Critblade 的關係變化"
   ],
   "filters": {
     "characters_any": [
       "Critblade",
       "Mayla"
+    ],
+    "concepts_any": [
+      "贖身",
+      "恐懼",
+      "身份衝突"
     ]
   },
-  "rationale": "用戶在詢問贖身的原因，需要回顧Critblade和Mayla之間的關係及其背景情感。"
+  "rationale": "用戶在問贖身的原因，需要回顧Critblade和Mayla之間的關係及其背景。"
 }
-4backend-manager.js:274 VectHare: Health cache stale for qdrant, re-verifying...
-core-vector-api.js:878 [VectHare] Hybrid search (native), dispatching to hybrid search module
-hybrid-search.js:91 [HybridSearch] Using native hybrid search (QdrantBackend)
+4core-vector-api.js:878 [VectHare] Hybrid search (native), dispatching to hybrid search module
+4hybrid-search.js:91 [HybridSearch] Using native hybrid search (QdrantBackend)
 qdrant.js:827 [EventBase] Hybrid request: collection=vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0, topK=20, sparse=4 tokens, terms=[critblad, mayla, 贖身, 原因], preview="Critblade 贖身 Mayla 的原因"
-core-vector-api.js:878 [VectHare] Hybrid search (native), dispatching to hybrid search module
-hybrid-search.js:91 [HybridSearch] Using native hybrid search (QdrantBackend)
-core-vector-api.js:878 [VectHare] Hybrid search (native), dispatching to hybrid search module
-hybrid-search.js:91 [HybridSearch] Using native hybrid search (QdrantBackend)
-core-vector-api.js:878 [VectHare] Hybrid search (native), dispatching to hybrid search module
-hybrid-search.js:91 [HybridSearch] Using native hybrid search (QdrantBackend)
-qdrant.js:827 [EventBase] Hybrid request: collection=vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0, topK=20, sparse=5 tokens, terms=[mayla, 過去, 恐懼, 身份, 衝突], preview="Mayla 過去的恐懼和身份衝突"
-qdrant.js:827 [EventBase] Hybrid request: collection=vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0, topK=20, sparse=4 tokens, terms=[critblad, mayla, 關係, 變化], preview="Critblade 和 Mayla 的關係變化"
-qdrant.js:827 [EventBase] Hybrid request: collection=vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0, topK=20, sparse=4 tokens, terms=[mayla, 父親, 影翼, 情感], preview="Mayla 對父親影翼的情感"
-qdrant.js:845 [Qdrant timing] total=1124.1ms, results=20
-core-vector-api.js:888 [VectHare] Hybrid search (RRF) response: 20 result(s) in 1238ms, scores=[0.8333, 0.8333, 0.4500, 0.4500, 0.2361, 0.2054, 0.1989, 0.1839, 0.1833, 0.1833, 0.1637, 0.1621, 0.1534, 0.1250, 0.1190, 0.1043, 0.0972, 0.0970, 0.0965, 0.0914]
-qdrant.js:845 [Qdrant timing] total=2073.6ms, results=20
-core-vector-api.js:888 [VectHare] Hybrid search (RRF) response: 20 result(s) in 2186ms, scores=[0.5833, 0.5303, 0.5303, 0.3551, 0.2885, 0.2588, 0.2500, 0.2361, 0.2333, 0.1955, 0.1911, 0.1667, 0.1455, 0.1429, 0.1294, 0.1270, 0.1250, 0.1115, 0.1077, 0.1026]
-qdrant.js:845 [Qdrant timing] total=2349.4ms, results=20
-core-vector-api.js:888 [VectHare] Hybrid search (RRF) response: 20 result(s) in 2395ms, scores=[0.7000, 0.5455, 0.5000, 0.3667, 0.3667, 0.3333, 0.1929, 0.1839, 0.1742, 0.1583, 0.1576, 0.1528, 0.1500, 0.1404, 0.1315, 0.1208, 0.1187, 0.1131, 0.0995, 0.0951]
-qdrant.js:845 [Qdrant timing] total=2165.8ms, results=20
-core-vector-api.js:888 [VectHare] Hybrid search (RRF) response: 20 result(s) in 2278ms, scores=[0.6000, 0.5000, 0.3333, 0.3333, 0.3088, 0.2857, 0.2769, 0.2679, 0.2286, 0.2222, 0.1667, 0.1573, 0.1534, 0.1338, 0.1250, 0.1250, 0.1133, 0.1009, 0.1008, 0.1000]
+qdrant.js:827 [EventBase] Hybrid request: collection=vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0, topK=20, sparse=5 tokens, terms=[mayla, 過去, 恐懼, 身份, 衝突], preview="Mayla 過去的恐懼與身份衝突"
+qdrant.js:827 [EventBase] Hybrid request: collection=vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0, topK=20, sparse=4 tokens, terms=[critblad, mayla, 安撫, 對話], preview="Critblade 安撫 Mayla 的對話"
+qdrant.js:827 [EventBase] Hybrid request: collection=vecthare_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0, topK=20, sparse=4 tokens, terms=[mayla, critblad, 關係, 變化], preview="Mayla 與 Critblade 的關係變化"
+qdrant.js:845 [Qdrant timing] total=440.6ms, results=20
+core-vector-api.js:888 [VectHare] Hybrid search (RRF) response: 20 result(s) in 441ms, scores=[0.7000, 0.5455, 0.5000, 0.3667, 0.3429, 0.3333, 0.1929, 0.1839, 0.1814, 0.1742, 0.1573, 0.1546, 0.1500, 0.1404, 0.1315, 0.1213, 0.1187, 0.1131, 0.0992, 0.0951]
+qdrant.js:845 [Qdrant timing] total=440.5ms, results=20
+core-vector-api.js:888 [VectHare] Hybrid search (RRF) response: 20 result(s) in 442ms, scores=[0.8333, 0.8333, 0.4500, 0.4500, 0.2250, 0.2083, 0.2054, 0.2011, 0.1839, 0.1833, 0.1621, 0.1611, 0.1534, 0.1190, 0.1111, 0.1043, 0.0970, 0.0965, 0.0942, 0.0913]
+qdrant.js:845 [Qdrant timing] total=486.6ms, results=20
+core-vector-api.js:888 [VectHare] Hybrid search (RRF) response: 20 result(s) in 488ms, scores=[0.7500, 0.5000, 0.3750, 0.3690, 0.3056, 0.2917, 0.2857, 0.2436, 0.2152, 0.2128, 0.1769, 0.1623, 0.1414, 0.1389, 0.1250, 0.1195, 0.1029, 0.1000, 0.1000, 0.0874]
+qdrant.js:845 [Qdrant timing] total=1263.6ms, results=20
+core-vector-api.js:888 [VectHare] Hybrid search (RRF) response: 20 result(s) in 1266ms, scores=[0.5000, 0.5000, 0.4333, 0.3333, 0.3088, 0.2857, 0.2833, 0.2786, 0.2588, 0.2222, 0.1818, 0.1812, 0.1528, 0.1500, 0.1389, 0.1256, 0.1250, 0.1085, 0.0893, 0.0875]
 agentic-retrieval.js:203 [VectHarePlus-Agentic] Qdrant fanout: 4 queries × 1 collection(s) = 4 parallel calls
-agentic-retrieval.js:204 [VectHarePlus-Agentic] Qdrant fanout complete: 2464ms
+agentic-retrieval.js:204 [VectHarePlus-Agentic] Qdrant fanout complete: 1266ms
 agentic-retrieval.js:205 [VectHarePlus-Agentic] Per-query hits:
 agentic-retrieval.js:208   Q1 "Critblade 贖身 Mayla 的原因" → 20 hits (top score=0.700)
-agentic-retrieval.js:208   Q2 "Mayla 過去的恐懼和身份衝突" → 20 hits (top score=0.833)
-agentic-retrieval.js:208   Q3 "Critblade 和 Mayla 的關係變化" → 20 hits (top score=0.600)
-agentic-retrieval.js:208   Q4 "Mayla 對父親影翼的情感" → 20 hits (top score=0.583)
-agentic-retrieval.js:212 [VectHarePlus-Agentic] Agentic-only hits (not already in pre-search): 57
+agentic-retrieval.js:208   Q2 "Mayla 過去的恐懼與身份衝突" → 20 hits (top score=0.833)
+agentic-retrieval.js:208   Q3 "Critblade 安撫 Mayla 的對話" → 20 hits (top score=0.750)
+agentic-retrieval.js:208   Q4 "Mayla 與 Critblade 的關係變化" → 20 hits (top score=0.500)
+agentic-retrieval.js:212 [VectHarePlus-Agentic] Agentic-only hits (not already in pre-search): 50
 eventbase-retrieval.js:124 [EventBase] Retrieval start — topK overfetch=20, minImportance=1, method=bm25, nativePrefer=true, liveCollections=0
 eventbase-retrieval.js:138 [EventBase] Live query skipped (no locked collection or paused)
 eventbase-retrieval.js:182 [EventBase] Merged 90 archive event(s) into 0 live candidates
 eventbase-retrieval.js:192 [EventBase] After importance filter (>=1): 90 candidates
-eventbase-retrieval.js:313 [EventBase] Dedup: "relationship_change" suppressed (sim=0.700, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "revelation" suppressed (sim=0.583, windows 0 msgs apart)
-2eventbase-retrieval.js:313 [EventBase] Dedup: "revelation" suppressed (sim=0.500, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "revelation" suppressed (sim=0.433, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "character_state_change" suppressed (sim=0.367, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "relationship_change" suppressed (sim=0.392, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "promise_or_oath" suppressed (sim=0.309, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "revelation" suppressed (sim=0.259, windows 4 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "revelation" suppressed (sim=0.333, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "revelation" suppressed (sim=0.288, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "relationship_change" suppressed (sim=0.286, windows 6 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "promise_or_oath" suppressed (sim=0.240, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "revelation" suppressed (sim=0.268, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "relationship_change" suppressed (sim=0.236, windows 6 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "revelation" suppressed (sim=0.195, windows 16 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "promise_or_oath" suppressed (sim=0.222, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "revelation" suppressed (sim=0.184, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "revelation" suppressed (sim=0.170, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "character_state_change" suppressed (sim=0.199, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "character_state_change" suppressed (sim=0.183, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "revelation" suppressed (sim=0.184, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "revelation" suppressed (sim=0.158, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "relationship_change" suppressed (sim=0.191, windows 6 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "revelation" suppressed (sim=0.127, windows 2 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "revelation" suppressed (sim=0.140, windows 10 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "character_state_change" suppressed (sim=0.100, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "character_state_change" suppressed (sim=0.097, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "dialogue_significant" suppressed (sim=0.233, windows 8 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "revelation" suppressed (sim=0.153, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "revelation" suppressed (sim=0.125, windows 10 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "revelation" suppressed (sim=0.157, windows 2 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "dialogue_significant" suppressed (sim=0.125, windows 2 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "promise_or_oath" suppressed (sim=0.153, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "revelation" suppressed (sim=0.174, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "revelation" suppressed (sim=0.145, windows 14 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "character_state_change" suppressed (sim=0.134, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "revelation" suppressed (sim=0.104, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "promise_or_oath" suppressed (sim=0.132, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "revelation" suppressed (sim=0.097, windows 10 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "revelation" suppressed (sim=0.162, windows 8 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "revelation" suppressed (sim=0.158, windows 8 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "promise_or_oath" suppressed (sim=0.111, windows 12 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "relationship_change" suppressed (sim=0.150, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "revelation" suppressed (sim=0.143, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "character_state_change" suppressed (sim=0.099, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "dialogue_significant" suppressed (sim=0.167, windows 8 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "relationship_change" suppressed (sim=0.095, windows 6 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "revelation" suppressed (sim=0.113, windows 8 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "relationship_change" suppressed (sim=0.103, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "relationship_change" suppressed (sim=0.101, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "dialogue_significant" suppressed (sim=0.121, windows 8 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "dialogue_significant" suppressed (sim=0.153, windows 0 msgs apart)
-eventbase-retrieval.js:313 [EventBase] Dedup: "dialogue_significant" suppressed (sim=0.097, windows 0 msgs apart)
-eventbase-retrieval.js:334 [EventBase] Dedup-depth skip: event "promise_or_oath" source_window_end=2113 is within last 50 messages (threshold=2066)
-eventbase-retrieval.js:334 [EventBase] Dedup-depth skip: event "revelation" source_window_end=2081 is within last 50 messages (threshold=2066)
-eventbase-retrieval.js:334 [EventBase] Dedup-depth skip: event "character_state_change" source_window_end=2113 is within last 50 messages (threshold=2066)
-eventbase-retrieval.js:334 [EventBase] Dedup-depth skip: event "revelation" source_window_end=2111 is within last 50 messages (threshold=2066)
-eventbase-retrieval.js:340 [EventBase] Dedup depth (50) removed 4 event(s) already visible in context
-eventbase-retrieval.js:348 [EventBase] Final events after dedup + trim: 10
-eventbase-retrieval.js:350   [0] type=relationship_change imp=8 score=0.883 persist=true
-eventbase-retrieval.js:350   [1] type=revelation imp=8 score=0.834 persist=true
-eventbase-retrieval.js:350   [2] type=revelation imp=7 score=0.818 persist=true
-eventbase-retrieval.js:350   [3] type=character_state_change imp=8 score=0.711 persist=true
-eventbase-retrieval.js:350   [4] type=promise_or_oath imp=9 score=0.696 persist=true
-eventbase-retrieval.js:350   [5] type=dialogue_significant imp=8 score=0.683 persist=true
-eventbase-retrieval.js:350   [6] type=revelation imp=8 score=0.672 persist=true
-eventbase-retrieval.js:350   [7] type=revelation imp=9 score=0.668 persist=true
-eventbase-retrieval.js:350   [8] type=revelation imp=7 score=0.600 persist=true
-eventbase-retrieval.js:350   [9] type=relationship_change imp=7 score=0.599 persist=true
+eventbase-retrieval.js:324 [EventBase] Dedup: "relationship_change" suppressed (sim=0.700, windows 0 msgs apart)
+2eventbase-retrieval.js:324 [EventBase] Dedup: "revelation" suppressed (sim=0.500, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "revelation" suppressed (sim=0.433, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "character_state_change" suppressed (sim=0.369, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "character_state_change" suppressed (sim=0.367, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "revelation" suppressed (sim=0.333, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "relationship_change" suppressed (sim=0.392, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "promise_or_oath" suppressed (sim=0.306, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "relationship_change" suppressed (sim=0.375, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "promise_or_oath" suppressed (sim=0.259, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "revelation" suppressed (sim=0.333, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "promise_or_oath" suppressed (sim=0.240, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "promise_or_oath" suppressed (sim=0.265, windows 0 msgs apart)
+2eventbase-retrieval.js:324 [EventBase] Dedup: "revelation" suppressed (sim=0.286, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "revelation" suppressed (sim=0.213, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "revelation" suppressed (sim=0.244, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "relationship_change" suppressed (sim=0.225, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "character_state_change" suppressed (sim=0.208, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "promise_or_oath" suppressed (sim=0.222, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "revelation" suppressed (sim=0.184, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "character_state_change" suppressed (sim=0.150, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "revelation" suppressed (sim=0.173, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "character_state_change" suppressed (sim=0.201, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "revelation" suppressed (sim=0.157, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "relationship_change" suppressed (sim=0.141, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "revelation" suppressed (sim=0.182, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "character_state_change" suppressed (sim=0.113, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "revelation" suppressed (sim=0.139, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "character_state_change" suppressed (sim=0.097, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "character_state_change" suppressed (sim=0.153, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "promise_or_oath" suppressed (sim=0.153, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "revelation" suppressed (sim=0.174, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "revelation" suppressed (sim=0.181, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "character_state_change" suppressed (sim=0.139, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "revelation" suppressed (sim=0.104, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "promise_or_oath" suppressed (sim=0.132, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "revelation" suppressed (sim=0.097, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "revelation" suppressed (sim=0.162, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "relationship_change" suppressed (sim=0.162, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "relationship_change" suppressed (sim=0.119, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "revelation" suppressed (sim=0.100, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "relationship_change" suppressed (sim=0.150, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "character_state_change" suppressed (sim=0.099, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "dialogue_significant" suppressed (sim=0.283, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "relationship_change" suppressed (sim=0.095, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "relationship_change" suppressed (sim=0.108, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "dialogue_significant" suppressed (sim=0.125, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "dialogue_significant" suppressed (sim=0.121, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "relationship_change" suppressed (sim=0.089, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "dialogue_significant" suppressed (sim=0.155, windows 0 msgs apart)
+eventbase-retrieval.js:324 [EventBase] Dedup: "dialogue_significant" suppressed (sim=0.091, windows 0 msgs apart)
+eventbase-retrieval.js:345 [EventBase] Dedup-depth skip: event "character_state_change" source_window_end=2113 is within last 50 messages (threshold=2066)
+eventbase-retrieval.js:351 [EventBase] Dedup depth (50) removed 1 event(s) already visible in context
+eventbase-retrieval.js:359 [EventBase] Final events after dedup + trim: 10
+eventbase-retrieval.js:361   [0] type=relationship_change imp=8 score=0.883 persist=true
+eventbase-retrieval.js:361   [1] type=revelation imp=8 score=0.834 persist=true
+eventbase-retrieval.js:361   [2] type=revelation imp=7 score=0.818 persist=true
+eventbase-retrieval.js:361   [3] type=promise_or_oath imp=8 score=0.785 persist=true
+eventbase-retrieval.js:361   [4] type=promise_or_oath imp=9 score=0.696 persist=true
+eventbase-retrieval.js:361   [5] type=revelation imp=9 score=0.668 persist=true
+eventbase-retrieval.js:361   [6] type=revelation imp=9 score=0.667 persist=true
+eventbase-retrieval.js:361   [7] type=relationship_change imp=7 score=0.630 persist=true
+eventbase-retrieval.js:361   [8] type=character_state_change imp=8 score=0.619 persist=true
+eventbase-retrieval.js:361   [9] type=revelation imp=7 score=0.600 persist=true
 agentic-retrieval.js:234 [VectHarePlus-Agentic] Final merged candidates: 10 pre-search + 80 agentic = 90 total → 10 after rerank/dedup/trim
-agentic-retrieval.js:235 [VectHarePlus-Agentic] Total wall-clock for agent overhead: 6891ms (LLM=2683ms, fanout=2464ms)
+agentic-retrieval.js:235 [VectHarePlus-Agentic] Total wall-clock for agent overhead: 7451ms (LLM=4826ms, fanout=1266ms)
 eventbase-workflow.js:471 [EventBase] Retrieval debug: {dualQuery: true, keywordScoringMethod: 'bm25', nativeHybridPrefer: true, fusionMethod: 'rrf', rawCount: 0, …}
-eventbase-workflow.js:515 [EventBase] Injected 10 event(s) (requested 10), text length: 5911
+eventbase-workflow.js:515 [EventBase] Injected 10 event(s) (requested 10), text length: 5760
 eventbase-workflow.js:516 [EventBase] setExtensionPrompt tag="3_vecthare_eventbase" position=0 depth=2
-eventbase-workflow.js:519 [EventBase] Slot verification — key exists: true, value type: string, length: 5911
-eventbase-workflow.js:520 [EventBase] extension_prompts keys: (11) ['1_memory', '2_floating_prompt', 'QUIET_PROMPT', 'customDepthWI_0_0', 'customDepthWI_0_1', 'customDepthWI_0_2', 'PERSONA_DESCRIPTION', '__STORY_STRING__', 'DEPTH_PROMPT', '3_vecthare', '3_vecthare_eventbase']
+eventbase-workflow.js:519 [EventBase] Slot verification — key exists: true, value type: string, length: 5760
+eventbase-workflow.js:520 [EventBase] extension_prompts keys: (10) ['1_memory', '2_floating_prompt', 'QUIET_PROMPT', 'PERSONA_DESCRIPTION', '__STORY_STRING__', '3_vecthare', '3_vecthare_eventbase', '3_vectors', '4_vectors_data_bank', 'DEPTH_PROMPT']
 eventbase-workflow.js:521 [EventBase] Injection preview: <VectHareMemory>
 # Event 1
 event_type: relationship_change
@@ -190,4 +183,3 @@ chat-vectorization.js:1904 [VectHare ChunkBase] No active Standard/ChunkBase col
 script.js:4547 Core/all messages: 2116/2116
 world-info.js:623 [WI] Processing sticky entry ArtificRealm創世域.42 {hash: 5608283655957508, start: 2116, end: 2117, protected: false}
 world-info.js:627 [WI] Removing sticky entry ArtificRealm創世域.42 from timedWorldInfo: chat not advanced {hash: 5608283655957508, start: 2116, end: 2117, protected: false}
-world-info.js:722 [WI] Adding sticky entry ArtificRealm創世域.42: start=2116, end=2117, protected=false

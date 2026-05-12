@@ -491,8 +491,8 @@ export function renderSettings(containerId, settings, callbacks) {
                                 <label for="vecthare_eventbase_dedup_window_gap" style="margin-top: 12px;">
                                     <small>Dedup Window Gap: <span id="vecthare_eventbase_dedup_window_gap_val">20</span> messages</small>
                                 </label>
-                                <input type="range" id="vecthare_eventbase_dedup_window_gap" class="vecthare-slider" min="1" max="200" step="1" />
-                                <small class="vecthare_hint">EventBase only. Two events with the same type + character cast are only suppressed as duplicates if their source windows are within this many messages of each other. Lower = stricter (keep more distinct scenes); higher = aggressive dedup. Default 20.</small>
+                                <input type="range" id="vecthare_eventbase_dedup_window_gap" class="vecthare-slider" min="0" max="200" step="1" />
+                                <small class="vecthare_hint">EventBase only. Minimum source-window distance at which two same-type/same-cast events are considered <b>distinct</b> (kept). <b>0 = OFF</b> (no temporal-proximity dedup; even same-window duplicates kept). <b>1</b> = only same-window duplicates suppressed. <b>20</b> = events within 19 messages dedup'd; 20+ apart kept (default). Higher = more aggressive dedup.</small>
 
                                 <label for="vecthare_eventbase_anchor_boost" style="margin-top: 12px;">
                                     <small>Anchor Boost: <span id="vecthare_eventbase_anchor_boost_val">0.25</span></small>
@@ -2685,11 +2685,12 @@ function bindSettingsEvents(settings, callbacks) {
 
     // EventBase Dedup Window Gap — temporal proximity threshold for the
     // dedup gate in eventbase-retrieval.js. See settings comment in index.js.
+    // 0 = temporal dedup fully disabled.
     $('#vecthare_eventbase_dedup_window_gap')
         .val(settings.eventbase_dedup_window_gap ?? 20)
         .on('input', function() {
             const value = parseInt($(this).val());
-            const safeValue = isNaN(value) ? 20 : Math.max(1, Math.min(200, value));
+            const safeValue = isNaN(value) ? 20 : Math.max(0, Math.min(200, value));
             $('#vecthare_eventbase_dedup_window_gap_val').text(safeValue);
             settings.eventbase_dedup_window_gap = safeValue;
             Object.assign(extension_settings.vecthareplus, settings);

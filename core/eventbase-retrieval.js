@@ -278,12 +278,15 @@ export async function retrieveEvents({ searchText, keywordQuery, chatLength, set
     //    DUPLICATE_SCORE_OVERRIDE = 0.75 is intentionally high. Most Qdrant RRF
     //    scores land in 0.2-0.6; crossing 0.75 means the query text and event are
     //    very tightly aligned (often a near-exact concept/keyword anchor match).
-    // Configurable via `eventbase_dedup_window_gap` (Core tab slider, 1-200,
-    // default 20). Two events are only considered duplicates when their source
-    // windows are within this many messages of each other. Lower = stricter
-    // (more events kept as distinct); higher = more aggressive dedup.
+    // Configurable via `eventbase_dedup_window_gap` (Core tab slider, 0-200,
+    // default 20). Semantics: events N or more messages apart are kept.
+    //   0   → temporal-proximity dedup fully DISABLED (every distance kept,
+    //         including same-window duplicates that were extracted from one chunk).
+    //   1   → only literal same-window (distance=0) duplicates suppressed.
+    //   20  → distances 0..19 suppressed; 20+ kept (default).
+    //   200 → aggressive dedup (max).
     const DUPLICATE_WINDOW_GAP = typeof settings.eventbase_dedup_window_gap === 'number'
-        ? Math.max(1, Math.min(200, settings.eventbase_dedup_window_gap))
+        ? Math.max(0, Math.min(200, settings.eventbase_dedup_window_gap))
         : 20;
     const DUPLICATE_SCORE_OVERRIDE = 0.75;
     const _candidateSimScore = (c) =>
@@ -298,6 +301,12 @@ export async function retrieveEvents({ searchText, keywordQuery, chatLength, set
             if (_characterOverlap(accepted.characters || [], candidate.characters || []) < 0.6) continue;
 
             // Temporal proximity check: only suppress when source windows are close.
+            // Semantics: gap N means "events N or more messages apart are KEPT
+            // (treated as distinct)". So we use STRICT less-than:
+            //   gap=1  → only same-window (distance 0) gets suppressed
+            //   gap=20 → distances 0..19 get suppressed; 20+ are kept
+            //   gap=200 → distances 0..199 get suppressed; 200+ are kept
+            //
             // When either event is missing source_window_end (unknown timing), we
             // can't verify proximity — fall back to the old behavior (suppress) to
             // stay safe against unannotated duplicates.
@@ -305,7 +314,7 @@ export async function retrieveEvents({ searchText, keywordQuery, chatLength, set
             const cEnd = candidate.source_window_end;
             const haveTiming = typeof aEnd === 'number' && typeof cEnd === 'number';
             const withinWindow = haveTiming
-                ? Math.abs(aEnd - cEnd) <= DUPLICATE_WINDOW_GAP
+                ? Math.abs(aEnd - cEnd) < DUPLICATE_WINDOW_GAP
                 : true;  // unknown timing → treat as suspect (legacy safety)
 
             if (!withinWindow) continue;
