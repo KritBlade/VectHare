@@ -12,7 +12,7 @@ Branched from the original VectHare project, VectHarePlus is an **advanced Retri
 
 I branched the original VectHare to handle the massive scale of my personal MVU Game Maker projects, which feature:
 - **Extreme scale: 2,000+ replies per story, with 1,000+ words per reply. Summary retrieval returns in less than 3 seconds**
-- Non-English language support (Japanese, Traditional/Simplified Chinese). It supports English by default.
+- Non-English language support (Japanese, Korean, Traditional/Simplified Chinese). It supports English by default.
 - Strip out all functional tag from MVU Game Maker.
 - Super long term memory that actually works (2000+ messages)
 
@@ -99,7 +99,7 @@ Most existing memory extensions use one of two approaches. Both lose detail as t
 
 **The core insight:** rolling summaries lose detail because they *throw away* old content to make room. Raw chunking loses detail because *retrieval breaks* at scale. EventBase keeps every meaningful event around forever — and lets vector + keyword search decide which 5–10 of them are worth showing the AI right now. Detail isn't compressed; **irrelevance is filtered**.
 
-> 💡 **The way you phrase your message has a big impact on what gets retrieved.** Because retrieval is driven by the text of your reply, the words you use matter. For example, *"Do you remember why I paid the ransom?"* and *"Do you remember why I paid 2,000 bucks?"* will return very different events — "ransom" pulls in every event tied to that storyline (the kidnapping, the negotiation, the drop-off), while "2,000 bucks" mostly matches events that literally mention the number 2,000. If you want the AI to recall a specific scene, anchor your message with the **story-meaningful words** from that scene rather than incidental details like exact numbers.
+> 💡 **The way you phrase your message has a big impact on what gets retrieved.** Because retrieval is driven by the text of your reply, the words you use matter. For example, *"Mayla, Do you remember why I paid the ransom?"* and *"Mayla, Do you remember why I paid 2,000 bucks?"* will return very different events — "ransom" pulls in every event tied to that storyline (the kidnapping, the negotiation, the drop-off), while "2,000 bucks" mostly matches events that literally mention the number 2,000. If you want the AI to recall a specific scene, anchor your message with the **story-meaningful words** from that scene rather than incidental details like exact numbers.  Having said that, I did the testing and A3 Path still manage to find the ransom event in 1500+ events in the DB on both replies while A1 and A2 Path failed on the 2nd input.  The first reply with correct anchor wording defintely get better quality of retrieval result for A3 Path though.
 
 ---
 
@@ -168,8 +168,9 @@ should_persist: false
 
 Both signals (meaning + keywords) operate over this rich field set, so a query like "armor for the dungeon" hits via concepts/open_threads, while "Astarion 80gp" hits via characters/items/keywords.  The structure is native to Qdrant vector database so that hit rate is WAY higher than any other kind of memory extension.
 
-### 🌏 CJK language support (Japanese, Traditional/Simplified Chinese)
+### 🌏 CJK language support (Japanese, Korean, Traditional/Simplified Chinese)
 - Jieba WASM (Simplified + Traditional Chinese), TinySegmenter (Japanese), Intl.Segmenter (English/Latin/Korean)
+- **Dedicated stop-word lists per language** — separate curated dictionaries for Japanese, Korean, Traditional Chinese, and Simplified Chinese (plus English/Latin). Stop words are the filler grammar particles like 「の・は・を」 in Japanese, 「的・地・得」 in Chinese, and 「의・은・는・을」 in Korean that show up everywhere but carry zero search signal. Stripping them before keyword scoring is what keeps BM25 hit-rates high on CJK content — without it, every event would "match" your query just because it contains common particles, drowning out the actual signal words.
 - CJK tokenizer mode is **locked per Qdrant collection** at upsert — switching modes shows a warning modal
 
 ### 🔍 Native sparse-vector hybrid search (Qdrant)
