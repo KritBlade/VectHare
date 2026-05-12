@@ -20,6 +20,8 @@ Ordinary SillyTavern memory extensions completely buckle under this load, especi
 
 Most memory extensions are designed for chats with 100 messages or fewer, and they work perfectly well at that scale. But as the chat grows past that, they're forced to summarize older messages more and more aggressively. You end up with full detail on recent history and a heavily compressed blur for everything older — and there's no real way around it, because you simply can't fit 100+ messages worth of raw context into the prompt. Old memory *has* to be compressed, which means detail is lost.
 
+Cars with square wheels will never solve the problem, no matter how much you fine-tune them. I need the right tool for the job. What I actually need is a dedicated vector database backend to properly store all these memories.
+
 To tackle this, VectHarePlus uses a dedicated vector database that stores **every single meaningful event** from the chat. Whether it's the first message or the 2,000th, every meaningful event stays in the database and is always available for SillyTavern to search.  I want a production grade memory vector system for SillyTavern which is scalable to 10k+ messages and round trip time within seconds.
 
 ### The Problem It Solves
@@ -35,24 +37,25 @@ Note: Qdrant is free and open source
 
 ---
 
-## 🧠 How It Works 
+## 🧠 How It Works
 
 Vector search is like a really smart "find" function. Instead of matching exact words, it matches **meaning** — type "I'm hungry" and it can find a message that said "let's grab lunch" because the *meaning* is similar.
 
-VectHarePlus splits content into two pipelines:
+VectHarePlus is built around two ideas that work together:
 
-| Pipeline | What it handles |
-|---|---|
-| **EventBase** | Your **chat history** (live chat + uploaded `.jsonl` archives) |
-| **Standard (Chunk)** | Everything else: Lorebook, Character Cards, URLs, documents, wiki pages, YouTube transcripts |
+### 1. EventBase — events extracted from windows, not summary-per-reply
 
-They never see each other's content — so the same chat message can't get retrieved twice.
+Most memory extensions take each/several AI replies and summarize it into one blob of text. That sounds fine until you look at what's actually in a reply:
 
-### What is EventBase?
+- A 100-sentence reply might contain **5 meaningful events** (a fight, a discovery, a promise, an item swap, a relationship beat) buried in 95 sentences of filler dialogue, scene-setting, and chitchat
+- Another reply might contain **zero events** — just banter
+- A third might pack **3 events** into 20 sentences
 
-An LLM periodically reads recent messages and **summarizes them into structured events** with metadata like importance, characters, locations, items, and timestamps. A chat reply may contain 0 events, 1 event, or several — depending on what actually happened.
+Summary-per-reply flattens all three cases into "one blob per reply" — losing event boundaries, mixing important beats with filler, and producing the same data shape whether anything actually happened or not.
 
-If your character had a long shopping trip with Astarion across 100 sentences with conversations amoung 3 other teamates and other background story noise that do not help on searching, EventBase might extract one event out of that wall of text:
+**EventBase looks at a window of recent messages and extracts 0, 1, or many structured events** depending on what actually occurred. Each event is its own record with rich metadata (`characters`, `locations`, `items`, `concepts`, `importance`, `DateTime`, etc.) — not just a description string.
+
+If Tav had a long shopping trip with Astarion across 100 sentences of conversation among 3 other teammates and background story noise, EventBase might extract one event out of that wall of text:
 
 ```
 {
@@ -63,7 +66,21 @@ If your character had a long shopping trip with Astarion across 100 sentences wi
 }
 ```
 
-Later when you mention "remember the shopping trip?", VectHarePlus retrieves **the event**, not 100 raw sentences nor a blurry summary of meaningless background dialogue. That gives the AI a clean, dense summary instead of a noisy wall of text. Re-running vectorization never re-extracts the same window twice (fingerprint cache).
+Later when you mention "remember the shopping trip?", VectHarePlus retrieves **the event** — not 100 raw sentences, and not a blurry summary that averaged the shopping trip with the unrelated banter that surrounded it.
+
+### 2. Why a dedicated vector DB is the natural fit
+
+If you only do summary-per-reply, you don't really *need* a vector database. You're producing ~1 blob per reply, always the same shape, and you re-summarize them recursively as the chat grows. A simple text file would do — and that's exactly why many older memory extensions never bothered with a real DB.
+
+But once you commit to EventBase, the picture changes:
+
+- 2,000 replies → potentially **1,000–3,000 structured events** (some replies extract several, some extract none)
+- Each event has rich fields: characters, locations, items, concepts, keywords, importance, timestamps
+- You need to find the relevant 5–10 events by **meaning + keyword + metadata filtering**, in real time, while the user is mid-conversation
+
+That's exactly the workload a **dedicated vector database like Qdrant is designed for**: many small structured records with both dense vector similarity and sparse keyword search, plus metadata filtering, plus global BM25 weighting across the full corpus. Trying to do this with a flat file of summaries would mean linear scans, no keyword indexing, no metadata filters, and no scale beyond a few hundred entries.
+
+EventBase doesn't *force* you onto Qdrant — the A1/A2 light paths run on SillyTavern's built-in Vectra. But once your chat passes a few hundreds events, Qdrant is the storage layer that was actually built for this shape of data.
 
 ### 🧠 Why this beats traditional memory extensions
 
@@ -287,6 +304,16 @@ Look for the update notification in the Extensions panel, or manually check with
 ---
 
 ## ❓ FAQ
+
+**Why are there two separate pipelines under the hood?**
+Internally VectHarePlus routes content through one of two retrieval paths, picked by content type:
+
+| Pipeline | What it handles |
+|---|---|
+| **EventBase** | Your chat history (live chat + uploaded `.jsonl` archives) |
+| **Standard (Chunk)** | Everything else: Lorebook, Character Cards, URLs, documents, wiki pages, YouTube transcripts |
+
+They never see each other's content — so the same chat message can't get retrieved twice (once as an event and once as a raw chunk). You don't normally need to think about this; it just means EventBase owns chat, and the standard chunk pipeline owns everything else.
 
 **Can I change the CJK Tokenizer Mode mid-chat?**
 No — don't do it. The CJK Tokenizer Mode is **locked into each Qdrant collection at upsert time** via a sentinel point. Switching modes after you've already vectorized content will trigger a "Tokenizer mismatch" warning modal on the next query, and your only real options are:
