@@ -869,12 +869,15 @@ class QdrantBackend {
         const debug = !!options.eventbaseDebug;
 
         // Outer filter: min-importance always; dedup-depth conditional.
+        // Qdrant FieldCondition shape: { key, range: { gte, lt, ... } } — NOT
+        // the nested-field form { range: { fieldname: { gte: ... } } } which
+        // some other vector DBs use.
         const outerMust = [];
         if (typeof minImportance === 'number' && minImportance > 0) {
-            outerMust.push({ range: { importance: { gte: minImportance } } });
+            outerMust.push({ key: 'importance', range: { gte: minImportance } });
         }
         if (applyContextDedupFilter && typeof visibleThreshold === 'number' && visibleThreshold >= 0) {
-            outerMust.push({ range: { source_window_end: { lt: visibleThreshold } } });
+            outerMust.push({ key: 'source_window_end', range: { lt: visibleThreshold } });
         }
         // Merge tenant filter conditions in too — they should narrow the candidate set
         // before formula scoring runs.
