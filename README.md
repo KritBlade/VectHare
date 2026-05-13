@@ -10,7 +10,7 @@
 
 ## 🎯 What is VectHarePlus?
 
-Branched from the original VectHare project which is a awesome product, VectHarePlus is an **advanced Retrieval-Augmented Generation (RAG) system** for SillyTavern, now featuring newly added, optimized support for English, Japanese, Korean, Traditional Chinese, and Simplified Chinese.
+Built on the excellent VectHare foundation, VectHarePlus is a **high-performance long-term memory system for SillyTavern**. It goes well beyond a language-extended fork — all intelligent retrieval logic runs server-side inside a real vector database (Qdrant), a structured event-based approach replaces raw chunk summarization for dramatically more accurate recall, and queries return in under 3 seconds even at 2,000+ messages. Natively multilingual: English, Japanese, Korean, Traditional Chinese, and Simplified Chinese.
 
 I branched the original VectHare to handle the massive scale of my personal [MVU Game Maker](https://github.com/KritBlade/MVU_Game_Maker) projects, which feature:
 - **Extreme scale: 2,000+ replies per story, with 1,000+ words per reply. Summary retrieval returns in less than 3 seconds**
