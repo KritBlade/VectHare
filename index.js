@@ -402,7 +402,7 @@ async function onMigrateCollectionsClick() {
         const result = await migrateAllCollections(
             settings,
             (current, total, message) => {
-                progressTracker.update(current, total, message);
+                progressTracker.updateProgress(current, message);
             },
             false // Don't delete old collections (keep as backup)
         );
