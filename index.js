@@ -1,7 +1,7 @@
 /**
  * Similharity Server Plugin
  *
- * Unified vector database backend for VectHare extension.
+ * Unified vector database backend for VectFox extension.
  * Supports multiple backends: Vectra (file-based), Qdrant
  *
  * All chunk operations go through unified /chunks/* endpoints.
@@ -729,7 +729,7 @@ async function getVectorsForSource(source, texts, model, directories, req) {
         let apiKey = req.body.apiKey || '';
 
         if (!apiUrl || typeof apiUrl !== 'string' || apiUrl.trim() === '') {
-            throw new Error('BananaBread: apiUrl is missing or invalid. Configure the embedding URL in VectHare settings.');
+            throw new Error('BananaBread: apiUrl is missing or invalid. Configure the embedding URL in VectFox settings.');
         }
         apiUrl = apiUrl.trim();
 
@@ -1333,7 +1333,7 @@ async function _getLegacySingleEmbedding(source, text, model, directories, req) 
      *
      * Requires Qdrant 1.13+ (formula query). The qdrantBackend probes server version
      * at initialize(); if formula is not supported, the route returns 400 and the
-     * VectHare-side flag falls back to the JS re-rank pipeline.
+     * VectFox-side flag falls back to the JS re-rank pipeline.
      *
      * Body: { backend, collectionId, searchText|queryVector, sparseQueryVector,
      *         rerankParams, topK?, options?, filters?, source?, model? }
@@ -1638,7 +1638,7 @@ async function getEmbeddingForSource(source, text, model, directories, req) {
 
             // Validate URL before attempting to use it
             if (!apiUrl || typeof apiUrl !== 'string' || apiUrl.trim() === '') {
-                throw new Error('BananaBread: apiUrl is missing or invalid. Configure the embedding URL in VectHare settings.');
+                throw new Error('BananaBread: apiUrl is missing or invalid. Configure the embedding URL in VectFox settings.');
             }
             apiUrl = apiUrl.trim();
 
@@ -1880,6 +1880,6 @@ export async function exit() {
 export const info = {
     id: pluginName,
     name: 'Similharity',
-    description: 'Unified vector database backend for VectHare - supports Vectra and Qdrant',
+    description: 'Unified vector database backend for VectFox - supports Vectra and Qdrant',
     version: pluginVersion
 };

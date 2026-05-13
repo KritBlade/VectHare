@@ -15,11 +15,15 @@
  * This backend runs server-side so CORS is not an issue here.
  *
  * Multitenancy Strategy:
- * - ONE collection: "vecthare_main"
+ * - ONE collection: "vecthare_main" (kept verbatim for on-disk compatibility)
  * - Payload fields: type, sourceId, timestamp, etc.
  * - Filters for isolation: {type: "chat", sourceId: "chat_001"}
  *
- * @author VectHare
+ * NOTE: `vecthare_main` and `_vecthare_meta` are kept verbatim for on-disk
+ * compatibility with existing user Qdrant data. Do not rebrand. 
+ * See plans/vectfox-rename-plan.md §1.10.
+ *
+ * @author VectFox
  * @version 3.0.0
  * ============================================================================
  */

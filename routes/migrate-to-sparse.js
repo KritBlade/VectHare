@@ -9,7 +9,7 @@
  *
  * MIGRATE-DELETE — entire file. Plus:
  *   1. Remove `router.use(...)` line in similharity/index.js (also MIGRATE-DELETE tagged)
- *   2. Delete core/migrate-to-sparse.js on the VectHare side
+ *   2. Delete core/migrate-to-sparse.js on the VectFox side
  *   3. Delete the Dev Tools UI block in ui-manager.js (MIGRATE-DELETE tagged)
  *
  * @since Phase 4 — Qdrant native sparse vectors migration

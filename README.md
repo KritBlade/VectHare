@@ -2,7 +2,7 @@
 
 **Version 2.0.0**
 
-Server-side plugin for [the VectHare](https://github.com/Conejachibi/VectHare) extension that provides enhanced vector database backends and full metadata storage capabilities.
+Server-side plugin for [the VectFox](https://github.com/Conejachibi/VectFox) extension that provides enhanced vector database backends and full metadata storage capabilities.
 
 ---
 
@@ -33,7 +33,7 @@ Open a terminal/command prompt in your SillyTavern folder and run:
 
 ```bash
 cd plugins
-git clone -b Similharity-Plugin https://github.com/Coneja-Chibi/VectHare.git similharity
+git clone -b Similharity-Plugin https://github.com/Coneja-Chibi/VectFox.git similharity
 cd similharity
 npm install
 ```
@@ -776,4 +776,4 @@ Coneja-Chibi
 
 ## Repository
 
-[https://github.com/Conejachibi/VectHare](https://github.com/Conejachibi/VectHare)
+[https://github.com/Conejachibi/VectFox](https://github.com/Conejachibi/VectFox)
