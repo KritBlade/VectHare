@@ -38,6 +38,42 @@ class QdrantBackend {
             url: null,
             apiKey: null,
         };
+        // Cached Qdrant server version (e.g. "1.15.0"). Probed once at initialize().
+        // null = unknown (probe failed or not yet attempted).
+        this.serverVersion = null;
+    }
+
+    /**
+     * Parse a semver-ish version string ("1.13.0", "1.13.2-dev") into [major, minor, patch].
+     * Returns [0,0,0] when unparseable.
+     */
+    _parseVersion(v) {
+        if (!v || typeof v !== 'string') return [0, 0, 0];
+        const m = v.match(/^(\d+)\.(\d+)\.(\d+)/);
+        if (!m) return [0, 0, 0];
+        return [parseInt(m[1], 10), parseInt(m[2], 10), parseInt(m[3], 10)];
+    }
+
+    /**
+     * Compare two semver-ish strings. Returns 1 if a > b, -1 if a < b, 0 if equal.
+     */
+    _cmpVersion(a, b) {
+        const A = this._parseVersion(a);
+        const B = this._parseVersion(b);
+        for (let i = 0; i < 3; i++) {
+            if (A[i] > B[i]) return 1;
+            if (A[i] < B[i]) return -1;
+        }
+        return 0;
+    }
+
+    /**
+     * Does the connected Qdrant support formula queries? (Requires 1.13+.)
+     * Returns false when the version is unknown — caller should fall back gracefully.
+     */
+    supportsFormulaQuery() {
+        if (!this.serverVersion) return false;
+        return this._cmpVersion(this.serverVersion, '1.13.0') >= 0;
     }
 
     /**
@@ -188,6 +224,23 @@ class QdrantBackend {
             throw error;
         }
 
+        // Probe server version. Used by EventBase native-rerank to gate formula
+        // queries (require 1.13+). Probe failure is non-fatal — features that
+        // depend on a known version simply stay disabled.
+        try {
+            const root = await this._request('GET', '/');
+            this.serverVersion = root?.version || root?.result?.version || null;
+            if (this.serverVersion) {
+                const okFormula = this.supportsFormulaQuery();
+                console.log(`[Qdrant] Server version: ${this.serverVersion} (formula query ${okFormula ? 'supported' : 'NOT supported, requires 1.13+'})`);
+            } else {
+                console.warn('[Qdrant] Server version probe returned no version field; formula-query features will stay disabled');
+            }
+        } catch (error) {
+            console.warn('[Qdrant] Version probe failed:', error.message);
+            this.serverVersion = null;
+        }
+
         // Ensure indexes exist on any existing vecthare_main collection
         await this.ensurePayloadIndexes('vecthare_main');
         const collections = await this.getCollections();
@@ -278,6 +331,9 @@ class QdrantBackend {
             { field: 'hash', schema: 'integer' },
             { field: 'timestamp', schema: 'integer' },
             { field: 'importance', schema: 'integer' },
+            // EventBase event-source window end — used by formula recency decay and
+            // dedup-depth range filter when the EventBase native rerank path is on.
+            { field: 'source_window_end', schema: 'integer' },
         ];
 
         for (const { field, schema } of indexConfigs) {
@@ -765,6 +821,144 @@ class QdrantBackend {
         }));
     }
 
+    /**
+     * Native Qdrant hybrid query + EventBase re-rank in a single /query call.
+     *
+     * Wraps the existing dense + sparse RRF hybrid in an outer formula query that
+     * computes the EventBase weighted score (cosine × $score + importance + persist +
+     * recency exp_decay) server-side, plus a min-importance + optional dedup-depth
+     * filter. The client still does anchor boost, pairwise dedup, cross-collection
+     * merge, and dual-query merge — see plans/qdrant-native-eventbase-rerank-formula.md.
+     *
+     * Requires Qdrant 1.13+ (formula query). Caller MUST check supportsFormulaQuery()
+     * first; this method does not guard internally because the route-level check is
+     * cheaper than a Qdrant round-trip that fails with 400.
+     *
+     * @param {string} collectionName
+     * @param {number[]} denseVector
+     * @param {{indices:number[], values:number[]}} sparseVector
+     * @param {number} topK - Final outer limit (typically finalTopK × 2 to give dedup overfetch room)
+     * @param {object} rerankParams - { weights:{cosine,importance,persist,recency} (pre-normalized),
+     *                                  chatLength, halfLife, minImportance, visibleThreshold,
+     *                                  applyContextDedupFilter, rrfScoreScale? }
+     * @param {object} options - { prefetchLimit, eventbaseDebug, debugQuery }
+     * @param {object} filters - { type, sourceId, ... } — tenant/content filters
+     * @returns {Promise<Array<{hash,text,score,metadata,formulaScore,fusionMethod,nativeSparse,rerankApplied}>>}
+     */
+    async hybridQueryNativeWithRerank(collectionName, denseVector, sparseVector, topK = 16, rerankParams = {}, options = {}, filters = {}) {
+        if (!this.baseUrl) throw new Error('Qdrant not initialized');
+        collectionName = this._parseCollectionName(collectionName);
+
+        const {
+            weights = { cosine: 0.4, importance: 0.2, persist: 0.2, recency: 0.2 },
+            chatLength = 0,
+            halfLife = 40,
+            minImportance = 1,
+            visibleThreshold = -1,
+            applyContextDedupFilter = true,
+            // RRF fused score range is ≈ [0, 1/(60+1)] ≈ [0, 0.0164] which is much
+            // narrower than raw cosine [0, 1]. Pre-scale the $score term so the
+            // user-visible `w.cosine` weight retains roughly its old meaning.
+            // See plans/qdrant-native-eventbase-rerank-formula.md "Shift 1".
+            rrfScoreScale = 40.0,
+        } = rerankParams;
+
+        const prefetchLimit = options.prefetchLimit || topK * 4;
+        const hybridLimit = Math.max(topK, prefetchLimit / 2);
+        const tenantFilter = this._buildHybridFilter(filters);
+        const debug = !!options.eventbaseDebug;
+
+        // Outer filter: min-importance always; dedup-depth conditional.
+        const outerMust = [];
+        if (typeof minImportance === 'number' && minImportance > 0) {
+            outerMust.push({ range: { importance: { gte: minImportance } } });
+        }
+        if (applyContextDedupFilter && typeof visibleThreshold === 'number' && visibleThreshold >= 0) {
+            outerMust.push({ range: { source_window_end: { lt: visibleThreshold } } });
+        }
+        // Merge tenant filter conditions in too — they should narrow the candidate set
+        // before formula scoring runs.
+        if (tenantFilter?.must) outerMust.push(...tenantFilter.must);
+        // Always carry the sentinel exclusion (must_not) from the tenant filter — it
+        // excludes `_vecthare_meta` points regardless of whether outerMust has any
+        // conditions of its own.
+        const outerFilter = {};
+        if (outerMust.length > 0) outerFilter.must = outerMust;
+        if (tenantFilter?.must_not?.length) outerFilter.must_not = tenantFilter.must_not;
+        const hasOuterFilter = !!(outerFilter.must || outerFilter.must_not);
+
+        // Inner prefetch: existing dense + sparse + RRF, but with the tenant filter
+        // pushed into each leg so the hybrid candidates are already tenant-scoped.
+        const densePrefetch  = { query: denseVector,  limit: prefetchLimit };
+        const sparsePrefetch = { query: sparseVector, using: 'text_sparse', limit: prefetchLimit };
+        if (tenantFilter) { densePrefetch.filter = tenantFilter; sparsePrefetch.filter = tenantFilter; }
+
+        const body = {
+            prefetch: [{
+                prefetch: [densePrefetch, sparsePrefetch],
+                query: { fusion: 'rrf' },
+                limit: hybridLimit,
+            }],
+            query: {
+                formula: {
+                    sum: [
+                        { mult: [weights.cosine,     { mult: [rrfScoreScale, '$score'] }] },
+                        { mult: [weights.importance, { div: ['importance', 10] }] },
+                        { mult: [weights.persist,    { condition: { key: 'should_persist', match: { value: true } }, if_true: 1, if_false: 0 }] },
+                        { mult: [weights.recency,    { exp_decay: { key: 'source_window_end', origin: chatLength, scale: halfLife, midpoint: 0.5 } }] },
+                    ],
+                },
+            },
+            limit: topK,
+            with_payload: true,
+        };
+        if (hasOuterFilter) body.filter = outerFilter;
+
+        if (debug) {
+            const top5sparse = sparseVector.indices
+                .map((idx, i) => ({ idx, val: sparseVector.values[i] }))
+                .sort((a, b) => b.val - a.val)
+                .slice(0, 5)
+                .map(t => `${t.idx}:${t.val.toFixed(3)}`)
+                .join(', ');
+            console.log(`[Qdrant-debug] hybridQueryNativeWithRerank: collection=${collectionName}, topK=${topK}, prefetchLimit=${prefetchLimit}, hybridLimit=${hybridLimit}`);
+            console.log(`[Qdrant-debug] weights: cosine=${weights.cosine?.toFixed(3)} importance=${weights.importance?.toFixed(3)} persist=${weights.persist?.toFixed(3)} recency=${weights.recency?.toFixed(3)} rrfScoreScale=${rrfScoreScale}`);
+            console.log(`[Qdrant-debug] recency: origin=${chatLength}, halfLife=${halfLife}; filter: minImportance=${minImportance}, visibleThreshold=${applyContextDedupFilter ? visibleThreshold : '(disabled)'}`);
+            if (options.debugQuery) {
+                console.log(`[Qdrant-debug] Query text: "${String(options.debugQuery).slice(0, 200)}"`);
+            }
+            console.log(`[Qdrant-debug] Dense: dim=${denseVector.length}; Sparse: ${sparseVector.indices.length} tokens, top-5 by weight: [${top5sparse}]`);
+        }
+
+        let resp;
+        try {
+            resp = await this._request('POST', `/collections/${collectionName}/points/query`, body);
+        } catch (err) {
+            console.error('[Qdrant] hybridQueryNativeWithRerank request failed. Body:', JSON.stringify(body).slice(0, 800), 'Error:', err.message);
+            throw err;
+        }
+        const points = resp.result?.points || [];
+
+        console.log(`[Qdrant] Native hybrid + rerank returned ${points.length} results from ${collectionName}`);
+
+        if (debug) {
+            points.slice(0, 10).forEach((p, i) => {
+                const text = p.payload?.text ? String(p.payload.text).slice(0, 80).replace(/\n/g, ' ') : '';
+                console.log(`[Qdrant-debug] [${i + 1}] formulaScore=${p.score?.toFixed(4)}, imp=${p.payload?.importance}, persist=${p.payload?.should_persist}, swe=${p.payload?.source_window_end}, text="${text}"`);
+            });
+        }
+
+        return points.map(p => ({
+            hash: p.payload?.hash,
+            text: p.payload?.text,
+            score: p.score,                 // = formula output (re-ranked score)
+            formulaScore: p.score,
+            metadata: p.payload,
+            fusionMethod: 'rrf',
+            nativeSparse: true,
+            rerankApplied: true,
+        }));
+    }
 
     /**
      * List all items in a collection (MULTITENANCY)

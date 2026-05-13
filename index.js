@@ -1324,6 +1324,104 @@ async function _getLegacySingleEmbedding(source, text, model, directories, req) 
     });
 
     /**
+     * POST /api/plugins/similharity/chunks/hybrid-query-rerank
+     *
+     * Hybrid search + EventBase re-rank in one Qdrant /query call. Adds an outer
+     * formula query over the existing dense + sparse + RRF prefetch that computes
+     * the EventBase weighted score (cosine × $score + importance + persist + recency
+     * decay) server-side, plus min-importance + dedup-depth range filters.
+     *
+     * Requires Qdrant 1.13+ (formula query). The qdrantBackend probes server version
+     * at initialize(); if formula is not supported, the route returns 400 and the
+     * VectHare-side flag falls back to the JS re-rank pipeline.
+     *
+     * Body: { backend, collectionId, searchText|queryVector, sparseQueryVector,
+     *         rerankParams, topK?, options?, filters?, source?, model? }
+     */
+    router.post('/chunks/hybrid-query-rerank', async (req, res) => {
+        try {
+            const {
+                backend = 'qdrant',
+                collectionId,
+                queryVector,
+                searchText,
+                topK = 16,
+                options = {},
+                filters = {},
+                source = 'transformers',
+                model = '',
+                hybridOptions = {},
+                sparseQueryVector = null,
+                rerankParams = null,
+            } = req.body;
+
+            if (!collectionId) {
+                return res.status(400).json({ error: 'collectionId is required' });
+            }
+            if (!queryVector && !searchText) {
+                return res.status(400).json({ error: 'queryVector or searchText is required' });
+            }
+            if (backend !== 'qdrant') {
+                return res.status(400).json({ error: `Backend ${backend} does not support native hybrid + rerank` });
+            }
+            if (!sparseQueryVector) {
+                return res.status(400).json({ error: 'sparseQueryVector is required (collection must be sparse-enabled)' });
+            }
+            if (!rerankParams || typeof rerankParams !== 'object') {
+                return res.status(400).json({ error: 'rerankParams object is required' });
+            }
+            if (!qdrantBackend.supportsFormulaQuery()) {
+                return res.status(400).json({
+                    error: `Qdrant ${qdrantBackend.serverVersion || '(unknown)'} does not support formula queries; requires 1.13+. Disable eventbase_native_rerank to fall back to client-side re-rank.`,
+                });
+            }
+
+            // Generate dense embedding if searchText provided.
+            let vector = queryVector;
+            if (!vector && searchText) {
+                vector = await getEmbeddingForSource(source, searchText, model, req.user.directories, req);
+            }
+
+            const mergedOptions = { ...hybridOptions, ...options };
+            const debug = !!mergedOptions.eventbaseDebug;
+            const results = await qdrantBackend.hybridQueryNativeWithRerank(
+                collectionId,
+                vector,
+                sparseQueryVector,
+                topK,
+                rerankParams,
+                {
+                    prefetchLimit: mergedOptions.prefetchLimit,
+                    eventbaseDebug: debug,
+                    debugQuery: debug ? searchText : undefined,
+                },
+                filters,
+            );
+
+            return res.json({
+                success: true,
+                backend: 'qdrant',
+                collectionId,
+                count: results.length,
+                rerankApplied: true,
+                results: results.map(r => ({
+                    hash: r.hash,
+                    text: r.text,
+                    score: r.score,
+                    formulaScore: r.formulaScore,
+                    metadata: r.metadata,
+                    nativeSparse: true,
+                    rerankApplied: true,
+                    fusionMethod: r.fusionMethod,
+                })),
+            });
+        } catch (error) {
+            console.error(`[${pluginName}] chunks/hybrid-query-rerank error:`, error);
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    /**
      * POST /api/plugins/similharity/chunks/purge
      * Purge all chunks in a collection
      * Body: { backend, collectionId, source?, model? }
