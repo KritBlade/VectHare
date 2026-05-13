@@ -856,11 +856,16 @@ class QdrantBackend {
             minImportance = 1,
             visibleThreshold = -1,
             applyContextDedupFilter = true,
-            // RRF fused score range is ≈ [0, 1/(60+1)] ≈ [0, 0.0164] which is much
-            // narrower than raw cosine [0, 1]. Pre-scale the $score term so the
-            // user-visible `w.cosine` weight retains roughly its old meaning.
-            // See plans/qdrant-native-eventbase-rerank-formula.md "Shift 1".
-            rrfScoreScale = 40.0,
+            // Qdrant normalizes RRF such that the top hit's fused score peaks at
+            // ≈1.0 (uses k=1, so rank-1 in both legs sums to 1/2 + 1/2 = 1.0),
+            // which matches the [0, 1] scale of cosine. So no rescale is needed
+            // for parity with the JS path — both use RRF fused score as the
+            // cosineScore input. Kept as a knob in case future tuning wants to
+            // amplify/attenuate the cosine term.
+            // See plans/qdrant-native-eventbase-rerank-formula.md "Shift 1" — the
+            // initial 40× estimate was based on the un-normalized RRF formula
+            // (1/(60+rank)); the measured behavior is normalized.
+            rrfScoreScale = 1.0,
         } = rerankParams;
 
         const prefetchLimit = options.prefetchLimit || topK * 4;
