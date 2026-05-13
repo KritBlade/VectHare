@@ -902,10 +902,19 @@ class QdrantBackend {
             query: {
                 formula: {
                     sum: [
+                        // w.cosine × (rrfScoreScale × $score)
                         { mult: [weights.cosine,     { mult: [rrfScoreScale, '$score'] }] },
-                        { mult: [weights.importance, { div: ['importance', 10] }] },
-                        { mult: [weights.persist,    { condition: { key: 'should_persist', match: { value: true } }, if_true: 1, if_false: 0 }] },
-                        { mult: [weights.recency,    { exp_decay: { key: 'source_window_end', origin: chatLength, scale: halfLife, midpoint: 0.5 } }] },
+                        // w.importance × (importance / 10). Note `div` is a structured object,
+                        // not an array — Qdrant rejects array form.
+                        { mult: [weights.importance, { div: { left: 'importance', right: 10 } }] },
+                        // w.persist × (should_persist == true ? 1 : 0). A bare FieldCondition
+                        // is itself an expression that yields 1 when the condition matches and
+                        // 0 otherwise — no `if_true`/`if_false` wrapper needed.
+                        { mult: [weights.persist,    { key: 'should_persist', match: { value: true } }] },
+                        // w.recency × exp_decay(source_window_end → chatLength).
+                        // Decay uses `x` (the input expression — bare payload field is OK)
+                        // and `target` (the value at which decay = 1.0), not `key`/`origin`.
+                        { mult: [weights.recency,    { exp_decay: { x: 'source_window_end', target: chatLength, scale: halfLife, midpoint: 0.5 } }] },
                     ],
                 },
             },
