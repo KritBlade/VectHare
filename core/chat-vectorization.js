@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * VECTHARE CHAT VECTORIZATION
+ * VECTFOX CHAT VECTORIZATION
  * ============================================================================
  * Core logic for vectorizing chat messages and retrieving relevant context
  *
@@ -253,7 +253,7 @@ async function groupMessagesByStrategy(messages, strategy, batchSize = 4, keywor
  * Applies chunk-level conditions to filter results
  * @param {object[]} chunks Chunks with metadata
  * @param {object[]} chat Chat messages for context
- * @param {object} settings VectHare settings
+ * @param {object} settings VECTFOX settings
  * @returns {Promise<object[]>} Filtered chunks
  */
 async function applyChunkConditions(chunks, chat, settings) {
@@ -293,7 +293,7 @@ async function applyChunkConditions(chunks, chat, settings) {
         }
     });
 
-    console.log(`VectHare: Chunk conditions filtered ${filtered.length} → ${conditionFilteredChunks.length}`);
+    console.log(`VectFox: Chunk conditions filtered ${filtered.length} → ${conditionFilteredChunks.length}`);
     return conditionFilteredChunks;
 }
 
@@ -318,7 +318,7 @@ function trackChunkActivation(hash, messageCount) {
  * Rerank chunks using BananaBread's reranking endpoint
  * @param {string} query The search query
  * @param {Array} chunks Array of chunks with text
- * @param {object} settings VectHare settings
+ * @param {object} settings VECTFOX settings
  * @returns {Promise<Array>} Chunks with updated scores from reranker
  */
 async function rerankWithBananaBread(query, chunks, settings) {
@@ -341,7 +341,7 @@ async function rerankWithBananaBread(query, chunks, settings) {
         });
 
         if (!response.ok) {
-            console.warn('VectHare: Reranking failed, using original scores');
+            console.warn('VectFox: Reranking failed, using original scores');
             return chunks;
         }
 
@@ -360,10 +360,10 @@ async function rerankWithBananaBread(query, chunks, settings) {
             return chunk;
         });
 
-        console.log(`VectHare: Reranked ${rerankedChunks.length} chunks with BananaBread`);
+        console.log(`VectFox: Reranked ${rerankedChunks.length} chunks with BananaBread`);
         return rerankedChunks;
     } catch (error) {
-        console.warn('VectHare: Reranking error:', error.message);
+        console.warn('VectFox: Reranking error:', error.message);
         return chunks;
     }
 }
@@ -377,7 +377,7 @@ async function rerankWithBananaBread(query, chunks, settings) {
  * 3. Process batch: take message, chunk it, insert chunks, remove from queue
  * 4. Repeat until queue empty
  *
- * @param {object} settings VectHare settings
+ * @param {object} settings VECTFOX settings
  * @param {number} batchSize Number of messages to process per call
  * @returns {Promise<object>} Progress info
  */
@@ -524,12 +524,12 @@ export async function synchronizeChat(settings, batchSize = 5) {
                         if (chatId) {
                             setCollectionLock(collectionId, chatId);
                         }
-                        console.log(`VectHare: Registered collection ${registryKey} after first successful insert`);
+                        console.log(`VectFox: Registered collection ${registryKey} after first successful insert`);
                     }
                 }
             } catch (itemError) {
                 // Log error but continue processing other items
-                console.warn(`VectHare: Failed to process item (hash: ${item.hash}, index: ${item.index}):`, itemError.message);
+                console.warn(`VectFox: Failed to process item (hash: ${item.hash}, index: ${item.index}):`, itemError.message);
                 itemsFailed++;
                 // Don't rethrow - continue with next item
             }
@@ -541,7 +541,7 @@ export async function synchronizeChat(settings, batchSize = 5) {
         progressTracker.updateCurrentItem(null);
 
         if (itemsFailed > 0) {
-            console.warn(`VectHare: Sync completed with ${itemsFailed} failed items out of ${itemsProcessed}`);
+            console.warn(`VectFox: Sync completed with ${itemsFailed} failed items out of ${itemsProcessed}`);
         }
 
         return {
@@ -560,10 +560,10 @@ export async function synchronizeChat(settings, batchSize = 5) {
             } catch (_) {
                 // no-op
             }
-            console.error('VectHare: Synchronization halted due to fatal summarization error:', error.message);
+            console.error('VectFox: Synchronization halted due to fatal summarization error:', error.message);
             return { remaining: -1, messagesProcessed: 0, chunksCreated: 0 };
         }
-        console.error('VectHare: Sync failed', error);
+        console.error('VectFox: Sync failed', error);
         throw error;
     } finally {
         syncBlocked = false;
@@ -579,7 +579,7 @@ export async function synchronizeChat(settings, batchSize = 5) {
 
 /**
  * Stage 1: Gather all collections that should be queried
- * @param {object} settings VectHare settings
+ * @param {object} settings VECTFOX settings
  * @returns {string[]} Array of collection IDs to query
  */
 function gatherCollectionsToQuery(settings) {
@@ -660,7 +660,7 @@ function gatherCollectionsToQuery(settings) {
 /**
  * Stage 2: Build the search query from recent messages
  * @param {object[]} chat Current chat messages
- * @param {object} settings VectHare settings
+ * @param {object} settings VECTFOX settings
  * @returns {string} Query text
  */
 function buildSearchQuery(chat, settings) {
@@ -677,7 +677,7 @@ function buildSearchQuery(chat, settings) {
  * Stage 3: Query all active collections and merge results
  * @param {string[]} activeCollections Collections that passed activation filters
  * @param {string} queryText Search query
- * @param {object} settings VectHare settings
+ * @param {object} settings VECTFOX settings
  * @param {object[]} chat Current chat messages
  * @param {object} debugData Debug tracking object
  * @returns {Promise<object[]>} Array of chunk objects with scores
@@ -714,7 +714,7 @@ async function queryAndMergeCollections(activeCollections, queryText, settings, 
                 }))
             });
 
-            console.log(`VectHare: Retrieved ${queryResults.hashes.length} chunks from ${collectionId}`);
+            console.log(`VectFox: Retrieved ${queryResults.hashes.length} chunks from ${collectionId}`);
 
             // Build chunks with text for visualizer
             const collectionChunks = queryResults.metadata.map((meta, idx) => {
@@ -771,7 +771,7 @@ async function queryAndMergeCollections(activeCollections, queryText, settings, 
 
             chunksForVisualizer.push(...collectionChunks);
         } catch (error) {
-            console.warn(`VectHare: Failed to query collection ${collectionId}:`, error.message);
+            console.warn(`VectFox: Failed to query collection ${collectionId}:`, error.message);
             addTrace(debugData, 'vector_search', `Query failed for ${collectionId}`, {
                 error: error.message
             });
@@ -793,7 +793,7 @@ async function queryAndMergeCollections(activeCollections, queryText, settings, 
  *
  * @param {object[]} chunks Chunks from query results
  * @param {string[]} activeCollections Collections that were queried
- * @param {object} settings VectHare settings
+ * @param {object} settings VECTFOX settings
  * @param {object} debugData Debug tracking object
  * @returns {Promise<object[]>} Chunks with summaries expanded to parents
  */
@@ -894,7 +894,7 @@ async function expandSummaryChunks(chunks, activeCollections, settings, debugDat
                         });
                     } else {
                         // Parent not found - keep the summary chunk as fallback
-                        console.warn(`VectHare: Parent chunk ${parentHash} not found for summary ${summaryChunk.hash}, using summary text`);
+                        console.warn(`VectFox: Parent chunk ${parentHash} not found for summary ${summaryChunk.hash}, using summary text`);
                         expandedChunks.push(summaryChunk);
 
                         recordChunkFate(debugData, summaryChunk.hash, 'summary_expansion', 'passed',
@@ -911,7 +911,7 @@ async function expandSummaryChunks(chunks, activeCollections, settings, debugDat
                 }
             }
         } catch (error) {
-            console.warn(`VectHare: Failed to expand summaries from ${collectionId}:`, error.message);
+            console.warn(`VectFox: Failed to expand summaries from ${collectionId}:`, error.message);
             // Keep summaries as-is on error
             for (const { summaryChunk } of parentInfos) {
                 expandedChunks.push(summaryChunk);
@@ -966,7 +966,7 @@ function applyThresholdFilter(chunks, threshold, debugData) {
  * Stage 5: Apply temporal decay to chunks
  * @param {object[]} chunks Chunks to process
  * @param {object[]} chat Current chat messages
- * @param {object} settings VectHare settings
+ * @param {object} settings VECTFOX settings
  * @param {number} threshold Score threshold for re-filtering
  * @param {object} debugData Debug tracking object
  * @returns {object[]} Chunks with decay applied
@@ -998,7 +998,7 @@ function applyTemporalDecayStage(chunks, chat, settings, threshold, debugData) {
 
     const decayType = 'standard';
     const decayedChunks = applyDecayToResults(chunksWithScores, currentMessageId, settings.temporal_decay);
-    console.log('VectHare: Applied temporal decay to search results');
+    console.log('VectFox: Applied temporal decay to search results');
 
     decayedChunks.sort((a, b) => b.score - a.score);
 
@@ -1067,7 +1067,7 @@ function applyTemporalDecayStage(chunks, chat, settings, threshold, debugData) {
  * Stage 6: Apply chunk-level conditions
  * @param {object[]} chunks Chunks to filter
  * @param {object[]} chat Current chat messages
- * @param {object} settings VectHare settings
+ * @param {object} settings VECTFOX settings
  * @param {object} debugData Debug tracking object
  * @returns {Promise<object[]>} Chunks that passed conditions
  */
@@ -1120,7 +1120,7 @@ async function applyConditionsStage(chunks, chat, settings, debugData) {
  * - Processes chunk links (both explicit and group-generated)
  * @param {object[]} chunks Chunks to process
  * @param {string[]} activeCollections Active collection IDs
- * @param {object} settings VectHare settings
+ * @param {object} settings VECTFOX settings
  * @param {object} debugData Debug tracking object
  * @returns {Promise<object[]>} Processed chunks with links applied
  */
@@ -1300,7 +1300,7 @@ async function applyGroupsAndLinksStage(chunks, activeCollections, settings, deb
  * Only checks against recent messages within the context window, not entire chat history.
  * @param {object[]} chunks Chunks to deduplicate
  * @param {object[]} chat Current chat messages
- * @param {object} settings VectHare settings (uses deduplication_depth)
+ * @param {object} settings VECTFOX settings (uses deduplication_depth)
  * @param {object} debugData Debug tracking object
  * @returns {{toInject: object[], skipped: object[]}} Chunks to inject and skipped duplicates
  */
@@ -1320,8 +1320,8 @@ function deduplicateChunks(chunks, chat, settings, debugData) {
         ? chat.slice(-deduplicationDepth)
         : chat;
 
-    console.log(`[VectHare Dedup] Building hash set from ${recentMessages.length} recent messages (depth: ${deduplicationDepth})`);
-    console.log(`[VectHare Dedup] Total chat length: ${chat.length}, checking duplicates in last ${recentMessages.length} messages`);
+    console.log(`[VECTFOX Dedup] Building hash set from ${recentMessages.length} recent messages (depth: ${deduplicationDepth})`);
+    console.log(`[VECTFOX Dedup] Total chat length: ${chat.length}, checking duplicates in last ${recentMessages.length} messages`);
 
     // Build set of hashes currently in chat context
     const currentChatHashes = new Set();
@@ -1347,7 +1347,7 @@ function deduplicateChunks(chunks, chat, settings, debugData) {
         }
     });
 
-    console.log(`[VectHare Dedup] Built hash set with ${currentChatHashes.size} unique message hashes from recent context`);
+    console.log(`[VECTFOX Dedup] Built hash set with ${currentChatHashes.size} unique message hashes from recent context`);
 
     const toInject = [];
     const skipped = [];
@@ -1357,7 +1357,7 @@ function deduplicateChunks(chunks, chat, settings, debugData) {
 
         if (isInChat) {
             const matchedMsg = chatHashMap.get(chunk.hash);
-            console.debug(`[VectHare Dedup] ❌ SKIPPING chunk (hash: ${chunk.hash})`);
+            console.debug(`[VECTFOX Dedup] ❌ SKIPPING chunk (hash: ${chunk.hash})`);
             console.debug(`  Chunk text: "${chunk.text?.substring(0, 80)}..."`);
             console.debug(`  Matches chat message #${matchedMsg.index} from ${matchedMsg.name}: "${matchedMsg.preview}..."`);
             console.debug(`  Score: ${chunk.score?.toFixed(4)}, Collection: ${chunk.collectionId}`);
@@ -1368,7 +1368,7 @@ function deduplicateChunks(chunks, chat, settings, debugData) {
                 { score: chunk.score }
             );
         } else {
-            console.debug(`[VectHare Dedup] ✅ KEEPING chunk (hash: ${chunk.hash}, score: ${chunk.score?.toFixed(4)})`);
+            console.debug(`[VECTFOX Dedup] ✅ KEEPING chunk (hash: ${chunk.hash}, score: ${chunk.score?.toFixed(4)})`);
             console.debug(`  Text: "${chunk.text?.substring(0, 80)}..."`);
 
             toInject.push(chunk);
@@ -1385,7 +1385,7 @@ function deduplicateChunks(chunks, chat, settings, debugData) {
         skippedDuplicates: skipped.length
     });
 
-    console.log(`[VectHare Dedup] FINAL: ${toInject.length} will inject, ${skipped.length} skipped as duplicates`);
+    console.log(`[VECTFOX Dedup] FINAL: ${toInject.length} will inject, ${skipped.length} skipped as duplicates`);
 
     return { toInject, skipped };
 }
@@ -1398,7 +1398,7 @@ function deduplicateChunks(chunks, chat, settings, debugData) {
  * 3. Chunk wrapper (innermost, per-chunk)
  *
  * @param {object[]} chunks Chunks to inject
- * @param {object} settings VectHare settings
+ * @param {object} settings VECTFOX settings
  * @returns {string} Formatted injection text
  */
 function buildNestedInjectionText(chunks, settings) {
@@ -1481,7 +1481,7 @@ function buildNestedInjectionText(chunks, settings) {
  * Resolves the effective injection position for a chunk using cascade:
  * chunk → collection → global
  * @param {object} chunk Chunk with collectionId
- * @param {object} settings VectHare settings
+ * @param {object} settings VECTFOX settings
  * @returns {{position: number, depth: number}} Resolved position and depth
  */
 function resolveChunkInjectionPosition(chunk, settings) {
@@ -1501,7 +1501,7 @@ function resolveChunkInjectionPosition(chunk, settings) {
  * Groups chunks by their resolved position+depth and creates separate injections.
  *
  * @param {object[]} chunksToInject Chunks to inject
- * @param {object} settings VectHare settings
+ * @param {object} settings VECTFOX settings
  * @param {object} debugData Debug tracking object
  * @returns {{verified: boolean, text: string}} Injection result
  */
@@ -1509,7 +1509,7 @@ function injectChunksIntoPrompt(chunksToInject, settings, debugData) {
     const injectionDebug = settings.injection_debug_logging || false;
     // Control print: Log chunks QUEUED for injection (not yet injected)
     if (injectionDebug) {
-        console.log(`[VectHare Injection Control] Preparing to inject ${chunksToInject.length} chunks`);
+        console.log(`[VECTFOX Injection Control] Preparing to inject ${chunksToInject.length} chunks`);
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         let emptyTextCount = 0;
         chunksToInject.forEach((chunk, idx) => {
@@ -1526,7 +1526,7 @@ function injectChunksIntoPrompt(chunksToInject, settings, debugData) {
             console.log('      ─────────────────────────────────────────────────────────────────');
         });
         if (emptyTextCount > 0) {
-            console.warn(`[VectHare Injection Control] ⚠️ WARNING: ${emptyTextCount}/${chunksToInject.length} chunks have empty or placeholder text!`);
+            console.warn(`[VECTFOX Injection Control] ⚠️ WARNING: ${emptyTextCount}/${chunksToInject.length} chunks have empty or placeholder text!`);
         }
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     }
@@ -1550,8 +1550,8 @@ function injectChunksIntoPrompt(chunksToInject, settings, debugData) {
         const insertedText = buildNestedInjectionText(group.chunks, settings);
 
         if (injectionDebug) {
-            console.log(`[VectHare Injection Control] Single position injection: position="${group.position}", depth=${group.depth}, chunks=${group.chunks.length}, textLength=${insertedText.length}`);
-            console.log(`[VectHare Injection Control] Injection text preview: "${insertedText.substring(0, 200)}${insertedText.length > 200 ? '...' : ''}"`); 
+            console.log(`[VECTFOX Injection Control] Single position injection: position="${group.position}", depth=${group.depth}, chunks=${group.chunks.length}, textLength=${insertedText.length}`);
+            console.log(`[VECTFOX Injection Control] Injection text preview: "${insertedText.substring(0, 200)}${insertedText.length > 200 ? '...' : ''}"`); 
         }
 
         setExtensionPrompt(EXTENSION_PROMPT_TAG, insertedText, group.position, group.depth, false);
@@ -1561,8 +1561,8 @@ function injectChunksIntoPrompt(chunksToInject, settings, debugData) {
         const injectionVerified = verifiedPrompt && verifiedPrompt.value === insertedText;
 
         if (injectionDebug) {
-            console.log(`[VectHare Injection Control] Injection verification: ${injectionVerified ? '✓ PASSED' : '✗ FAILED'}`);
-            console.log(`[VectHare Injection Control] extension_prompts[${EXTENSION_PROMPT_TAG}]:`, {
+            console.log(`[VECTFOX Injection Control] Injection verification: ${injectionVerified ? '✓ PASSED' : '✗ FAILED'}`);
+            console.log(`[VECTFOX Injection Control] extension_prompts[${EXTENSION_PROMPT_TAG}]:`, {
                 exists: !!verifiedPrompt,
                 valueLength: verifiedPrompt?.value?.length,
                 position: verifiedPrompt?.position,
@@ -1572,7 +1572,7 @@ function injectChunksIntoPrompt(chunksToInject, settings, debugData) {
         }
 
         if (!injectionVerified) {
-            console.warn('VectHare: ⚠️ Injection verification failed!', {
+            console.warn('VectFox: ⚠️ Injection verification failed!', {
                 expected: insertedText.substring(0, 100) + '...',
                 actual: verifiedPrompt?.value?.substring(0, 100) + '...',
                 promptExists: !!verifiedPrompt
@@ -1591,7 +1591,7 @@ function injectChunksIntoPrompt(chunksToInject, settings, debugData) {
     }
 
     // Multiple injection positions - create separate extension prompts for each
-    if (injectionDebug) console.log(`[VectHare Injection Control] Multiple position injection: ${positionGroups.size} different positions`);
+    if (injectionDebug) console.log(`[VECTFOX Injection Control] Multiple position injection: ${positionGroups.size} different positions`);
 
     // Clear the main tag first (will be unused when multi-position)
     setExtensionPrompt(EXTENSION_PROMPT_TAG, '', settings.position, settings.depth, false);
@@ -1606,7 +1606,7 @@ function injectChunksIntoPrompt(chunksToInject, settings, debugData) {
         const groupText = buildNestedInjectionText(group.chunks, groupSettings);
 
         if (injectionDebug) {
-            console.log(`[VectHare Injection Control] Position group ${groupIndex + 1}/${positionGroups.size}: key="${key}", chunks=${group.chunks.length}, textLength=${groupText.length}`);
+            console.log(`[VECTFOX Injection Control] Position group ${groupIndex + 1}/${positionGroups.size}: key="${key}", chunks=${group.chunks.length}, textLength=${groupText.length}`);
             group.chunks.forEach((chunk, idx) => {
                 console.log(`    [${idx + 1}/${group.chunks.length}] Hash: ${chunk.hash}, Score: ${chunk.score?.toFixed(4)}`);
             });
@@ -1621,10 +1621,10 @@ function injectChunksIntoPrompt(chunksToInject, settings, debugData) {
         const verifiedPrompt = extension_prompts[tag];
         const verified = verifiedPrompt && verifiedPrompt.value === groupText;
 
-        if (injectionDebug) console.log(`[VectHare Injection Control] Position group ${groupIndex + 1} verification: ${verified ? '✓ PASSED' : '✗ FAILED'}`);
+        if (injectionDebug) console.log(`[VECTFOX Injection Control] Position group ${groupIndex + 1} verification: ${verified ? '✓ PASSED' : '✗ FAILED'}`);
 
         if (!verified) {
-            console.warn(`VectHare: ⚠️ Injection verification failed for position ${key}`, {
+            console.warn(`VectFox: ⚠️ Injection verification failed for position ${key}`, {
                 tag,
                 expected: groupText.substring(0, 100) + '...',
                 actual: verifiedPrompt?.value?.substring(0, 100) + '...'
@@ -1646,7 +1646,7 @@ function injectChunksIntoPrompt(chunksToInject, settings, debugData) {
         groupIndex++;
     }
 
-    if (injectionDebug) console.log(`[VectHare Injection Control] Injection complete: ${allVerified ? '✓ All verified' : '✗ Some failed'}, ${allTexts.length} groups`);
+    if (injectionDebug) console.log(`[VECTFOX Injection Control] Injection complete: ${allVerified ? '✓ All verified' : '✗ Some failed'}, ${allTexts.length} groups`);
 
     return {
         verified: allVerified,
@@ -1664,16 +1664,16 @@ function injectChunksIntoPrompt(chunksToInject, settings, debugData) {
  * enabled collections like lorebooks, documents, character files, etc.
  *
  * @param {object[]} chat Current chat messages
- * @param {object} settings VectHare settings
+ * @param {object} settings VECTFOX settings
  * @param {string} type Generation type
  */
 export async function rearrangeChat(chat, settings, type) {
-    console.log(`🐰 VectHare: rearrangeChat called (type: ${type}, chat length: ${chat?.length || 0})`);
+    console.log(`🐰 VectFox: rearrangeChat called (type: ${type}, chat length: ${chat?.length || 0})`);
 
     try {
         // === EARLY EXITS ===
         if (type === 'quiet') {
-            console.debug('VectHare: Skipping quiet prompt');
+            console.debug('VectFox: Skipping quiet prompt');
             return;
         }
 
@@ -1688,13 +1688,13 @@ export async function rearrangeChat(chat, settings, type) {
         }
 
         if (!getCurrentChatId() || !Array.isArray(chat)) {
-            console.debug('VectHare: No chat selected');
+            console.debug('VectFox: No chat selected');
             return;
         }
 
         const minChatLength = settings.min_chat_length ?? 0;
         if (minChatLength > 0 && chat.length < minChatLength) {
-            console.warn(`⚠️ VectHare: Not enough messages to inject chunks (${chat.length} < ${minChatLength})`);
+            console.warn(`⚠️ VectFox: Not enough messages to inject chunks (${chat.length} < ${minChatLength})`);
             console.log(`   💡 You need at least ${minChatLength} messages before chunk injection starts`);
             return;
         }
@@ -1727,20 +1727,20 @@ export async function rearrangeChat(chat, settings, type) {
         const canQueryWI = settings.enabled_world_info;
 
         if (!hasCollections && !canQueryWI) {
-            console.warn('⚠️ VectHare: No enabled collections to query and World Info disabled - chunks cannot be injected!');
-            console.log('   💡 Make sure you have enabled at least one collection in VectHare settings, or enable World Info');
+            console.warn('⚠️ VectFox: No enabled collections to query and World Info disabled - chunks cannot be injected!');
+            console.log('   💡 Make sure you have enabled at least one collection in VECTFOX settings, or enable World Info');
             return;
         }
         if (hasCollections) {
-            console.log(`VectHare: Will query ${collectionsToQuery.length} collections:`, collectionsToQuery);
+            console.log(`VectFox: Will query ${collectionsToQuery.length} collections:`, collectionsToQuery);
         } else {
-            console.log('VectHare: No regular collections enabled, but World Info is enabled - will query lorebooks only');
+            console.log('VectFox: No regular collections enabled, but World Info is enabled - will query lorebooks only');
         }
 
         // === STAGE 2: Build search query ===
         const queryText = buildSearchQuery(chat, settings);
         if (queryText.length === 0) {
-            console.debug('VectHare: No text to query');
+            console.debug('VectFox: No text to query');
             return;
         }
 
@@ -1751,7 +1751,7 @@ export async function rearrangeChat(chat, settings, type) {
             baseWeight: settings.keyword_boost_base_weight || 1.5
         });
         const queryKeywordTexts = queryKeywords.map(kw => kw.text.toLowerCase());
-        if (settings.eventbase_debug_logging) console.log(`VectHare: Extracted ${queryKeywords.length} keywords from query:`, queryKeywordTexts);
+        if (settings.eventbase_debug_logging) console.log(`VectFox: Extracted ${queryKeywords.length} keywords from query:`, queryKeywordTexts);
 
         // === STAGE 3: Filter by activation conditions ===
         let activeCollections = [];
@@ -1773,7 +1773,7 @@ export async function rearrangeChat(chat, settings, type) {
         const preEmptyFilter = activeCollections.length;
         activeCollections = activeCollections.filter(key => !isCollectionEmpty(key));
         if (activeCollections.length < preEmptyFilter) {
-            console.log(`VectHare: Skipped ${preEmptyFilter - activeCollections.length} empty collection(s) from retrieval`);
+            console.log(`VectFox: Skipped ${preEmptyFilter - activeCollections.length} empty collection(s) from retrieval`);
         }
 
         // Allow WI-only mode even if no regular collections pass filters.
@@ -1786,12 +1786,12 @@ export async function rearrangeChat(chat, settings, type) {
         // and is unaffected by this branch.
         if (activeCollections.length === 0 && !canQueryWI) {
             if (settings.eventbase_debug_logging) {
-                console.log('[VectHare ChunkBase] No active Standard/ChunkBase collections and World Info disabled — skipping non-chat chunk injection (this is normal if you only use EventBase).');
+                console.log('[VECTFOX ChunkBase] No active Standard/ChunkBase collections and World Info disabled — skipping non-chat chunk injection (this is normal if you only use EventBase).');
             }
             return;
         }
         if (activeCollections.length > 0) {
-            console.log(`✅ VectHare: ${activeCollections.length} collections passed activation filters:`, activeCollections);
+            console.log(`✅ VectFox: ${activeCollections.length} collections passed activation filters:`, activeCollections);
         }
 
         // === INITIALIZE DEBUG DATA ===
@@ -1860,7 +1860,7 @@ export async function rearrangeChat(chat, settings, type) {
             }
 
             if (keywordMatchCount > 0) {
-                console.log(`VectHare: Boosted ${keywordMatchCount}/${chunks.length} chunks with matching keywords to 100% score`);
+                console.log(`VectFox: Boosted ${keywordMatchCount}/${chunks.length} chunks with matching keywords to 100% score`);
                 debugData.stages.afterKeywordBoost = [...chunks];
                 debugData.stats.keywordBoosted = keywordMatchCount;
                 addTrace(debugData, 'keyword_boost', `Boosted ${keywordMatchCount} chunks with keyword matches`, {
@@ -1868,7 +1868,7 @@ export async function rearrangeChat(chat, settings, type) {
                     boostedCount: keywordMatchCount
                 });
             } else {
-                console.log(`VectHare: No chunks matched query keywords, all ${chunks.length} chunks keep original scores`);
+                console.log(`VectFox: No chunks matched query keywords, all ${chunks.length} chunks keep original scores`);
             }
         }
 
@@ -1908,10 +1908,10 @@ export async function rearrangeChat(chat, settings, type) {
                 }
             }
         } catch (wiError) {
-            console.warn('VectHare: WorldInfo semantic integration failed', wiError.message);
+            console.warn('VectFox: WorldInfo semantic integration failed', wiError.message);
             addTrace(debugData, 'world_info', 'WorldInfo query failed', { error: wiError.message });
         }
-        console.log(`VectHare: Retrieved ${chunks.length} total chunks from ${activeCollections.length} collections`);
+        console.log(`VectFox: Retrieved ${chunks.length} total chunks from ${activeCollections.length} collections`);
 
         debugData.stages.initial = [...chunks];
         debugData.stats.retrievedFromVector = chunks.length;
@@ -1921,7 +1921,7 @@ export async function rearrangeChat(chat, settings, type) {
         chunks = await expandSummaryChunks(chunks, activeCollections, settings, debugData);
         if (chunks.length !== chunksBeforeExpansion || chunks.some(c => c.expandedFromSummary)) {
             const expandedCount = chunks.filter(c => c.expandedFromSummary).length;
-            console.log(`VectHare: Expanded ${expandedCount} summary chunks to parent text`);
+            console.log(`VectFox: Expanded ${expandedCount} summary chunks to parent text`);
             debugData.stages.afterSummaryExpansion = [...chunks];
             debugData.stats.summariesExpanded = expandedCount;
         }
@@ -1964,24 +1964,24 @@ export async function rearrangeChat(chat, settings, type) {
             timestamp: Date.now(),
             settings: { threshold: settings.score_threshold, topK: (settings.top_k ?? settings.insert), temporal_decay: settings.temporal_decay }
         };
-        console.log(`VectHare: Stored ${chunks.length} chunks for visualizer`);
+        console.log(`VectFox: Stored ${chunks.length} chunks for visualizer`);
 
         // === STAGE 9: Deduplicate ===
-        console.log(`[VectHare Deduplication] Starting with ${chunks.length} chunks before deduplication`);
-        console.log(`[VectHare Deduplication] Current chat has ${chat.length} messages`);
+        console.log(`[VECTFOX Deduplication] Starting with ${chunks.length} chunks before deduplication`);
+        console.log(`[VECTFOX Deduplication] Current chat has ${chat.length} messages`);
 
         const { toInject: chunksToInject, skipped: skippedDuplicates } = deduplicateChunks(chunks, chat, settings, debugData);
 
-        console.log(`[VectHare Deduplication] After deduplication: ${chunksToInject.length} to inject, ${skippedDuplicates.length} skipped`);
+        console.log(`[VECTFOX Deduplication] After deduplication: ${chunksToInject.length} to inject, ${skippedDuplicates.length} skipped`);
         if (skippedDuplicates.length > 0) {
-            console.log(`[VectHare Deduplication] Skipped chunks (already in chat):`);
+            console.log(`[VECTFOX Deduplication] Skipped chunks (already in chat):`);
             skippedDuplicates.forEach((chunk, idx) => {
                 console.log(`  [${idx + 1}] Hash: ${chunk.hash}, Score: ${chunk.score?.toFixed(4)}, Text: "${chunk.text?.substring(0, 80)}..."`);
             });
         }
 
         if (chunksToInject.length === 0) {
-            console.log('ℹ️ VectHare: All retrieved chunks already in context, nothing to inject');
+            console.log('ℹ️ VectFox: All retrieved chunks already in context, nothing to inject');
             console.log(`   ${skippedDuplicates.length} chunks were skipped (already in current chat)`);
             console.info('[VectHare] Injection blocked: All retrieved chunks are already present in the current chat context. Adjust temporal decay or query depth if you want older messages.');
             debugData.stages.injected = [];
@@ -1995,12 +1995,12 @@ export async function rearrangeChat(chat, settings, type) {
             return;
         }
 
-        console.log(`[VectHare Deduplication] ✅ ${chunksToInject.length} chunks will proceed to injection`);
+        console.log(`[VECTFOX Deduplication] ✅ ${chunksToInject.length} chunks will proceed to injection`);
 
         // === STAGE 10: Inject into prompt ===
         const injection = injectChunksIntoPrompt(chunksToInject, settings, debugData);
 
-        console.log(`\n✅ VectHare: Successfully injected ${chunksToInject.length} chunk(s) into prompt`);
+        console.log(`\n✅ VectFox: Successfully injected ${chunksToInject.length} chunk(s) into prompt`);
         console.log(`   Verification: ${injection.verified ? '✓ PASSED' : '✗ FAILED'}`);
         console.log(`   Total characters injected: ${injection.text.length}\n`);
 
@@ -2028,17 +2028,17 @@ export async function rearrangeChat(chat, settings, type) {
         });
 
         setLastSearchDebug(debugData);
-        console.log(`VectHare: ✅ Injected ${chunksToInject.length} chunks (${skippedDuplicates.length} skipped - already in context)`);
+        console.log(`VectFox: ✅ Injected ${chunksToInject.length} chunks (${skippedDuplicates.length} skipped - already in context)`);
 
     } catch (error) {
         toastr.error(`Generation interceptor aborted: ${error.message}`, 'VectHare');
-        console.error('VectHare: Failed to rearrange chat', error);
+        console.error('VectFox: Failed to rearrange chat', error);
     }
 }
 
 /**
  * Vectorizes entire chat
- * @param {object} settings VectHare settings
+ * @param {object} settings VECTFOX settings
  * @param {number} batchSize Batch size
  */
 export async function vectorizeAll(settings, batchSize, abortSignal = null) {
@@ -2061,7 +2061,7 @@ export async function vectorizeAll(settings, batchSize, abortSignal = null) {
                 `Backend "${backendName}" is not available. Check your settings or start the backend service.`,
                 'Vectorization aborted'
             );
-            console.error(`VectHare: Backend ${backendName} failed health check before vectorization`);
+            console.error(`VectFox: Backend ${backendName} failed health check before vectorization`);
             return;
         }
 
@@ -2092,7 +2092,7 @@ export async function vectorizeAll(settings, batchSize, abortSignal = null) {
 
             // Handle disabled/blocked state
             if (result.remaining === -1) {
-                console.log('VectHare: Vectorization blocked or disabled');
+                console.log('VectFox: Vectorization blocked or disabled');
                 progressTracker.complete(false, 'Blocked or disabled');
                 return;
             }
@@ -2110,7 +2110,7 @@ export async function vectorizeAll(settings, batchSize, abortSignal = null) {
             );
             progressTracker.updateChunks(totalChunks);
 
-            console.log(`VectHare: Vectorization iteration ${iteration}, ${result.remaining > 0 ? result.remaining + ' remaining' : 'complete'} (${result.chunksCreated} chunks this batch)`);
+            console.log(`VectFox: Vectorization iteration ${iteration}, ${result.remaining > 0 ? result.remaining + ' remaining' : 'complete'} (${result.chunksCreated} chunks this batch)`);
 
             if (chatId !== getCurrentChatId()) {
                 progressTracker.complete(false, 'Chat changed during vectorization');
@@ -2120,9 +2120,9 @@ export async function vectorizeAll(settings, batchSize, abortSignal = null) {
 
         progressTracker.complete(true, `Vectorized ${processedCount} messages (${totalChunks} chunks)`);
         toastr.success('Chat vectorized successfully', 'VectHare');
-        console.log(`VectHare: ✅ Vectorization complete after ${iteration} iterations`);
+        console.log(`VectFox: ✅ Vectorization complete after ${iteration} iterations`);
     } catch (error) {
-        console.error('VectHare: Failed to vectorize all', error);
+        console.error('VectFox: Failed to vectorize all', error);
         progressTracker.addError(error.message);
         progressTracker.complete(false, 'Vectorization failed');
         toastr.error(`Vectorization failed: ${error.message}`, 'VectHare');
@@ -2131,7 +2131,7 @@ export async function vectorizeAll(settings, batchSize, abortSignal = null) {
 
 /**
  * Purges vector index for current chat
- * @param {object} settings VectHare settings
+ * @param {object} settings VECTFOX settings
  */
 export async function purgeChatIndex(settings) {
     if (!getCurrentChatId()) {
@@ -2147,7 +2147,7 @@ export async function purgeChatIndex(settings) {
 
     if (await purgeVectorIndex(collectionId, settings)) {
         toastr.success('Vector index purged', 'VectHare');
-        console.log('VectHare: Index purged successfully');
+        console.log('VectFox: Index purged successfully');
     } else {
         toastr.error('Failed to purge vector index', 'VectHare');
     }

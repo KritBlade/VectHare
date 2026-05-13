@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * VECTHARE CONTENT VECTORIZER UI
+ * VECTFOX CONTENT VECTORIZER UI
  * ============================================================================
  * Modal interface for vectorizing different content types with intelligent
  * settings that adapt based on selected content type.
@@ -1588,7 +1588,7 @@ async function loadSourceStats(contentType, sourceId) {
             }
         }
     } catch (e) {
-        console.error('VectHare: Failed to load source stats:', e);
+        console.error('VectFox: Failed to load source stats:', e);
         statsContainer.html('<div class="vectfox-cv-stats-info">Selected</div>');
     }
 }
@@ -1615,7 +1615,7 @@ async function populateSourceSelect(type) {
                     select.append('<option value="" disabled>No lorebooks found</option>');
                 }
             } catch (importError) {
-                console.warn('VectHare: Could not import world-info module:', importError);
+                console.warn('VectFox: Could not import world-info module:', importError);
                 select.append('<option value="" disabled>Could not load lorebooks</option>');
             }
 
@@ -1644,7 +1644,7 @@ async function populateSourceSelect(type) {
             }
         }
     } catch (e) {
-        console.error('VectHare: Failed to populate source select:', e);
+        console.error('VectFox: Failed to populate source select:', e);
         select.append('<option value="" disabled>Error loading sources</option>');
     }
 }
@@ -1790,7 +1790,7 @@ async function handleCharacterPngUpload(file) {
         toastr.success(`Loaded character: ${characterData.name} (${filledFields.length} fields, ${(totalChars/1000).toFixed(1)}k chars)`, 'VectHare');
 
     } catch (err) {
-        console.error('VectHare: PNG parse error:', err);
+        console.error('VectFox: PNG parse error:', err);
         toastr.error(`Failed to parse character PNG: ${err.message}`);
     }
 }
@@ -1853,7 +1853,7 @@ function extractCharaFromPng(bytes) {
 
                     return charData;
                 } catch (e) {
-                    console.error('VectHare: Failed to decode character data:', e);
+                    console.error('VectFox: Failed to decode character data:', e);
                     throw new Error('Invalid character data in PNG');
                 }
             }
@@ -1938,7 +1938,7 @@ async function fetchUrl() {
         toastr.success(`Fetched ${content.length.toLocaleString()} characters`, 'VectHare');
 
     } catch (e) {
-        console.error('VectHare: URL fetch failed:', e);
+        console.error('VectFox: URL fetch failed:', e);
         status.html(`<i class="fa-solid fa-times" style="color: var(--vectfox-danger);"></i> ${e.message}`);
         toastr.error('Failed to fetch URL: ' + e.message);
     }
@@ -1997,7 +1997,7 @@ async function isWikiPluginAvailable(wikiType) {
 
         return response.ok;
     } catch (error) {
-        console.debug('VectHare: Wiki plugin probe failed:', error);
+        console.debug('VectFox: Wiki plugin probe failed:', error);
         return false;
     }
 }
@@ -2082,7 +2082,7 @@ async function scrapeWiki() {
         toastr.success(`Scraped ${pages.length} page(s), ${combinedContent.length.toLocaleString()} chars`, 'VectHare');
 
     } catch (e) {
-        console.error('VectHare: Wiki scrape failed:', e);
+        console.error('VectFox: Wiki scrape failed:', e);
         status.html(`<i class="fa-solid fa-times" style="color: var(--vectfox-danger);"></i> ${e.message}`);
         scrapeBtn.prop('disabled', false);
         toastr.error('Failed to scrape wiki: ' + e.message);
@@ -2188,7 +2188,7 @@ async function fetchYouTubeTranscript() {
         toastr.success(`Fetched transcript: ${transcript.length.toLocaleString()} characters`, 'VectHare');
 
     } catch (e) {
-        console.error('VectHare: YouTube fetch failed:', e);
+        console.error('VectFox: YouTube fetch failed:', e);
         status.html(`<i class="fa-solid fa-times" style="color: var(--vectfox-danger);"></i> ${e.message}`);
         fetchBtn.prop('disabled', false);
         toastr.error('Failed to fetch transcript: ' + e.message);
@@ -2341,7 +2341,7 @@ async function handleChatFileUpload(e) {
             }
         } catch (err) {
             parseError = err;
-            console.error('VectHare: Chat file parse error:', err);
+            console.error('VectFox: Chat file parse error:', err);
         }
 
         if (parseError || messages.length === 0) {
@@ -2498,7 +2498,7 @@ async function previewChunks() {
         `);
 
     } catch (e) {
-        console.error('VectHare: Preview failed:', e);
+        console.error('VectFox: Preview failed:', e);
         container.html(`<div class="vectfox-cv-error">Preview failed: ${e.message}</div>`);
     }
 }
@@ -2623,7 +2623,7 @@ async function startContinueVectorization() {
         return;
     }
 
-    // currentSettings only carries content-type defaults — merge global VectHare settings
+    // currentSettings only carries content-type defaults — merge global VECTFOX settings
     // so the user's summarize_model / API key (set in Core → LLM Summarization) is visible.
     const mergedSettings = { ...(extension_settings.vectfox || {}), ...currentSettings };
     console.log('[VectHare] LLM config check (vectorize-content):', {
@@ -2635,7 +2635,7 @@ async function startContinueVectorization() {
     const llmCheck = validateLLMConfig(mergedSettings);
     if (!llmCheck.ok) {
         toastr.error(
-            `${llmCheck.reason} Open VectHare → Core → LLM Summarization & EventBase Extraction and fill in the required fields.`,
+            `${llmCheck.reason} Open VECTFOX → Core → LLM Summarization & EventBase Extraction and fill in the required fields.`,
             'Configuration required',
             { timeOut: 8000 }
         );
@@ -2666,7 +2666,7 @@ async function startContinueVectorization() {
 
     try {
         const { vectorizeContent } = await import('../core/content-vectorization.js');
-        // Merge global VectHare settings (vector_backend, source, model, etc.) into currentSettings,
+        // Merge global VECTFOX settings (vector_backend, source, model, etc.) into currentSettings,
         // which by itself is only the content-type defaults. Without this, the collection-ID builder
         // sees `settings.vector_backend` as undefined and drops the backend segment from the name.
         const mergedSettings = { ...(extension_settings.vectfox || {}), ...currentSettings };
@@ -2690,7 +2690,7 @@ async function startContinueVectorization() {
             toastr.info('Vectorization stopped', 'VectHare');
             return;
         }
-        console.error('VectHare: Continue vectorization failed:', e);
+        console.error('VectFox: Continue vectorization failed:', e);
         toastr.error('Vectorization failed: ' + e.message, 'VectHare');
     } finally {
         progressTracker.clearCancelHandler();
@@ -2864,7 +2864,7 @@ async function startVectorization() {
     const llmCheck = validateLLMConfig(mergedSettings);
     if (!llmCheck.ok) {
         toastr.error(
-            `${llmCheck.reason} Open VectHare → Core → LLM Summarization & EventBase Extraction and fill in the required fields.`,
+            `${llmCheck.reason} Open VECTFOX → Core → LLM Summarization & EventBase Extraction and fill in the required fields.`,
             'Configuration required',
             { timeOut: 8000 }
         );
@@ -2908,7 +2908,7 @@ async function startVectorization() {
                 toastr.info('Cleared existing vectors', 'VectHare');
             }
         } catch (e) {
-            console.warn('VectHare: Could not check for existing vectors:', e);
+            console.warn('VectFox: Could not check for existing vectors:', e);
             // Continue anyway
         }
     }
@@ -2922,7 +2922,7 @@ async function startVectorization() {
         // Import the appropriate handler
         const { vectorizeContent } = await import('../core/content-vectorization.js');
 
-        // Merge global VectHare settings (vector_backend, source, model, etc.) into currentSettings.
+        // Merge global VECTFOX settings (vector_backend, source, model, etc.) into currentSettings.
         const mergedSettings = { ...(extension_settings.vectfox || {}), ...currentSettings };
         const result = await vectorizeContent({
             contentType: currentContentType,
@@ -2943,14 +2943,14 @@ async function startVectorization() {
             return;
         }
 
-        console.error('VectHare: Vectorization failed:', e);
+        console.error('VectFox: Vectorization failed:', e);
 
         // Check for dimension mismatch error and provide helpful guidance
         if (e.message.includes('dimension mismatch') || e.message.includes('Vector dimension error')) {
             toastr.error(
                 'Vector dimension mismatch detected. You likely switched embedding models. ' +
                 'Please delete this collection in Database Browser and try again.',
-                'VectHare - Dimension Mismatch',
+                'VECTFOX - Dimension Mismatch',
                 { timeOut: 10000 }
             );
         } else {

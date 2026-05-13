@@ -1,5 +1,5 @@
 /**
- * VectHare Collection Metadata Manager
+ * VECTFOX Collection Metadata Manager
  *
  * Manages collection-level metadata in extension_settings.vectfox.collections
  * This is the "settings layer" - user preferences for collections.
@@ -179,7 +179,7 @@ export function getDefaultDecayForType(collectionType) {
 function ensureCollectionsObject() {
     // VEC-26: Add proper null checks to prevent crashes
     if (!extension_settings) {
-        console.error('VectHare: extension_settings is null/undefined - cannot access collections');
+        console.error('VectFox: extension_settings is null/undefined - cannot access collections');
         return false;
     }
     if (!extension_settings.vectfox) {
@@ -230,7 +230,7 @@ export function getCollectionMeta(collectionId) {
  */
 export function setCollectionMeta(collectionId, data) {
     if (!collectionId) {
-        console.warn('VectHare: setCollectionMeta called with null/undefined collectionId');
+        console.warn('VectFox: setCollectionMeta called with null/undefined collectionId');
         return;
     }
 
@@ -245,7 +245,7 @@ export function setCollectionMeta(collectionId, data) {
     };
 
     saveSettingsDebounced();
-    console.log(`VectHare: Updated metadata for collection ${collectionId}`);
+    console.log(`VectFox: Updated metadata for collection ${collectionId}`);
 }
 
 /**
@@ -258,7 +258,7 @@ export function deleteCollectionMeta(collectionId) {
     if (extension_settings.vectfox.collections[collectionId]) {
         delete extension_settings.vectfox.collections[collectionId];
         saveSettingsDebounced();
-        console.log(`VectHare: Deleted metadata for collection ${collectionId}`);
+        console.log(`VectFox: Deleted metadata for collection ${collectionId}`);
     }
 }
 
@@ -434,7 +434,7 @@ export function migrateOldEnabledKeys() {
                     ...defaultCollectionMeta,
                     enabled: enabled !== false,
                 };
-                console.log(`VectHare: Migrated enabled key for ${collectionId}`);
+                console.log(`VectFox: Migrated enabled key for ${collectionId}`);
             }
 
             keysToDelete.push(key);
@@ -449,7 +449,7 @@ export function migrateOldEnabledKeys() {
 
     if (migrated > 0) {
         saveSettingsDebounced();
-        console.log(`VectHare: Migrated ${migrated} old enabled keys to new collections structure`);
+        console.log(`VectFox: Migrated ${migrated} old enabled keys to new collections structure`);
     }
 
     return { migrated };
@@ -474,12 +474,12 @@ export function cleanupOrphanedMeta(actualCollectionIds) {
 
     for (const collectionId of orphaned) {
         delete extension_settings.vectfox.collections[collectionId];
-        console.log(`VectHare: Removed orphaned metadata for ${collectionId}`);
+        console.log(`VectFox: Removed orphaned metadata for ${collectionId}`);
     }
 
     if (orphaned.length > 0) {
         saveSettingsDebounced();
-        console.log(`VectHare: Cleaned up ${orphaned.length} orphaned metadata entries`);
+        console.log(`VectFox: Cleaned up ${orphaned.length} orphaned metadata entries`);
     }
 
     return { removed: orphaned.length, orphanedIds: orphaned };
@@ -524,7 +524,7 @@ export function setCollectionLock(collectionId, chatId) {
     }
 
     setCollectionMeta(collectionId, update);
-    console.log(`VectHare: Collection ${collectionId} locks updated:`, update.lockedToChatIds);
+    console.log(`VectFox: Collection ${collectionId} locks updated:`, update.lockedToChatIds);
 }
 
 /**
@@ -551,7 +551,7 @@ export function removeCollectionLock(collectionId, chatId) {
     update.lockedToChatId = null; // Clear old format
 
     setCollectionMeta(collectionId, update);
-    console.log(`VectHare: Removed chat ${chatId} from collection ${collectionId} locks`);
+    console.log(`VectFox: Removed chat ${chatId} from collection ${collectionId} locks`);
 }
 
 /**
@@ -636,7 +636,7 @@ export function setCollectionCharacterLock(collectionId, characterId) {
 
     update.lockedToCharacterIds = locks;
     setCollectionMeta(collectionId, update);
-    console.log(`VectHare: Collection ${collectionId} character locks updated:`, update.lockedToCharacterIds);
+    console.log(`VectFox: Collection ${collectionId} character locks updated:`, update.lockedToCharacterIds);
 }
 
 /**
@@ -656,7 +656,7 @@ export function removeCollectionCharacterLock(collectionId, characterId) {
 
     update.lockedToCharacterIds = locks;
     setCollectionMeta(collectionId, update);
-    console.log(`VectHare: Removed character ${characterId} from collection ${collectionId} locks`);
+    console.log(`VectFox: Removed character ${characterId} from collection ${collectionId} locks`);
 }
 
 /**
@@ -666,7 +666,7 @@ export function removeCollectionCharacterLock(collectionId, characterId) {
 export function clearCollectionCharacterLocks(collectionId) {
     if (!collectionId) return;
     setCollectionMeta(collectionId, { lockedToCharacterIds: [] });
-    console.log(`VectHare: Cleared all character locks for collection ${collectionId}`);
+    console.log(`VectFox: Cleared all character locks for collection ${collectionId}`);
 }
 
 /**
@@ -730,7 +730,7 @@ export function ensureCollectionMeta(collectionId, initialData = {}) {
             ...initialData,
         };
         saveSettingsDebounced();
-        console.log(`VectHare: Created metadata for new collection ${collectionId} (type: ${collectionType})`);
+        console.log(`VectFox: Created metadata for new collection ${collectionId} (type: ${collectionType})`);
     }
 }
 
@@ -800,7 +800,7 @@ function checkTriggers(triggers, context, options = {}) {
                 const regex = new RegExp(pattern, flags);
                 return regex.test(searchText);
             } catch (e) {
-                console.warn(`VectHare: Invalid trigger regex: ${trigger}`);
+                console.warn(`VectFox: Invalid trigger regex: ${trigger}`);
                 return false;
             }
         }
@@ -855,7 +855,7 @@ async function evaluateAdvancedConditions(meta, context, collectionId) {
 
     const results = rules.map(rule => {
         const result = evaluate(rule, context);
-        console.log(`VectHare: Collection ${collectionId} condition ${rule.type}: ${result}`);
+        console.log(`VectFox: Collection ${collectionId} condition ${rule.type}: ${result}`);
         return result;
     });
 
@@ -885,14 +885,14 @@ export async function shouldCollectionActivate(collectionId, context) {
 
     // Priority 1: Pause button — global disable, blocks everything
     if (meta.enabled === false) {
-        if (debug) console.log(`[VectHare Activation Filter] Collection ${collectionId}: ✗ DISABLED`);
+        if (debug) console.log(`[VECTFOX Activation Filter] Collection ${collectionId}: ✗ DISABLED`);
         return false;
     }
 
     const hasTriggers = meta.triggers && meta.triggers.length > 0;
     const hasConditions = meta.conditions?.enabled && meta.conditions?.rules?.length > 0;
 
-    if (debug) console.log(`[VectHare Activation Filter] Collection ${collectionId}: hasTriggers=${hasTriggers}, hasConditions=${hasConditions}`);
+    if (debug) console.log(`[VECTFOX Activation Filter] Collection ${collectionId}: hasTriggers=${hasTriggers}, hasConditions=${hasConditions}`);
 
     // Priority 2: Activation Triggers (PRIMARY) — keyword match activates regardless of lock state
     if (hasTriggers) {
@@ -902,34 +902,34 @@ export async function shouldCollectionActivate(collectionId, context) {
             scanDepth: meta.triggerScanDepth || 5,
         });
         if (triggersMatch) {
-            if (debug) console.log(`[VectHare Activation Filter] Collection ${collectionId}: ✓ TRIGGERS_MATCHED (${meta.triggers.join(', ')})`);
+            if (debug) console.log(`[VECTFOX Activation Filter] Collection ${collectionId}: ✓ TRIGGERS_MATCHED (${meta.triggers.join(', ')})`);
             return true;
         }
-        if (debug) console.log(`[VectHare Activation Filter] Collection ${collectionId}: triggers set but not matched`);
+        if (debug) console.log(`[VECTFOX Activation Filter] Collection ${collectionId}: triggers set but not matched`);
     }
 
     // Priority 3: Advanced Conditions (SECONDARY) — condition pass activates regardless of lock state
     if (hasConditions) {
         const conditionsPass = await evaluateAdvancedConditions(meta, context, collectionId);
-        if (debug) console.log(`[VectHare Activation Filter] Collection ${collectionId}: ${conditionsPass ? '✓' : '✗'} CONDITIONS_${conditionsPass ? 'PASS' : 'FAIL'}`);
+        if (debug) console.log(`[VECTFOX Activation Filter] Collection ${collectionId}: ${conditionsPass ? '✓' : '✗'} CONDITIONS_${conditionsPass ? 'PASS' : 'FAIL'}`);
         if (conditionsPass) return true;
-        if (debug) console.log(`[VectHare Activation Filter] Collection ${collectionId}: conditions failed`);
+        if (debug) console.log(`[VECTFOX Activation Filter] Collection ${collectionId}: conditions failed`);
     }
 
     // Priority 4: "Active for current chat" checkbox / character lock — manual always-on fallback
     if (currentChatId && isCollectionLockedToChat(collectionId, currentChatId)) {
-        if (debug) console.log(`[VectHare Activation Filter] Collection ${collectionId}: ✓ LOCKED_TO_CURRENT_CHAT (${currentChatId})`);
+        if (debug) console.log(`[VECTFOX Activation Filter] Collection ${collectionId}: ✓ LOCKED_TO_CURRENT_CHAT (${currentChatId})`);
         return true;
     }
 
     const currentCharacterId = context?.currentCharacterId;
     if (currentCharacterId && isCollectionLockedToCharacter(collectionId, currentCharacterId)) {
-        if (debug) console.log(`[VectHare Activation Filter] Collection ${collectionId}: ✓ LOCKED_TO_CURRENT_CHARACTER (${currentCharacterId})`);
+        if (debug) console.log(`[VECTFOX Activation Filter] Collection ${collectionId}: ✓ LOCKED_TO_CURRENT_CHARACTER (${currentCharacterId})`);
         return true;
     }
 
     // Priority 5: Nothing activated it
-    if (debug) console.log(`[VectHare Activation Filter] Collection ${collectionId}: ✗ NOT_ACTIVATED (no trigger match, no condition pass, not locked)`);
+    if (debug) console.log(`[VECTFOX Activation Filter] Collection ${collectionId}: ✗ NOT_ACTIVATED (no trigger match, no condition pass, not locked)`);
     return false;
 }
 
@@ -950,9 +950,9 @@ export async function filterActiveCollections(collectionIds, context) {
     const activeIds = results.filter(r => r.active).map(r => r.id);
 
     if (extension_settings.vectfox?.eventbase_debug_logging) {
-        console.log(`[VectHare Activation Filter] Summary: ${collectionIds.length} collections → ${activeIds.length} active`);
+        console.log(`[VECTFOX Activation Filter] Summary: ${collectionIds.length} collections → ${activeIds.length} active`);
         if (activeIds.length > 0) {
-            console.log(`[VectHare Activation Filter] Active collections:`, activeIds);
+            console.log(`[VECTFOX Activation Filter] Active collections:`, activeIds);
         }
     }
 
@@ -1150,7 +1150,7 @@ export function setChunkTemporallyBlind(hash, isBlind) {
         ...existing,
         temporallyBlind: isBlind,
     });
-    console.log(`VectHare: Chunk ${hash} temporally blind: ${isBlind}`);
+    console.log(`VectFox: Chunk ${hash} temporally blind: ${isBlind}`);
 }
 
 /**

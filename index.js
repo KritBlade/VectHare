@@ -487,7 +487,7 @@ jQuery(async () => {
     // ST auto-creates extension_settings[folderName] on every load, which would write a
     // duplicate "vecthare" entry to settings.json alongside our canonical "vectfox" key.
     // Making the property non-enumerable hides it from JSON.stringify so it never saves.
-    if (extension_settings.vecthare !== undefined) {
+    if (extension_settings.VECTFOX !== undefined) {
         delete extension_settings.vecthare;
     }
     Object.defineProperty(extension_settings, 'vecthare', {

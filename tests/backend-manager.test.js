@@ -21,7 +21,7 @@ vi.mock('../../../../../script.js', () => ({
 // Mock extension_settings
 vi.mock('../../../../extensions.js', () => ({
     extension_settings: {
-        vecthare: {
+        VectFox: {
             vector_backend: 'standard',
         },
     },

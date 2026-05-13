@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * VECTHARE DATABASE BROWSER
+ * VECTFOX DATABASE BROWSER
  * ============================================================================
  * Comprehensive vector database browser UI
  * Main entry point for browsing, managing, and editing all vector collections
@@ -136,11 +136,11 @@ let bulkEventsBound = false;
 
 /**
  * Initializes the database browser
- * @param {object} settings VectHare settings
+ * @param {object} settings VECTFOX settings
  */
 export function initializeDatabaseBrowser(settings) {
   browserState.settings = settings;
-  console.log("VectHare Database Browser: Initialized");
+  console.log("VECTFOX Database Browser: Initialized");
 }
 
 /**
@@ -148,7 +148,7 @@ export function initializeDatabaseBrowser(settings) {
  */
 export async function openDatabaseBrowser() {
   if (browserState.isOpen) {
-    console.log("VectHare Database Browser: Already open");
+    console.log("VECTFOX Database Browser: Already open");
     return;
   }
 
@@ -170,7 +170,7 @@ export async function openDatabaseBrowser() {
 
   // Show modal
   $("#vecthare_database_browser_modal").fadeIn(200);
-  console.log("VectHare Database Browser: Opened");
+  console.log("VECTFOX Database Browser: Opened");
 }
 
 /**
@@ -193,7 +193,7 @@ export function closeDatabaseBrowser() {
   browserState.isOpen = false;
   // Reset event bound flags for clean rebind on next open
   resetEventFlags();
-  console.log("VectHare Database Browser: Closed");
+  console.log("VECTFOX Database Browser: Closed");
 }
 
 /**
@@ -214,7 +214,7 @@ function createBrowserModal() {
             <div class="vectfox-modal-content vectfox-database-browser-content">
                 <!-- Header -->
                 <div class="vectfox-modal-header">
-                    <h3>🗃️ VectHare Database Browser</h3>
+                    <h3>🗃️ VECTFOX Database Browser</h3>
                     <button class="vectfox-btn-icon" id="vecthare_browser_close">✕</button>
                 </div>
 
@@ -224,7 +224,7 @@ function createBrowserModal() {
                     <div class="vectfox-warning-text">
                         <strong>Limited Discovery Mode</strong>
                         <span>Similharity plugin not detected. Only registered collections and current chat can be discovered.
-                        Collections created outside VectHare won't appear here.
+                        Collections created outside VECTFOX won't appear here.
                         <a href="https://github.com/Coneja-Chibi/VectHare/tree/Similharity-Plugin" target="_blank">Install the plugin</a> for full filesystem scanning.</span>
                     </div>
                 </div>
@@ -513,7 +513,7 @@ function bindBrowserEvents() {
 
       toastr.success("Registry cleared and resynced from disk", "VectFox");
     } catch (error) {
-      console.error("VectHare: Failed to resync", error);
+      console.error("VectFox: Failed to resync", error);
       toastr.error(`Failed to resync: ${error.message}`, "VectFox");
     }
   });
@@ -556,13 +556,13 @@ function bindBrowserEvents() {
 
         if (!data) {
           toastr.error(
-            "This PNG does not contain VectHare data.",
-            "VectHare Import",
+            "This PNG does not contain VECTFOX data.",
+            "VECTFOX Import",
           );
           return;
         }
 
-        toastr.info("Found VectHare data in PNG!", "VectFox");
+        toastr.info("Found VECTFOX data in PNG!", "VectFox");
       } else {
         // JSON file
         data = await readImportFile(file);
@@ -599,7 +599,7 @@ function bindBrowserEvents() {
       if (!validation.valid) {
         toastr.error(
           `Invalid export file:\n${validation.errors.join("\n")}`,
-          "VectHare Import",
+          "VECTFOX Import",
         );
         return;
       }
@@ -618,14 +618,14 @@ function bindBrowserEvents() {
           : "(re-embedded)";
         toastr.success(
           `Imported ${result.chunkCount} chunks ${vectorMsg}`,
-          "VectHare Import",
+          "VECTFOX Import",
         );
 
         // Refresh collections list
         await refreshCollections();
       }
     } catch (error) {
-      console.error("VectHare: Import failed", error);
+      console.error("VectFox: Import failed", error);
       toastr.error(`Import failed: ${error.message}`, "VectFox");
     }
   });
@@ -671,7 +671,7 @@ function _sanitizeHandleForFilter(name) {
 }
 
 /**
- * Extract the persona handle embedded in a VectHare collection ID name.
+ * Extract the persona handle embedded in a VECTFOX collection ID name.
  *
  * Naming convention (collection-ids.js):
  *   vecthare_<type>_<backend>_<handle>_<charname>_<uuid>   (new)
@@ -698,7 +698,7 @@ function _extractHandleFromCollectionId(collectionId) {
 
 /**
  * Collection prefixes whose collections carry a persona-owned `creatorHandle`.
- * All VectHare content types follow the unified `vecthare_<type>_<backend>_<handle>_...`
+ * All VECTFOX content types follow the unified `vecthare_<type>_<backend>_<handle>_...`
  * naming protocol and are persona-scoped.
  */
 const _PERSONA_SCOPED_PREFIXES = [
@@ -736,7 +736,7 @@ function _filterCollectionsByCurrentPersona(collections) {
   // show every collection on the server. See defaults in index.js.
   if (browserState.settings?.superadmin === true) {
     console.log(
-      `VectHare DB Browser: ⚡ superadmin=true → bypassing persona/handle filter (showing ALL ${collections.length} collections)`,
+      `VECTFOX DB Browser: ⚡ superadmin=true → bypassing persona/handle filter (showing ALL ${collections.length} collections)`,
     );
     return collections;
   }
@@ -772,7 +772,7 @@ async function refreshCollections() {
     if (allCollections.length !== browserState.collections.length) {
       const hidden = allCollections.length - browserState.collections.length;
       console.log(
-        `VectHare DB Browser: Hiding ${hidden} chat-scoped collection(s) from other personas (current: ${_sanitizeHandleForFilter(getContext()?.name1)})`,
+        `VECTFOX DB Browser: Hiding ${hidden} chat-scoped collection(s) from other personas (current: ${_sanitizeHandleForFilter(getContext()?.name1)})`,
       );
     }
 
@@ -783,13 +783,13 @@ async function refreshCollections() {
     const cleanupResult = cleanupOrphanedMeta(actualIds);
     if (cleanupResult.removed > 0) {
       console.log(
-        `VectHare: Cleaned up ${cleanupResult.removed} orphaned metadata entries`,
+        `VectFox: Cleaned up ${cleanupResult.removed} orphaned metadata entries`,
       );
     }
 
     renderCollections();
   } catch (error) {
-    console.error("VectHare: Failed to load collections", error);
+    console.error("VectFox: Failed to load collections", error);
     $("#vecthare_collections_list").html(`
             <div class="vectfox-error">
                 Failed to load collections. Check console for details.
@@ -1136,10 +1136,10 @@ async function performPngExport(imageFile) {
       `PNG export complete!\n${exportData.stats.chunkCount} chunks\n` +
         `Original: ${formatBytes(jsonSize)}\n` +
         `PNG: ${formatBytes(pngSize)} (${ratio}%)`,
-      "VectHare Export",
+      "VECTFOX Export",
     );
   } catch (error) {
-    console.error("VectHare: PNG export failed", error);
+    console.error("VectFox: PNG export failed", error);
     toastr.error(`PNG export failed: ${error.message}`, "VectFox");
   }
 }
@@ -1247,7 +1247,7 @@ function bindCollectionCardEvents() {
           );
         }
       } catch (error) {
-        console.error("VectHare: Failed to delete collection", error);
+        console.error("VectFox: Failed to delete collection", error);
         toastr.error(`Failed to delete collection: ${error.message}`, "VectFox");
       }
     });
@@ -1279,7 +1279,7 @@ function bindCollectionCardEvents() {
 
         toastr.success("Opened collection folder", "VectFox");
       } catch (error) {
-        console.error("VectHare: Failed to open folder", error);
+        console.error("VectFox: Failed to open folder", error);
         toastr.error(`Failed to open folder: ${error.message}`, "VectFox");
       }
     });
@@ -1305,7 +1305,7 @@ function bindCollectionCardEvents() {
             "Collection has no backend defined - this is a bug",
             "VectFox",
           );
-          console.error("VectHare: Collection missing backend:", collection);
+          console.error("VectFox: Collection missing backend:", collection);
           return;
         }
 
@@ -1323,7 +1323,7 @@ function bindCollectionCardEvents() {
             ...(limit ? { limit } : {}),
           };
 
-          console.log("VectHare DB Browser: Requesting chunks with:", requestBody);
+          console.log("VECTFOX DB Browser: Requesting chunks with:", requestBody);
 
           const response = await fetch("/api/plugins/similharity/chunks/list", {
             method: "POST",
@@ -1373,7 +1373,7 @@ function bindCollectionCardEvents() {
 
         await doLoad(null);
       } catch (error) {
-        console.error("VectHare: Failed to load chunks", error);
+        console.error("VectFox: Failed to load chunks", error);
         toastr.error(`Failed to load chunks: ${error.message}`, "VectFox");
       }
     });
@@ -1435,10 +1435,10 @@ function bindCollectionCardEvents() {
 
         toastr.success(
           `Exported ${exportData.stats.chunkCount} chunks (${exportData.stats.chunksWithVectors} with vectors)`,
-          "VectHare Export",
+          "VECTFOX Export",
         );
       } catch (error) {
-        console.error("VectHare: Export failed", error);
+        console.error("VectFox: Export failed", error);
         toastr.error(`Export failed: ${error.message}`, "VectFox");
       }
     });
@@ -1472,7 +1472,7 @@ function bindCollectionCardEvents() {
         "Export as PNG\n\n" +
           "Would you like to use a custom image?\n\n" +
           "• Click OK to choose an image file\n" +
-          "• Click Cancel to use default VectHare image",
+          "• Click Cancel to use default VECTFOX image",
       );
 
       if (useCustomImage) {
@@ -1870,7 +1870,7 @@ function openActivationEditor(collectionId, collectionName) {
   const chatScopedActive = Boolean(hasChatLockMatch);
   const resolvedAlwaysActive = chatScopedActive;
   console.log(
-    `[VectHare DB Browser] Active-for-current-chat resolution for ${collectionId}: ` +
+    `[VECTFOX DB Browser] Active-for-current-chat resolution for ${collectionId}: ` +
     `resolved=${resolvedAlwaysActive}, ` +
     `chatScopedActive=${chatScopedActive}, currentChatId=${currentChatId || 'none'}`
   );
@@ -2284,7 +2284,7 @@ function bindActivationEditorEvents() {
     try {
       openCollectionLockDialog(collId);
     } catch (err) {
-      console.error("VectHare: Failed to open lock dialog", err);
+      console.error("VectFox: Failed to open lock dialog", err);
       toastr.error("Failed to open lock dialog");
     }
   });
@@ -2442,7 +2442,7 @@ function refreshActivationLockButton() {
       $btn.attr("title", tooltip);
     }
   } catch (err) {
-    console.error("VectHare: Failed to refresh activation lock button", err);
+    console.error("VectFox: Failed to refresh activation lock button", err);
   }
 }
 
@@ -2878,7 +2878,7 @@ function bindConditionRuleEvents() {
           entrySelect.prop("disabled", false);
         }
       } catch (error) {
-        console.error("VectHare: Failed to load world info", error);
+        console.error("VectFox: Failed to load world info", error);
         entrySelect.html(
           '<option value="">-- Error loading entries --</option>',
         );
@@ -3099,7 +3099,7 @@ async function scanKeywords() {
           }
         }
       } catch (err) {
-        console.warn(`VectHare: Failed to scan keywords from ${collection.id}:`, err);
+        console.warn(`VectFox: Failed to scan keywords from ${collection.id}:`, err);
       }
     }
 
@@ -3116,7 +3116,7 @@ async function scanKeywords() {
       toastr.success(`Found ${browserState.availableKeywords.length} unique keywords`, "VectFox");
     }
   } catch (error) {
-    console.error("VectHare: Keyword scan failed", error);
+    console.error("VectFox: Keyword scan failed", error);
     $tags.html('<span class="vectfox-keyword-hint vectfox-error">Scan failed</span>');
     toastr.error("Failed to scan keywords", "VectFox");
   } finally {
@@ -3323,7 +3323,7 @@ async function performSearch() {
     const filteredResults = filterResultsByKeywords(results);
     renderSearchResults(filteredResults, query, results);
   } catch (error) {
-    console.error("VectHare: Search failed", error);
+    console.error("VectFox: Search failed", error);
     $("#vecthare_search_results").html(`
             <div class="vectfox-search-error">
                 ${icons.x(24)} Search failed: ${error.message}
@@ -3478,7 +3478,7 @@ function renderSearchResults(results, query, originalResults = null) {
             "Collection has no backend defined - this is a bug",
             "VectFox",
           );
-          console.error("VectHare: Collection missing backend:", collection);
+          console.error("VectFox: Collection missing backend:", collection);
           return;
         }
 
@@ -3541,7 +3541,7 @@ function renderSearchResults(results, query, originalResults = null) {
 
         await doLoad(null);
       } catch (error) {
-        console.error("VectHare: Failed to load chunks", error);
+        console.error("VectFox: Failed to load chunks", error);
         toastr.error(`Failed to load chunks: ${error.message}`, "VectFox");
       }
     });
@@ -3737,7 +3737,7 @@ function bindBulkEvents() {
           downloadExport(exportData, collection.name || collection.id);
           successCount++;
         } catch (error) {
-          console.error(`VectHare: Failed to export ${collection.id}`, error);
+          console.error(`VectFox: Failed to export ${collection.id}`, error);
         }
       }
 
@@ -3795,7 +3795,7 @@ function bindBulkEvents() {
             partialCount++;
           }
         } catch (error) {
-          console.error(`VectHare: Failed to delete ${collection.id}`, error);
+          console.error(`VectFox: Failed to delete ${collection.id}`, error);
         }
       }
 

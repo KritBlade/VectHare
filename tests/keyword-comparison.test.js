@@ -1,5 +1,5 @@
 /**
- * VectHare vs OpenVault Keyword Extraction Comparison Test
+ * VECTFOX vs OpenVault Keyword Extraction Comparison Test
  *
  * Compares keyword quality produced by VectHare's (per-chunk vectorization-time)
  * extraction against OpenVault's (query-time BM25 token generation) approach.
@@ -192,17 +192,17 @@ const STORY_NAMES = new Set([
 // COMPARISON TESTS
 // ============================================================================
 
-describe('VectHare vs OpenVault Keyword Comparison', () => {
+describe('VECTFOX vs OpenVault Keyword Comparison', () => {
     // -----------------------------------------------------------------------
     // 1. RAW TOKENIZATION COMPARISON (fundamental CJK handling)
     // -----------------------------------------------------------------------
 
     describe('1. Tokenization — CJK Handling', () => {
-        it('VectHare (Intl.Segmenter): should split CJK sentences into individual words/tokens', () => {
+        it('VECTFOX (Intl.Segmenter): should split CJK sentences into individual words/tokens', () => {
             const cjkTokens = extractCJKTokens('酒館裡大概有三十個人');
 
             // Intl.Segmenter should produce proper word boundaries
-            console.log('[VectHare CJK Tokens]', cjkTokens);
+            console.log('[VECTFOX CJK Tokens]', cjkTokens);
             expect(cjkTokens.length).toBeGreaterThan(2);
 
             // Should detect meaningful multi-character words (酒館, 大概, 三十, etc.)
@@ -234,31 +234,31 @@ describe('VectHare vs OpenVault Keyword Comparison', () => {
     // -----------------------------------------------------------------------
 
     describe('2. Full Story Keyword Extraction', () => {
-        it('VectHare extractBM25Keywords: should extract keywords from bilingual text', () => {
+        it('VECTFOX extractBM25Keywords: should extract keywords from bilingual text', () => {
             const keywords = extractBM25Keywords(TEST_STORY, {
                 level: 'aggressive',
                 maxKeywords: 25,
             });
 
-            console.log('\n=== VECTHARE BM25 KEYWORDS ===');
+            console.log('\n=== VECTFOX BM25 KEYWORDS ===');
             keywords.forEach(k => console.log(`  ${k.text.padEnd(20)} weight=${k.weight.toFixed(3)}${k.tfidf ? ` tfidf=${k.tfidf.toFixed(2)}` : ''}`));
             console.log(`Total keywords: ${keywords.length}`);
 
             expect(keywords.length).toBeGreaterThan(0);
 
-            // VectHare should extract Chinese keywords
+            // VECTFOX should extract Chinese keywords
             const chineseKeywords = keywords.filter(k => /[\u4E00-\u9FFF]/.test(k.text));
             console.log(`\nChinese keywords (${chineseKeywords.length}):`, chineseKeywords.map(k => k.text));
             expect(chineseKeywords.length).toBeGreaterThan(0);
         });
 
-        it('VectHare extractTextKeywords: should extract keywords from bilingual text', () => {
+        it('VECTFOX extractTextKeywords: should extract keywords from bilingual text', () => {
             const keywords = extractTextKeywords(TEST_STORY, {
                 level: 'aggressive',
                 maxKeywords: 25,
             });
 
-            console.log('\n=== VECTHARE TEXT KEYWORDS ===');
+            console.log('\n=== VECTFOX TEXT KEYWORDS ===');
             keywords.forEach(k => console.log(`  ${k.text.padEnd(20)} weight=${k.weight.toFixed(3)}`));
             console.log(`Total keywords: ${keywords.length}`);
 
@@ -293,20 +293,20 @@ describe('VectHare vs OpenVault Keyword Comparison', () => {
     // -----------------------------------------------------------------------
 
     describe('3. Stopword Filtering', () => {
-        it('VectHare: should filter known Chinese stopwords from keywords', () => {
+        it('VectFox: should filter known Chinese stopwords from keywords', () => {
             const bm25Keywords = extractBM25Keywords(TEST_STORY, { level: 'aggressive', maxKeywords: 30 });
 
             const foundStopwords = bm25Keywords
                 .map(k => k.text)
                 .filter(w => KNOWN_ZH_STOPWORDS.has(w));
 
-            console.log('\n[VectHare BM25] Stopwords found in keywords:', foundStopwords.length > 0 ? foundStopwords : '(none)');
+            console.log('\n[VECTFOX BM25] Stopwords found in keywords:', foundStopwords.length > 0 ? foundStopwords : '(none)');
 
-            // VectHare actively filters stopwords — ideally 0 slip through
+            // VECTFOX actively filters stopwords — ideally 0 slip through
             // But some context-dependent words (沒有, 那個) may pass if TF-IDF is high
             // The test verifies that MOST stopwords are filtered
             const stopwordRatio = foundStopwords.length / bm25Keywords.length;
-            console.log(`[VectHare BM25] Stopword ratio: ${(stopwordRatio * 100).toFixed(1)}%`);
+            console.log(`[VECTFOX BM25] Stopword ratio: ${(stopwordRatio * 100).toFixed(1)}%`);
         });
 
         it('OpenVault: has NO Chinese stopword filtering — CJK stopwords appear in output', () => {
@@ -339,31 +339,31 @@ describe('VectHare vs OpenVault Keyword Comparison', () => {
             openvaultTokens = openvaultTokenize(TEST_STORY);
         });
 
-        it('VectHare BM25: capital boost (1.3x) helps proper nouns rank higher', () => {
-            console.log('\n[VectHare BM25] All keywords:');
+        it('VECTFOX BM25: capital boost (1.3x) helps proper nouns rank higher', () => {
+            console.log('\n[VECTFOX BM25] All keywords:');
             vectHareBM25Keywords.forEach(k =>
                 console.log(`  ${k.text.padEnd(20)} weight=${k.weight.toFixed(3)}`)
             );
 
             const capitalizedKeywords = vectHareBM25Keywords.filter(k => /^[A-Z]/.test(k.text));
-            console.log('\n[VectHare BM25] Capitalized (proper noun boost applied):', capitalizedKeywords.map(k => `${k.text}(${k.weight.toFixed(2)}x)`));
+            console.log('\n[VECTFOX BM25] Capitalized (proper noun boost applied):', capitalizedKeywords.map(k => `${k.text}(${k.weight.toFixed(2)}x)`));
 
             // Capital boost means capitalized words should appear
             // If Francisca, Blake, Jakob, Aarav appear, capital boost is working
             const foundNames = [...STORY_NAMES].filter(name =>
                 vectHareBM25Keywords.some(k => k.text.toLowerCase() === name)
             );
-            console.log(`[VectHare BM25] Story names found: ${foundNames.length}/${STORY_NAMES.size} — [${foundNames.join(', ')}]`);
+            console.log(`[VECTFOX BM25] Story names found: ${foundNames.length}/${STORY_NAMES.size} — [${foundNames.join(', ')}]`);
         });
 
-        it('VectHare Text: proper noun detection should capture capitalized names', () => {
+        it('VECTFOX Text: proper noun detection should capture capitalized names', () => {
             const capitalizedKeywords = vectHareTextKeywords.filter(k => /^[A-Z]/.test(k.text));
-            console.log('\n[VectHare Text] Capitalized keywords:', capitalizedKeywords.map(k => `${k.text}(${k.weight.toFixed(2)}x)`));
+            console.log('\n[VECTFOX Text] Capitalized keywords:', capitalizedKeywords.map(k => `${k.text}(${k.weight.toFixed(2)}x)`));
 
             const foundNames = [...STORY_NAMES].filter(name =>
                 vectHareTextKeywords.some(k => k.text.toLowerCase() === name)
             );
-            console.log(`[VectHare Text] Story names found: ${foundNames.length}/${STORY_NAMES.size} — [${foundNames.join(', ')}]`);
+            console.log(`[VECTFOX Text] Story names found: ${foundNames.length}/${STORY_NAMES.size} — [${foundNames.join(', ')}]`);
         });
 
         it('OpenVault: Porter stemmer may mangle names (e.g., "francisca" → "francisc")', () => {
@@ -416,7 +416,7 @@ describe('VectHare vs OpenVault Keyword Comparison', () => {
                 console.log('');
             }
 
-            // VectHare should always produce more tokens than OpenVault for pure CJK text
+            // VECTFOX should always produce more tokens than OpenVault for pure CJK text
             for (const sentence of testCases) {
                 const ovTokens = openvaultTokenize(sentence);
                 const vhTokens = extractCJKTokens(sentence);
@@ -443,7 +443,7 @@ describe('VectHare vs OpenVault Keyword Comparison', () => {
             console.log('[OpenVault] 8-char sentence:', longTokens);
             console.log('[OpenVault] Both survive >2 filter — system cannot distinguish names from sentences');
 
-            // VectHare correctly segments both
+            // VECTFOX correctly segments both
             const vhShort = extractCJKTokens(shortCjk);
             const vhLong = extractCJKTokens(longCjk);
             console.log('[VectHare] 3-char name segmented:', vhShort);
@@ -452,11 +452,11 @@ describe('VectHare vs OpenVault Keyword Comparison', () => {
     });
 
     // -----------------------------------------------------------------------
-    // 6. BRACKET TERM HANDLING (VectHare unique feature)
+    // 6. BRACKET TERM HANDLING (VECTFOX unique feature)
     // -----------------------------------------------------------------------
 
-    describe('6. Bracket Term Extraction (VectHare only)', () => {
-        it('VectHare: should extract CJK bracket-enclosed terms from 【】', () => {
+    describe('6. Bracket Term Extraction (VECTFOX only)', () => {
+        it('VectFox: should extract CJK bracket-enclosed terms from 【】', () => {
             const bracketText = '她使用了【治癒術】和【淨化之光】來驅散黑暗。';
 
             const keywords = extractBM25Keywords(bracketText, { level: 'aggressive', maxKeywords: 10 });
@@ -469,7 +469,7 @@ describe('VectHare vs OpenVault Keyword Comparison', () => {
             expect(hasHealing || hasPurification).toBe(true);
         });
 
-        it('VectHare: bracket terms should rank higher than non-bracket words', () => {
+        it('VectFox: bracket terms should rank higher than non-bracket words', () => {
             const bracketText = '他使用了【火球術】和普通攻擊。';
 
             const keywords = extractBM25Keywords(bracketText, { level: 'aggressive', maxKeywords: 10 });
@@ -573,11 +573,11 @@ describe('VectHare vs OpenVault Keyword Comparison', () => {
             console.log('└──────────────────────────────────┴──────────┴──────────────┴──────────┘');
             console.log('');
 
-            console.log('--- VectHare BM25 Keywords ---');
+            console.log('--- VECTFOX BM25 Keywords ---');
             console.log(`  All: [${metrics.vectHareBM25.keywordTexts.join(', ')}]`);
             console.log(`  Chinese: [${metrics.vectHareBM25.chineseKeywordList.join(', ')}]`);
 
-            console.log('\n--- VectHare Text Keywords ---');
+            console.log('\n--- VECTFOX Text Keywords ---');
             console.log(`  Chinese: [${metrics.vectHareText.chineseKeywordList.join(', ')}]`);
 
             console.log('\n--- OpenVault Tokens ---');
@@ -605,26 +605,26 @@ afterAll(() => {
     console.log('OBJECTIVELY VERIFIED DIFFERENCES:');
     console.log('');
     console.log('1. CJK Segmentation:');
-    console.log('   VectHare — Intl.Segmenter splits Chinese into word-boundary tokens');
+    console.log('   VECTFOX — Intl.Segmenter splits Chinese into word-boundary tokens');
     console.log('   OpenVault — \\p{L} regex matches CJK as contiguous sentence-length blobs');
-    console.log('   → VectHare produces usable CJK keywords; OpenVault does not segment CJK');
+    console.log('   → VECTFOX produces usable CJK keywords; OpenVault does not segment CJK');
     console.log('');
     console.log('2. Stopword Filtering:');
-    console.log('   VectHare — ~50 Chinese stopwords filtered from bm25-scorer.js');
+    console.log('   VECTFOX — ~50 Chinese stopwords filtered from bm25-scorer.js');
     console.log('   OpenVault — No Chinese stopword list; only >2 length filter applies');
-    console.log('   → VectHare removes noise; OpenVault lets stopwords ≥3 chars through');
+    console.log('   → VECTFOX removes noise; OpenVault lets stopwords ≥3 chars through');
     console.log('');
     console.log('3. Entity Name Handling:');
-    console.log('   VectHare — Capital boost (1.3x) elevates proper nouns in ranking');
+    console.log('   VECTFOX — Capital boost (1.3x) elevates proper nouns in ranking');
     console.log('   OpenVault — Porter stemmer may mangle names (francisca → francisc)');
-    console.log('   → VectHare preserves entity names better for retrieval');
+    console.log('   → VECTFOX preserves entity names better for retrieval');
     console.log('');
     console.log('4. Bracket Terms:');
-    console.log('   VectHare — Dedicated 【】 extraction with synthetic high scores');
+    console.log('   VECTFOX — Dedicated 【】 extraction with synthetic high scores');
     console.log('   OpenVault — No bracket support; CJK terms survive only by ≥3 char filter');
     console.log('');
     console.log('5. Architecture:');
-    console.log('   VectHare — Per-chunk keyword storage at vectorization time');
+    console.log('   VECTFOX — Per-chunk keyword storage at vectorization time');
     console.log('   OpenVault — Query-time BM25 token generation from raw text');
     console.log('');
     console.log('NOTE ON KEYWORD USEFULNESS:');
