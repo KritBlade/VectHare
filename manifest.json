@@ -8,7 +8,7 @@
     "css": "vectfox.css",
     "author": "Coneja Chibi",
     "version": "3.0.0",
-    "homePage": "https://github.com/YOUR_USERNAME/VectFox",
+    "homePage": "https://github.com/KritBlade/VectFox",
     "description": "Advanced RAG system with temporal decay, importance weighting, and intelligent chunking",
     "auto_update": true,
     "hooks": {
