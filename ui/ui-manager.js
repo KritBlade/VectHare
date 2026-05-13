@@ -326,6 +326,10 @@ export function renderSettings(containerId, settings, callbacks) {
                                         </label>
                                         <input type="text" id="vecthare_vllm_model" class="vecthare-input" placeholder="Model name" />
                                         <small class="vecthare_hint">Enter the model name from your vLLM deployment</small>
+                                        <label for="vecthare_vllm_api_key" style="margin-top: 8px;">
+                                            <small>vLLM API Key (optional):</small>
+                                        </label>
+                                        <input type="password" id="vecthare_vllm_api_key" class="vecthare-input" placeholder="Leave blank for local / no-auth deployments" autocomplete="off" />
                                     </div>
 
                                     <!-- Google Model (PaLM/VertexAI) -->
@@ -3561,6 +3565,21 @@ function bindSettingsEvents(settings, callbacks) {
             settings.vllm_model = String($(this).val());
             Object.assign(extension_settings.vecthareplus, settings);
             saveSettingsDebounced();
+        });
+
+    // vLLM API key (stored in extension settings, not ST secrets)
+    $('#vecthare_vllm_api_key')
+        .val(settings.vllm_api_key ? '••••••••' : '')
+        .attr('placeholder', settings.vllm_api_key ? '••••••••' : 'Leave blank for local / no-auth deployments')
+        .on('change', function() {
+            const value = String($(this).val()).trim();
+            if (value && value !== '••••••••') {
+                settings.vllm_api_key = value;
+                Object.assign(extension_settings.vecthareplus, settings);
+                saveSettingsDebounced();
+                $(this).val('••••••••').attr('placeholder', '••••••••');
+                toastr.success('vLLM API key saved');
+            }
         });
 
     // Google model

@@ -68,6 +68,7 @@ function getProviderSpecificParams(settings, isQuery = false) {
             params.apiUrl = settings.use_alt_endpoint
                 ? settings.alt_endpoint_url
                 : textgenerationwebui_settings.server_urls[textgen_types.VLLM];
+            if (settings.vllm_api_key) params.apiKey = settings.vllm_api_key;
             break;
 
         case 'bananabread':

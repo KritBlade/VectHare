@@ -71,6 +71,7 @@ const defaultSettings = {
     ollama_model: 'mxbai-embed-large',
     ollama_keep: false,
     vllm_model: '',
+    vllm_api_key: '', // Stored here since custom keys aren't returned by ST's readSecretState()
     webllm_model: '',
     google_model: 'text-embedding-005',
     bananabread_rerank: false,

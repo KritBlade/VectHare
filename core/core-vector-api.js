@@ -221,6 +221,7 @@ export function getVectorsRequestBody(args = {}, settings) {
         case 'vllm':
             body.apiUrl = settings.use_alt_endpoint ? settings.alt_endpoint_url : textgenerationwebui_settings.server_urls[textgen_types.VLLM];
             body.model = settings.vllm_model;
+            if (settings.vllm_api_key) body.apiKey = settings.vllm_api_key;
             break;
         case 'bananabread':
             body.apiUrl = settings.use_alt_endpoint ? settings.alt_endpoint_url : 'http://localhost:8008';
