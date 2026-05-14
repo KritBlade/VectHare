@@ -872,6 +872,39 @@ async function _getKoboldCppEmbedding(text, model, req) {
 }
 
 /**
+ * vLLM embedding that respects an explicit apiKey from the request body.
+ * Falls back to ST additional-headers auth when no apiKey is provided.
+ */
+async function _getVllmEmbedding(text, apiUrl, model, apiKey, directories) {
+    if (!apiKey) {
+        const { getVllmVector } = await import('../../src/vectors/vllm-vectors.js');
+        return await getVllmVector(text, apiUrl, model, directories);
+    }
+    const { trimV1 } = await import('../../src/util.js');
+    const urlJoinModule = await import('url-join');
+    const urlJoin = urlJoinModule.default;
+    const url = new URL(urlJoin(trimV1(apiUrl), '/v1/embeddings'));
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({ input: [text], model }),
+    });
+    if (!response.ok) {
+        const responseText = await response.text();
+        throw new Error(`VLLM: Failed to get vector for text: ${response.statusText} ${responseText}`);
+    }
+    const data = await response.json();
+    if (!Array.isArray(data?.data)) {
+        throw new Error('VLLM: API response was not an array');
+    }
+    data.data.sort((a, b) => a.index - b.index);
+    return data.data[0].embedding;
+}
+
+/**
  * Legacy single embedding function (renamed)
  */
 async function _getLegacySingleEmbedding(source, text, model, directories, req) {
@@ -917,9 +950,9 @@ async function _getLegacySingleEmbedding(source, text, model, directories, req) 
             return (await getVectorsForSource(source, [text], model, directories, req))[0];
         }
         case 'vllm': {
-            const { getVllmVector } = await import('../../src/vectors/vllm-vectors.js');
             const apiUrl = req.body?.apiUrl || 'http://localhost:8000';
-            return await getVllmVector(text, apiUrl, model, directories);
+            const apiKey = req.body?.apiKey || '';
+            return await _getVllmEmbedding(text, apiUrl, model, apiKey, directories);
         }
         case 'palm':
         case 'vertexai': {
@@ -1706,9 +1739,9 @@ async function getEmbeddingForSource(source, text, model, directories, req) {
             return data.embedding;
         }
         case 'vllm': {
-            const { getVllmVector } = await import('../../src/vectors/vllm-vectors.js');
             const apiUrl = req.body?.apiUrl || 'http://localhost:8000';
-            return await getVllmVector(text, apiUrl, model, directories);
+            const apiKey = req.body?.apiKey || '';
+            return await _getVllmEmbedding(text, apiUrl, model, apiKey, directories);
         }
         case 'palm':
         case 'vertexai': {
