@@ -67,6 +67,7 @@ const defaultSettings = {
     openai_model: 'text-embedding-ada-002',
     electronhub_model: 'text-embedding-3-small',
     openrouter_model: 'openai/text-embedding-3-large',
+    openrouter_api_key: '', // Stored here so the Choose button can send auth; also written to ST secrets for actual embedding calls
     cohere_model: 'embed-english-v3.0',
     ollama_model: 'mxbai-embed-large',
     ollama_keep: false,

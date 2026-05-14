@@ -3635,14 +3635,26 @@ function bindSettingsEvents(settings, callbacks) {
 
         try {
             if (!_openrouterModelCache) {
-                const resp = await fetch('https://openrouter.ai/api/v1/models', { method: 'GET' });
+                const headers = { 'Content-Type': 'application/json' };
+                const apiKey = settings.openrouter_api_key;
+                if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
+                const resp = await fetch('https://openrouter.ai/api/v1/models', { method: 'GET', headers });
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                 const data = await resp.json();
-                _openrouterModelCache = (data?.data || []).map(m => ({ id: m.id, label: m.name ? `${m.id} — ${m.name}` : m.id }));
+                _openrouterModelCache = (data?.data || []).map(m => ({
+                    id: m.id,
+                    label: m.name ? `${m.id} — ${m.name}` : m.id,
+                    modality: m.architecture?.modality || '',
+                }));
             }
 
             const all = _openrouterModelCache;
-            const embeddings = all.filter(m => m.id.toLowerCase().includes('embed'));
+            const isEmbeddingModel = m => {
+                const id = m.id.toLowerCase();
+                const modality = m.modality.toLowerCase();
+                return id.includes('embed') || modality.includes('embed') || modality === 'text->text:embedding';
+            };
+            const embeddings = all.filter(isEmbeddingModel);
 
             const renderList = (items, showingAll) => {
                 if (!items.length) {
@@ -3687,7 +3699,7 @@ function bindSettingsEvents(settings, callbacks) {
             const showingAll = !!$list.data('showing-all');
             const all = _openrouterModelCache || [];
             const items = showingAll
-                ? all.filter(m => m.id.toLowerCase().includes('embed'))
+                ? all.filter(m => { const id = m.id.toLowerCase(); const mod = (m.modality || '').toLowerCase(); return id.includes('embed') || mod.includes('embed') || mod === 'text->text:embedding'; })
                 : all;
             items.sort((a, b) => a.id.localeCompare(b.id));
             const currentValue = String($('#VectFox_openrouter_model').val() || '').trim();
@@ -3728,6 +3740,10 @@ function bindSettingsEvents(settings, callbacks) {
             if (value) {
                 await writeSecret(SECRET_KEYS.OPENROUTER, value);
                 await readSecretState(); // Refresh state to get masked value
+                settings.openrouter_api_key = value;
+                Object.assign(extension_settings.vectfox, settings);
+                saveSettingsDebounced();
+                _openrouterModelCache = null; // Invalidate cache so next fetch uses new key
                 toastr.success('OpenRouter API key saved');
                 $(this).val(''); // Clear input
                 updateOpenRouterKeyDisplay(); // Show masked key in placeholder
