@@ -138,11 +138,7 @@ let bulkEventsBound = false;
  * Initializes the database browser
  * @param {object} settings VECTFOX settings
  */
-/**
- * Renders the collections list and UI. Called after vectorization or when metadata changes.
- * @internal Used by content-vectorizer to refresh UI after completing vectorization.
- */
-export function renderCollections() {
+export function initializeDatabaseBrowser(settings) {
   browserState.settings = settings;
   console.log("VECTFOX Database Browser: Initialized");
 }
