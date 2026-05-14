@@ -1684,17 +1684,23 @@ export function refreshWIStatus() {
         $status.html('<i class="fa-solid fa-circle-exclamation" style="color: var(--warning-color, #f39c12);"></i> No lorebooks vectorized — vectorize one first');
         return;
     }
-    // Show the actual lorebook names so users can verify the right one is vectorized
-    import('../core/collection-metadata.js').then(({ getCollectionMeta }) => {
-        const names = lorebookIds.map(id => {
-            const meta = getCollectionMeta(id);
-            return meta?.sourceName || id;
-        });
+    import('../core/collection-metadata.js').then(({ getCollectionMeta, isCollectionLockedToChat }) => {
+        const chatId = getCurrentChatId();
+        const lockedIds = chatId ? lorebookIds.filter(id => isCollectionLockedToChat(id, chatId)) : [];
+        if (lockedIds.length === 0) {
+            const names = lorebookIds.map(id => getCollectionMeta(id)?.sourceName || id);
+            const nameList = names.map(n => `<span style="font-style:italic;">${n}</span>`).join(', ');
+            $status.html(
+                `<i class="fa-solid fa-circle-exclamation" style="color: var(--warning-color, #f39c12);"></i> ` +
+                `Vectorized (${nameList}) but not locked to this chat — open Database Browser → Collection Settings to lock it`
+            );
+            return;
+        }
+        const names = lockedIds.map(id => getCollectionMeta(id)?.sourceName || id);
         const nameList = names.map(n => `<span style="font-style:italic;">${n}</span>`).join(', ');
         $status.html(
             `<i class="fa-solid fa-circle-check" style="color: var(--success-color, #27ae60);"></i> ` +
-            `Vectorized: ${nameList} ` +
-            `<span style="opacity:0.6;">(must be set to Always Active or have triggers in Database Browser)</span>`
+            `Active for this chat: ${nameList}`
         );
     });
 }
