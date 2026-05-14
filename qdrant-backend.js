@@ -305,8 +305,17 @@ class QdrantBackend {
                         text_sparse: { modifier: 'idf' },
                     };
                 }
-                await this._request('PUT', `/collections/${collectionName}`, body);
-                console.log(`[Qdrant] Created collection: ${collectionName} (dim=${vectorSize}${nativeSparse ? ', +text_sparse[idf]' : ''})`);
+                try {
+                    await this._request('PUT', `/collections/${collectionName}`, body);
+                    console.log(`[Qdrant] Created collection: ${collectionName} (dim=${vectorSize}${nativeSparse ? ', +text_sparse[idf]' : ''})`);
+                } catch (createError) {
+                    // 409 = another concurrent request already created it — that's fine
+                    if (createError.message?.includes('409') || createError.message?.includes('already exists')) {
+                        console.log(`[Qdrant] Collection ${collectionName} already exists (concurrent creation), continuing.`);
+                    } else {
+                        throw createError;
+                    }
+                }
 
                 // Create payload indexes for filterable fields
                 await this.createPayloadIndexes(collectionName);
