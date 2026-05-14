@@ -28,6 +28,7 @@ import { extension_settings, getContext } from '../../../../extensions.js';
 import { saveSettingsDebounced } from '../../../../../script.js';
 import { getChatUUID } from '../core/chat-vectorization.js';
 import { validateLLMConfig } from '../core/summarizer.js';
+import { renderCollections } from './database-browser.js';
 import { buildArchiveEventCollectionId } from '../core/collection-ids.js';
 import { callGenericPopup, POPUP_TYPE } from '../../../../popup.js';
 import { openTextCleaningManager } from './text-cleaning-manager.js';
@@ -2933,6 +2934,7 @@ async function startVectorization() {
         });
 
         toastr.success(`Vectorized ${result.chunkCount} chunks`, 'VectFox');
+        renderCollections(); // Refresh DB browser to show the collection is now active
         closeContentVectorizer();
 
     } catch (e) {

@@ -138,7 +138,11 @@ let bulkEventsBound = false;
  * Initializes the database browser
  * @param {object} settings VECTFOX settings
  */
-export function initializeDatabaseBrowser(settings) {
+/**
+ * Renders the collections list and UI. Called after vectorization or when metadata changes.
+ * @internal Used by content-vectorizer to refresh UI after completing vectorization.
+ */
+export function renderCollections() {
   browserState.settings = settings;
   console.log("VECTFOX Database Browser: Initialized");
 }
@@ -800,8 +804,9 @@ async function refreshCollections() {
 
 /**
  * Renders collections list based on current filters
+ * @internal Exported so content-vectorizer can refresh UI after vectorization completes.
  */
-function renderCollections() {
+export function renderCollections() {
   const container = $("#vectfox_collections_list");
 
     // Apply filters
