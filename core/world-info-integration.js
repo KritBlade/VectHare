@@ -221,7 +221,7 @@ function _sanitizeLorebookName(name) {
 function _findLorebookRegistryEntry(lorebookName, settings) {
     const sanitizedName = _sanitizeLorebookName(lorebookName);
     if (!sanitizedName) return null;
-    const lorebookPrefix = 'VectFox_lorebook_';
+    const lorebookPrefix = 'vf_lorebook_';
     const nameNeedle = `_${sanitizedName}_`;
 
     const registry = settings.VectFox_collection_registry || [];

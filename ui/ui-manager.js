@@ -1678,7 +1678,7 @@ export function refreshWIStatus() {
     if (!$status.length) return;
     const registry = getCollectionRegistry();
     const lorebookIds = Array.isArray(registry)
-        ? registry.filter(id => id.startsWith('VectFox_lorebook_'))
+        ? registry.filter(id => id.startsWith('vf_lorebook_'))
         : [];
     if (lorebookIds.length === 0) {
         $status.html('<i class="fa-solid fa-circle-exclamation" style="color: var(--warning-color, #f39c12);"></i> No lorebooks vectorized — vectorize one first');
@@ -2782,7 +2782,7 @@ function bindSettingsEvents(settings, callbacks) {
             if (enabled) {
                 // Check if any lorebook collections have been vectorized
                 const registry = getCollectionRegistry();
-                const hasLorebookVectors = Array.isArray(registry) && registry.some(id => id.startsWith('VectFox_lorebook_'));
+                const hasLorebookVectors = Array.isArray(registry) && registry.some(id => id.startsWith('vf_lorebook_'));
 
                 if (!hasLorebookVectors) {
                     $checkbox.prop('checked', false);
