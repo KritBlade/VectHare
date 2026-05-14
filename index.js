@@ -20,7 +20,7 @@ import { DEFAULT_STOP_WORD_SET } from './stop-words.js';
 import { registerMigrationRoutes } from './routes/migrate-to-sparse.js'; // MIGRATE-DELETE
 
 const pluginName = 'similharity';
-const pluginVersion = '3.3.0';
+const pluginVersion = '3.3.1';
 
 // ─── CJK-aware query keyword extractor ───────────────────────────────────────
 
@@ -935,10 +935,26 @@ async function _getLegacySingleEmbedding(source, text, model, directories, req) 
             return await _getKoboldCppEmbedding(text, model, req);
         }
         case 'ollama': {
-            const { getOllamaVector } = await import('../../src/vectors/ollama-vectors.js');
             const apiUrl = req.body?.apiUrl || 'http://localhost:11434';
+            const apiKey = req.body?.apiKey || '';
             const keep = req.body?.keep || false;
-            return await getOllamaVector(text, apiUrl, model, keep, directories);
+            if (!apiKey) {
+                const { getOllamaVector } = await import('../../src/vectors/ollama-vectors.js');
+                return await getOllamaVector(text, apiUrl, model, keep, directories);
+            }
+            const ollamaUrl = new URL('/api/embeddings', apiUrl.replace(/\/$/, ''));
+            const ollamaResp = await fetch(ollamaUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+                body: JSON.stringify({ model, prompt: text, keep_alive: keep ? -1 : undefined }),
+            });
+            if (!ollamaResp.ok) {
+                const errText = await ollamaResp.text();
+                throw new Error(`Ollama: Failed to get vector: ${ollamaResp.statusText} ${errText}`);
+            }
+            const ollamaData = await ollamaResp.json();
+            if (!Array.isArray(ollamaData?.embedding)) throw new Error('Ollama: API response missing embedding array');
+            return ollamaData.embedding;
         }
         case 'llamacpp': {
             const { getLlamaCppVector } = await import('../../src/vectors/llamacpp-vectors.js');
@@ -1708,10 +1724,26 @@ async function getEmbeddingForSource(source, text, model, directories, req) {
             return await getCohereVector(text, true, directories, model);
         }
         case 'ollama': {
-            const { getOllamaVector } = await import('../../src/vectors/ollama-vectors.js');
             const apiUrl = req.body?.apiUrl || 'http://localhost:11434';
+            const apiKey = req.body?.apiKey || '';
             const keep = req.body?.keep || false;
-            return await getOllamaVector(text, apiUrl, model, keep, directories);
+            if (!apiKey) {
+                const { getOllamaVector } = await import('../../src/vectors/ollama-vectors.js');
+                return await getOllamaVector(text, apiUrl, model, keep, directories);
+            }
+            const ollamaUrl = new URL('/api/embeddings', apiUrl.replace(/\/$/, ''));
+            const ollamaResp = await fetch(ollamaUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+                body: JSON.stringify({ model, prompt: text, keep_alive: keep ? -1 : undefined }),
+            });
+            if (!ollamaResp.ok) {
+                const errText = await ollamaResp.text();
+                throw new Error(`Ollama: Failed to get vector: ${ollamaResp.statusText} ${errText}`);
+            }
+            const ollamaData = await ollamaResp.json();
+            if (!Array.isArray(ollamaData?.embedding)) throw new Error('Ollama: API response missing embedding array');
+            return ollamaData.embedding;
         }
         case 'llamacpp': {
             const { getLlamaCppVector } = await import('../../src/vectors/llamacpp-vectors.js');
