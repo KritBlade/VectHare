@@ -1,10 +1,12 @@
-# 🐰 VectFox — SillyTavern 向け高度 RAG システム
+# 🦊 VectFox — SillyTavern 向け高度 RAG システム
 
 > *長編ロールプレイをもっと自然に、もっと覚えてくれる存在へ。*VectFox は、LLMによるストーリーイベント抽出、ネイティブなスパースベクトル・ハイブリッド検索、そして本格的なベクターデータベースによる高速かつスケーラブルなメモリーを実現します。
 
 ![License](https://img.shields.io/badge/license-GPLv3-blue) ![Status](https://img.shields.io/badge/status-Active-brightgreen)
 
 **Languages:** [English](README.md) | [繁體中文](README_ZH.md) | **日本語** | [한국어](README_KR.md)
+
+![](assets/20260514_163417_vectfox.jpg)
 
 ---
 
