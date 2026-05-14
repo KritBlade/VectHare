@@ -1705,6 +1705,11 @@ export function refreshWIStatus() {
             `<i class="fa-solid fa-circle-check" style="color: var(--success-color, #27ae60);"></i> ` +
             `Active for this chat: ${nameList}`
         );
+        // Auto-enable the feature when a lorebook is confirmed active for this chat
+        const $wiCheckbox = $('#VectFox_enabled_world_info');
+        if ($wiCheckbox.length && !$wiCheckbox.prop('checked')) {
+            $wiCheckbox.prop('checked', true).trigger('change');
+        }
     });
 }
 
