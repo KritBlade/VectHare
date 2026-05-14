@@ -775,7 +775,7 @@ class QdrantBackend {
             const hasHardConstraint = must.some(c =>
                 c.key !== 'type' && c.key !== 'sourceId' && c.key !== 'content_type');
             if (!hasHardConstraint) {
-                out.min_should = { conditions: 1 };
+                out.min_should = 1;
             }
         }
         return out;
