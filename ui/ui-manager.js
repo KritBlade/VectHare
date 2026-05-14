@@ -1523,6 +1523,7 @@ function initializeCollapsibleCards() {
             // Show only the matching tab panel
             $('[data-vectfox-tab]', '#VectFox_settings').removeClass('vectfox-tab-active');
             $(`[data-vectfox-tab="${tab}"]`, '#VectFox_settings').addClass('vectfox-tab-active');
+            if (tab === 'worldinfo') refreshWIStatus();
         });
     }
 
@@ -1689,11 +1690,6 @@ export function refreshWIStatus() {
     }
     import('../core/collection-metadata.js').then(({ getCollectionMeta, isCollectionLockedToChat }) => {
         const chatId = getCurrentChatId();
-        console.log(`[VectFox WI] refreshWIStatus: chatId=${chatId}, lorebookIds=`, lorebookIds);
-        lorebookIds.forEach(id => {
-            const meta = getCollectionMeta(id);
-            console.log(`[VectFox WI]  collection=${id} locks=`, meta?.lockedToChatIds, 'locked?', isCollectionLockedToChat(id, chatId));
-        });
         const lockedIds = chatId ? lorebookIds.filter(id => isCollectionLockedToChat(id, chatId)) : [];
         if (lockedIds.length === 0) {
             const names = lorebookIds.map(id => getCollectionMeta(id)?.sourceName || id);
@@ -2889,6 +2885,7 @@ function bindSettingsEvents(settings, callbacks) {
     $('#VectFox_world_info_settings').toggle(settings.enabled_world_info || false);
     refreshWIStatus();
     document.addEventListener('vectfox:collections-updated', refreshWIStatus);
+    eventSource.on(event_types.CHAT_CHANGED, refreshWIStatus);
 
     // Debug buttons: Test semantic WI and dump registry
     $('#VectFox_wi_test_btn').on('click', async function() {
