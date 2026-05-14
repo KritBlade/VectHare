@@ -832,7 +832,7 @@ export async function deleteVectorItems(collectionId, hashes, settings) {
  * @param {object} settings VectFox settings object
  * @returns {Promise<{ hashes: number[], metadata: object[]}>} - Hashes and metadata of the results
  */
-export async function queryCollection(collectionId, searchText, topK, settings) {
+export async function queryCollection(collectionId, searchText, topK, settings, filters = {}) {
     const parsed = parseRegistryKey(collectionId);
     const backend = parsed.backend
         ? await getBackendForCollection(parsed.backend, settings)
@@ -880,7 +880,7 @@ export async function queryCollection(collectionId, searchText, topK, settings) 
         }
         const queryStart = Date.now();
         try {
-            const result = await hybridSearch(collectionId, searchText, topK, settings, { queryVector });
+            const result = await hybridSearch(collectionId, searchText, topK, settings, { queryVector, filters });
             const queryLatency = Date.now() - queryStart;
             recordQuery(settings?.vector_backend || 'standard', queryLatency);
             if (settings.eventbase_debug_logging) {
@@ -895,7 +895,10 @@ export async function queryCollection(collectionId, searchText, topK, settings) 
         }
     }
 
-    // Standard vector search flow
+    // Standard vector search flow (A1/A2). Filters are not supported here.
+    if (Object.keys(filters).length > 0 && settings.eventbase_debug_logging) {
+        console.warn('[VectFox] queryCollection: filters ignored on A1/A2 Standard backend path');
+    }
     // Overfetch to allow keyword-boosted chunks to surface
     const overfetchAmount = getOverfetchAmount(topK);
     // VEC-18: Track query latency for health dashboard

@@ -308,7 +308,9 @@ Each collection card has an Activation panel. The priority chain is:
 
 Conditions support emotion (via Character Expressions sprite detection), keywords, message/turn count, and combined AND/OR rules. 
 
-> ⚠️ **CJK note:** Triggers and emotion/keyword conditions are **English-only** — the keyword dictionary is English and regex `\b` word boundaries don't fire between CJK characters. For Chinese/Japanese/Korean stories, use **"Active for current chat" / Character lock** instead. Message Count / Turn Count conditions are numeric and work fine for any language.
+> ⚠️ **Legacy feature note:** Triggers and condition-based activation are **inherited from VectHare** and kept here for backward compatibility only. Due to major architectural changes in VectFox, **users should always make collections "Active for current chat" or use Character lock** instead of relying on triggers/conditions. The whole point of vector search is to let the search engine search everything — selective activation based on keyword triggers defeats that purpose.
+> 
+> **CJK note:** Triggers and emotion/keyword conditions are also **English-only** — the keyword dictionary is English and regex `\b` word boundaries don't fire between CJK characters. For Chinese/Japanese/Korean stories, use **"Active for current chat" / Character lock** instead. Message Count / Turn Count conditions are numeric and work fine for any language.
 
 ---
 

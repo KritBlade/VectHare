@@ -55,7 +55,7 @@ Your output is STRICT JSON with three top-level fields:
              the user needs to remember.
 
   filters:   Optional. Object with any of:
-               characters_any, locations_any, factions_any, concepts_any,
+               characters_any, locations_any, factions_any, items_any, concepts_any,
                event_type_any  (arrays of strings)
                importance_gte  (number 1-10)
 

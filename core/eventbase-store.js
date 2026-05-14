@@ -15,7 +15,7 @@ import {
     getAdditionalArgs,
     getSavedHashes,
 } from './core-vector-api.js';
-import { getCurrentChatId, chat_metadata, saveSettingsDebounced } from '../../../../../script.js';
+import { getCurrentChatId, chat_metadata, saveSettingsDebounced, getRequestHeaders } from '../../../../../script.js';
 import { extension_settings } from '../../../../extensions.js';
 import { getChatUUID, buildEventBaseCollectionId, getRegistryBackend, COLLECTION_PREFIXES, parseRegistryKey } from './collection-ids.js';
 import { registerCollection, getCollectionRegistry } from './collection-loader.js';
@@ -395,6 +395,98 @@ async function _resolveEventBaseCollectionIdForRead(settings, chatUUID) {
     // No registered collection has data yet — return the would-be ID so
     // first-time writers have a target. May be null if no chat is active.
     return buildEventBaseCollectionId(uuid, settings?.vector_backend);
+}
+
+// ---------------------------------------------------------------------------
+// Phase 1.5 — one-time index backfill
+// ---------------------------------------------------------------------------
+
+/**
+ * Ensure the 6 Phase-1.5 EventBase payload indexes exist on all registered
+ * EventBase collections. Called once per page load from index.js; skipped after
+ * the first successful run via the `eventbase_indexes_v1_backfilled` flag.
+ *
+ * Non-blocking — errors are caught and logged, toastr shown, never bubbles up.
+ *
+ * @param {object} settings - VectFox settings
+ * @returns {Promise<void>}
+ */
+export async function ensureEventBaseIndexes(settings) {
+    if (settings?.vector_backend !== 'qdrant') return;
+    if (extension_settings?.vectfox?.eventbase_indexes_v1_backfilled) return;
+
+    // Collect all EventBase + ArchiveEvent Qdrant collections from the registry.
+    const qdrantCollections = [];
+    for (const registryKey of getCollectionRegistry()) {
+        const parsed = parseRegistryKey(registryKey);
+        if (parsed.backend !== 'qdrant') continue;
+        const colId = parsed.collectionId;
+        if (!colId) continue;
+        if (
+            colId.startsWith(COLLECTION_PREFIXES.VECTFOX_EVENTBASE) ||
+            colId.startsWith(COLLECTION_PREFIXES.VECTFOX_ARCHIVE_EVENT)
+        ) {
+            qdrantCollections.push(colId);
+        }
+    }
+
+    if (qdrantCollections.length === 0) {
+        // No EventBase collections yet — mark done so we don't re-check every load.
+        if (extension_settings?.vectfox) {
+            extension_settings.vectfox.eventbase_indexes_v1_backfilled = true;
+            saveSettingsDebounced();
+        }
+        return;
+    }
+
+    // Show a non-blocking start toast only when there is actually work to do.
+    if (typeof toastr !== 'undefined') {
+        toastr.info(
+            `VectFox: upgrading EventBase index (one-time, ~${Math.ceil(qdrantCollections.length * 5)}s)…`,
+            'VectFox',
+            { timeOut: 8000 },
+        );
+    }
+
+    const errors = [];
+    for (const collectionId of qdrantCollections) {
+        try {
+            const resp = await fetch('/api/plugins/similharity/chunks/ensure-eventbase-indexes', {
+                method: 'POST',
+                headers: getRequestHeaders(),
+                body: JSON.stringify({ collectionId }),
+            });
+            if (!resp.ok) {
+                const msg = await resp.text().catch(() => resp.statusText);
+                errors.push(`${collectionId}: ${msg}`);
+            }
+        } catch (err) {
+            errors.push(`${collectionId}: ${err?.message || err}`);
+        }
+    }
+
+    if (errors.length === 0) {
+        if (extension_settings?.vectfox) {
+            extension_settings.vectfox.eventbase_indexes_v1_backfilled = true;
+            saveSettingsDebounced();
+        }
+        if (typeof toastr !== 'undefined') {
+            toastr.success(
+                `VectFox: EventBase index upgrade complete (${qdrantCollections.length} collection(s)).`,
+                'VectFox',
+                { timeOut: 5000 },
+            );
+        }
+    } else {
+        console.warn('[VectFox] EventBase index backfill errors:', errors);
+        if (typeof toastr !== 'undefined') {
+            toastr.warning(
+                `VectFox: EventBase index upgrade failed for ${errors.length} collection(s) — see console. AgentMode filters may run slower.`,
+                'VectFox',
+                { timeOut: 10000 },
+            );
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------

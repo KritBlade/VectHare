@@ -233,6 +233,7 @@ const defaultSettings = {
     agentic_retrieval_max_queries: 4,                  // Hard ceiling on planner output (slider 1-4)
     agentic_retrieval_timeout_ms: 30000,               // Planner LLM call timeout (matches summarize default; some models need >5s)
     agentic_retrieval_debug_logging: false,            // Separate debug toggle from eventbase_debug_logging
+    agentic_filters_enabled: true,                     // Apply planner-emitted *_any / importance_gte filters (Phase 1.5)
 
     // ─── Hidden / Power-User ────────────────────────────────────────────
     // SUPERADMIN MODE — no GUI toggle. Set to true by hand-editing settings.json
@@ -483,6 +484,15 @@ jQuery(async () => {
             );
         }
     })();
+
+    // Phase 1.5: backfill EventBase payload indexes on pre-existing Qdrant collections.
+    if (settings.vector_backend === 'qdrant') {
+        import('./core/eventbase-store.js').then(({ ensureEventBaseIndexes }) => {
+            ensureEventBaseIndexes(settings).catch(err => {
+                console.warn('[VectFox] EventBase index backfill failed:', err);
+            });
+        }).catch(() => {});
+    }
 
     // D5: Cross-repo version check — warn loud if similharity is behind.
     const SIMILHARITY_EXPECTED_VERSION = '3.2.0';

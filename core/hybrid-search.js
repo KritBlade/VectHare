@@ -81,7 +81,8 @@ export async function hybridSearch(collectionId, searchText, topK, settings, opt
         vectorWeight = settings.hybrid_vector_weight ?? 0.5,
         textWeight = settings.hybrid_text_weight ?? 0.5,
         rrfK = settings.hybrid_rrf_k || DEFAULT_RRF_K,
-        queryVector = null
+        queryVector = null,
+        filters = {},
     } = options;
 
     // Check if backend supports native hybrid search and user prefers it
@@ -95,8 +96,8 @@ export async function hybridSearch(collectionId, searchText, topK, settings, opt
                 vectorWeight,
                 textWeight,
                 fusionMethod,
-                rrfK
-            });
+                rrfK,
+            }, filters);
         } catch (error) {
             if (debugLog) {
                 console.warn(`[HybridSearch] Native hybrid failed, falling back to client-side:`, error.message);

@@ -737,7 +737,7 @@ export class QdrantBackend extends VectorBackend {
      * @param {object} hybridOptions - Hybrid search options
      * @returns {Promise<{hashes: number[], metadata: object[]}>}
      */
-    async hybridQuery(collectionId, searchText, topK, settings, hybridOptions = {}) {
+    async hybridQuery(collectionId, searchText, topK, settings, hybridOptions = {}, filters = {}) {
         const {
             vectorWeight = 0.5,
             textWeight = 0.5,
@@ -799,12 +799,13 @@ export class QdrantBackend extends VectorBackend {
             ...getPluginProviderParams(settings),
         };
 
-        if (settings.qdrant_multitenancy) {
-            body.filter = {
-                must: [
-                    { key: 'content_type', match: { value: strippedCollectionId } }
-                ]
-            };
+        // Merge multitenancy content_type into the filters object so the
+        // plugin's _buildHybridFilter handles it via the unified filters path.
+        const mergedFilters = settings.qdrant_multitenancy
+            ? { ...filters, content_type: strippedCollectionId }
+            : { ...filters };
+        if (Object.keys(mergedFilters).length > 0) {
+            body.filters = mergedFilters;
         }
 
         if (settings.eventbase_debug_logging) {
@@ -883,7 +884,7 @@ export class QdrantBackend extends VectorBackend {
      * @param {object} hybridOptions - { prefetchLimit }
      * @returns {Promise<{hashes:number[], metadata:object[]}>}
      */
-    async hybridQueryWithRerank(collectionId, searchText, topK, settings, rerankParams, hybridOptions = {}) {
+    async hybridQueryWithRerank(collectionId, searchText, topK, settings, rerankParams, hybridOptions = {}, filters = {}) {
         const strippedCollectionId = this._stripRegistryPrefix(collectionId);
         const actualCollectionId = getActualCollectionId(strippedCollectionId, settings);
 
@@ -931,12 +932,11 @@ export class QdrantBackend extends VectorBackend {
             ...getPluginProviderParams(settings),
         };
 
-        if (settings.qdrant_multitenancy) {
-            body.filter = {
-                must: [
-                    { key: 'content_type', match: { value: strippedCollectionId } }
-                ]
-            };
+        const mergedFilters = settings.qdrant_multitenancy
+            ? { ...filters, content_type: strippedCollectionId }
+            : { ...filters };
+        if (Object.keys(mergedFilters).length > 0) {
+            body.filters = mergedFilters;
         }
 
         if (settings.eventbase_debug_logging) {
@@ -985,6 +985,6 @@ export class QdrantBackend extends VectorBackend {
         // Fallback: regular hybridQuery (no server-side rerank). The caller
         // (eventbase-retrieval) will then need to apply JS re-rank itself; the
         // result lacks `rerankApplied: true` so the caller can detect and branch.
-        return this.hybridQuery(collectionId, searchText, topK, settings, hybridOptions);
+        return this.hybridQuery(collectionId, searchText, topK, settings, hybridOptions, filters);
     }
 }

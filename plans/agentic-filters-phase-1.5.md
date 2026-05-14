@@ -11,7 +11,7 @@ Related: [Doc/dev_helper.md §10](../Doc/dev_helper.md), [plans/executed/agentic
 ### Goals
 - Translate planner-emitted `*_any` arrays into Qdrant `should` clauses.
 - Translate `importance_gte` into a Qdrant `range: { gte }` clause inside `must`.
-- Preserve today's sentinel-exclusion (`must_not: type=_vecthare_meta`) and multitenancy (`content_type` filter) behavior.
+- Preserve today's sentinel-exclusion (`must_not: type=_vectfox_meta`) and multitenancy (`content_type` filter) behavior.
 - Plumb a single optional `filters` argument through the chain
   `agentic-retrieval.js → queryCollection → backend.hybridQuery → similharity plugin → _buildHybridFilter`.
 - Zero behavior change when `filters` is empty / undefined — agentic with no filters and non-agentic paths run exactly as today.
@@ -83,18 +83,19 @@ Same flow for `hybridQueryWithRerank` (the native formula rerank path).
 |---|---|---|
 | [similharity/qdrant-backend.js](../../similharity/qdrant-backend.js) | `_buildHybridFilter()` translates filter dict → Qdrant filter; `createPayloadIndexes()` declares Qdrant indexes | Extend filter with `*_any` and `importance_gte`; add 6 EventBase fields to index list (§4.10) |
 | [similharity/index.js](../../similharity/index.js) (routes section) | `/chunks/hybrid-query`, `/chunks/hybrid-query-rerank`, plus new `/chunks/ensure-eventbase-indexes` | Accept `filters` in request body; add backfill route (§4.10.2) |
-| [VectHare/backends/qdrant.js](../backends/qdrant.js) | `hybridQuery`, `hybridQueryWithRerank` | Add `filters` arg, include in POST body |
-| [VectHare/core/hybrid-search.js](../core/hybrid-search.js) | `hybridSearch()` wrapper | Pass `options.filters` through to `backend.hybridQuery` |
-| [VectHare/core/core-vector-api.js](../core/core-vector-api.js) | `queryCollection()` public API | Add optional `filters` 5th argument, forward into `hybridSearch` options |
-| [VectHare/core/agentic-retrieval.js](../core/agentic-retrieval.js) | Fanout loop | Validate/sanitize `plan.filters`, pass to each `queryCollection` call |
-| [VectHare/core/eventbase-store.js](../core/eventbase-store.js) | Insert + registry | New exported `ensureEventBaseIndexes(settings)` for one-time backfill (§4.10.2) |
-| [VectHare/core/eventbase-retrieval.js](../core/eventbase-retrieval.js) | `_runOneLiveQuery` (native rerank path) | No change for Phase 1.5 — pre-search stays unfiltered (broad recall). Filters only apply to planner fanout. |
-| [VectHare/index.js](../index.js) | Default settings | Add `agentic_filters_enabled: true` (master kill switch) |
-| [VectHare/ui/ui-manager.js](../ui/ui-manager.js) | AgentMode tab | Add single checkbox "Apply planner filters" (default on) |
-| [VectHare/Doc/dev_helper.md](../Doc/dev_helper.md) §10 | Phase 1 limitations list | Remove the filter-limitation bullet once shipped |
-| [VectHare/tests/](../tests/) | New | Add `agentic-filters.test.js` for `_validatePlannerFilters` |
+| [VectFox/backends/qdrant.js](../backends/qdrant.js) | `hybridQuery`, `hybridQueryWithRerank` | Add `filters` arg, include in POST body |
+| [VectFox/core/hybrid-search.js](../core/hybrid-search.js) | `hybridSearch()` wrapper | Pass `options.filters` through to `backend.hybridQuery` |
+| [VectFox/core/core-vector-api.js](../core/core-vector-api.js) | `queryCollection()` public API | Add optional `filters` 5th argument, forward into `hybridSearch` options |
+| [VectFox/core/agentic-retrieval.js](../core/agentic-retrieval.js) | Fanout loop | Validate/sanitize `plan.filters`, pass to each `queryCollection` call |
+| [VectFox/core/agentic-prompt.js](../core/agentic-prompt.js) | Planner prompt | One-line fix: add `items_any` to the filter-schema declaration (§4.6.1) |
+| [VectFox/core/eventbase-store.js](../core/eventbase-store.js) | Insert + registry | New exported `ensureEventBaseIndexes(settings)` for one-time backfill (§4.10.2) |
+| [VectFox/core/eventbase-retrieval.js](../core/eventbase-retrieval.js) | `_runOneLiveQuery` (native rerank path) | No change for Phase 1.5 — pre-search stays unfiltered (broad recall). Filters only apply to planner fanout. |
+| [VectFox/index.js](../index.js) | Default settings | Add `agentic_filters_enabled: true` (master kill switch) |
+| [VectFox/ui/ui-manager.js](../ui/ui-manager.js) | AgentMode tab | Add single checkbox "Apply planner filters" (default on) |
+| [VectFox/Doc/dev_helper.md](../Doc/dev_helper.md) §10 | Phase 1 limitations list | Remove the filter-limitation bullet once shipped |
+| [VectFox/tests/](../tests/) | New | Add `agentic-filters.test.js` for `_validatePlannerFilters` |
 
-**Net:** 2 files in similharity (1 with backfill route added), 7 files in VectHare (incl. eventbase-store.js for backfill), 1 doc, 1 test.
+**Net:** 2 files in similharity (1 with backfill route added), 8 files in VectFox (incl. eventbase-store.js for backfill and the one-line planner-prompt fix), 1 doc, 1 test.
 
 ---
 
@@ -108,7 +109,8 @@ Existing function handles single-value `match` and `range` clauses on scalar pay
 _buildHybridFilter(filters) {
     const must = [];
     const should = [];
-    const must_not = [{ key: 'type', match: { value: '_vecthare_meta' } }];
+    // Use the existing module-level constant — do NOT inline the string literal.
+    const must_not = [{ key: 'type', match: { value: SENTINEL_POINT_TYPE } }];
 
     const add = (key, clause) => must.push({ key, ...clause });
 
@@ -119,7 +121,6 @@ _buildHybridFilter(filters) {
     if (filters.timestampAfter !== undefined) add('timestamp', { range: { gte: filters.timestampAfter } });
     if (filters.characterName)      add('characterName',   { match: { value: filters.characterName } });
     if (filters.chatId)             add('chatId',          { match: { value: filters.chatId } });
-    if (filters.chunkGroup)         add('chunkGroup.name', { match: { value: filters.chunkGroup } });
     if (filters.embeddingSource)    add('embeddingSource', { match: { value: filters.embeddingSource } });
     if (filters.content_type)       add('content_type',    { match: { value: filters.content_type } });
 
@@ -165,11 +166,25 @@ _buildHybridFilter(filters) {
 - `match: { any: [...] }` is Qdrant's array-value match operator. Works on both
   scalar payload fields (matches if field equals any value) and array fields
   (matches if any element of the payload array equals any value in the list).
-  EventBase stores `characters`, `locations`, etc. as arrays — this is correct.
+  EventBase stores `characters`, `locations`, `factions`, `concepts`, `items`
+  as arrays and `event_type` as a scalar — the same operator handles both.
 - `min_should: { conditions: 1 }` is the Qdrant ≥ 1.7 form. If the server is
   older the simpler integer form `min_should: 1` works as a fallback — gate this
   on `serverVersion` if needed.
 - Backward compatible: empty / missing `filters` → same output as today.
+- **Where `should` / `min_should` actually take effect:** both
+  `hybridQueryNative` and `hybridQueryNativeWithRerank` attach the full
+  `_buildHybridFilter` output (must + must_not + should + min_should) onto the
+  dense and sparse **prefetch legs** in [qdrant-backend.js:782-784 / 904-906](../../similharity/qdrant-backend.js#L782).
+  Anything that doesn't satisfy `min_should` is pruned at prefetch time and
+  never reaches the outer fusion/formula step. The outer-filter merge in
+  `hybridQueryNativeWithRerank` at [lines 877-899](../../similharity/qdrant-backend.js#L877)
+  intentionally only re-uses `must` and `must_not` — it does NOT need to
+  propagate `should` / `min_should`, because the prefetch already gated them.
+  Workers: do not "fix" that merge code to forward `should` — it's correct as-is.
+- **Empty payload arrays** (e.g. an event with `factions: []` and `items: []`)
+  are common. `match: { any: [...] }` against an empty array simply fails to
+  match — no error, no crash. No defensive guard required at the filter layer.
 
 ### 4.2 `similharity/index.js` — accept `filters` in route bodies
 
@@ -185,7 +200,7 @@ const results = await qdrantBackend.hybridQueryNative(
 
 `_buildHybridFilter` is called inside `hybridQueryNative` / `hybridQueryNativeWithRerank` — both already pass `filters` through. No further change in those methods.
 
-### 4.3 `VectHare/backends/qdrant.js` — add `filters` arg
+### 4.3 `VectFox/backends/qdrant.js` — add `filters` arg
 
 ```js
 async hybridQuery(collectionId, searchText, topK, settings, hybridOptions = {}, filters = {}) {
@@ -216,7 +231,7 @@ async hybridQuery(collectionId, searchText, topK, settings, hybridOptions = {}, 
 
 Same pattern in `hybridQueryWithRerank`. The existing `body.filter = { must: [...] }` shortcut for multitenancy is removed in favor of letting the plugin's `_buildHybridFilter` handle it via the merged `filters.content_type`.
 
-### 4.4 `VectHare/core/hybrid-search.js` — thread filters through options
+### 4.4 `VectFox/core/hybrid-search.js` — thread filters through options
 
 ```js
 export async function hybridSearch(collectionId, searchText, topK, settings, options = {}) {
@@ -227,7 +242,7 @@ export async function hybridSearch(collectionId, searchText, topK, settings, opt
 }
 ```
 
-### 4.5 `VectHare/core/core-vector-api.js` — extend `queryCollection`
+### 4.5 `VectFox/core/core-vector-api.js` — extend `queryCollection`
 
 ```js
 export async function queryCollection(collectionId, searchText, topK, settings, filters = {}) {
@@ -238,7 +253,7 @@ export async function queryCollection(collectionId, searchText, topK, settings, 
     }
     // A1 path: filters ignored (Standard backend doesn't support them). Log once if non-empty.
     if (Object.keys(filters).length > 0 && settings.eventbase_debug_logging) {
-        console.warn('[VectHare] queryCollection: filters ignored on A1 / Standard backend path');
+        console.warn('[VectFox] queryCollection: filters ignored on A1 / Standard backend path');
     }
     // ...existing A1 flow...
 }
@@ -246,7 +261,7 @@ export async function queryCollection(collectionId, searchText, topK, settings, 
 
 **Caller compatibility:** Every existing call site passes 4 args. The new 5th arg defaults to `{}`, so no other code changes are required.
 
-### 4.6 `VectHare/core/agentic-retrieval.js` — validate and pass filters
+### 4.6 `VectFox/core/agentic-retrieval.js` — validate and pass filters
 
 Add a validator helper near `_validateAndTrimQueries`:
 
@@ -289,9 +304,9 @@ const plannerFilters = _validatePlannerFilters(plan?.filters, settings);
 
 if (agenticDebug) {
     if (Object.keys(plannerFilters).length === 0) {
-        console.log('[VectHarePlus-Agentic] Planner filters: (none — running unfiltered)');
+        console.log('[vectfoxPlus-Agentic] Planner filters: (none — running unfiltered)');
     } else {
-        console.log(`[VectHarePlus-Agentic] Planner filters applied: ${JSON.stringify(plannerFilters)}`);
+        console.log(`[vectfoxPlus-Agentic] Planner filters applied: ${JSON.stringify(plannerFilters)}`);
     }
 }
 
@@ -308,6 +323,22 @@ for (const colId of liveCollectionIds) {
 ```
 
 Update the file header comment to remove the "filters NOT applied" line and drop the Phase 1 note above the fanout (line 165).
+
+### 4.6.1 `core/agentic-prompt.js` — declare `items_any` in the planner's filter schema
+
+The planner-prompt's filter-schema declaration at [agentic-prompt.js:57-60](../core/agentic-prompt.js#L57) currently lists only five `*_any` keys (`characters_any`, `locations_any`, `factions_any`, `concepts_any`, `event_type_any`) — `items_any` is missing from the schema even though the worked examples downstream (e.g. line 145: `items_any: ["勾魂"]`) reference it. Without the schema declaration the LLM is unlikely to emit `items_any` at all, so the planner→validator→filter pipeline never sees it in practice.
+
+One-line fix:
+
+```diff
+   filters:   Optional. Object with any of:
+-               characters_any, locations_any, factions_any, concepts_any,
++               characters_any, locations_any, factions_any, items_any, concepts_any,
+               event_type_any  (arrays of strings)
+               importance_gte  (number 1-10)
+```
+
+No other prompt changes required — the worked examples already use `items_any` correctly.
 
 ### 4.7 Settings — `index.js`
 
@@ -371,29 +402,29 @@ Implementation:
    - Calls `qdrantBackend.createPayloadIndexes(collectionId)` per collection.
    - Returns `{ ensured: [{collectionId, fieldsCreated: [...]}], errors: [] }`.
 
-2. **VectHare-side bootstrap** in [core/eventbase-store.js](../core/eventbase-store.js) (new exported function `ensureEventBaseIndexes(settings)`):
-   - Triggered once per page load, gated by a flag in `extension_settings.vecthareplus.eventbase_indexes_v1_backfilled` so it doesn't repeat on every reload after success.
-   - Discovers EventBase collections via the existing registry (`vecthare_eventbase_*` and `vecthare_archiveevent_*` prefixes).
+2. **VectFox-side bootstrap** in [core/eventbase-store.js](../core/eventbase-store.js) (new exported function `ensureEventBaseIndexes(settings)`):
+   - Triggered once per page load, gated by a flag in `extension_settings.vectfox.eventbase_indexes_v1_backfilled` so it doesn't repeat on every reload after success.
+   - Discovers EventBase collections via the existing registry (`vf_eventbase_*` and `vf_archiveevent_*` prefixes).
    - Calls the new route. On success, sets the backfill flag.
    - Skipped entirely when `settings.vector_backend !== 'qdrant'`.
 
 3. **UI popups** — small toast-style notifications, not blocking modals:
-   - **On start:** `"VectHare: upgrading EventBase index (one-time, ~30s)…"` — appears when the bootstrap kicks off and at least one collection needs work.
-   - **On finish:** `"VectHare: EventBase index upgrade complete (N collections)."` — appears when the route returns success.
-   - **On error:** `"VectHare: EventBase index upgrade failed for <N> collection(s) — see console. AgentMode filters may run slower."` — non-fatal; filters still work, just unindexed.
-   - Reuse the existing toast system in [ui/ui-manager.js](../ui/ui-manager.js) (SillyTavern's `toastr` global, same as other VectHare notifications).
+   - **On start:** `"VectFox: upgrading EventBase index (one-time, ~30s)…"` — appears when the bootstrap kicks off and at least one collection needs work.
+   - **On finish:** `"VectFox: EventBase index upgrade complete (N collections)."` — appears when the route returns success.
+   - **On error:** `"VectFox: EventBase index upgrade failed for <N> collection(s) — see console. AgentMode filters may run slower."` — non-fatal; filters still work, just unindexed.
+   - Reuse the existing toast system in [ui/ui-manager.js](../ui/ui-manager.js) (SillyTavern's `toastr` global, same as other VectFox notifications).
    - Suppressed entirely when no collections need backfill (flag already set → silent no-op).
 
-4. **Wiring** — call `ensureEventBaseIndexes(settings)` from VectHare's existing init path in [index.js](../index.js) (alongside the existing collection-registry cleanup). Non-blocking: errors are caught and logged, never bubble up to prevent extension load.
+4. **Wiring** — call `ensureEventBaseIndexes(settings)` from VectFox's existing init path in [index.js](../index.js) (alongside the existing collection-registry cleanup). Non-blocking: errors are caught and logged, never bubble up to prevent extension load.
 
 ```js
-// In VectHare/index.js init sequence (sketch)
+// In VectFox/index.js init sequence (sketch)
 import { ensureEventBaseIndexes } from './core/eventbase-store.js';
 
 // ...after settings load, after backend init...
 if (settings.vector_backend === 'qdrant') {
     ensureEventBaseIndexes(settings).catch(err => {
-        console.warn('[VectHare] EventBase index backfill failed:', err);
+        console.warn('[VectFox] EventBase index backfill failed:', err);
     });
 }
 ```
@@ -434,9 +465,13 @@ The point payload itself does NOT change. Events ingested before Phase 1.5 alrea
 | `{characters_any: ['A', 'B']}` | `{characters_any: ['A', 'B']}` |
 | `{characters_any: ['A', '', 'A', 'A']}` (dedup + trim) | `{characters_any: ['A']}` |
 | `{characters_any: [1, 2, 3]}` (non-string) | `{}` |
-| `{importance_gte: 15}` (clamp) | `{importance_gte: 10}` |
+| `{characters_any: ['A', 1, 'B', null]}` (mixed types — filter non-strings, keep rest) | `{characters_any: ['A', 'B']}` |
+| `{importance_gte: 15}` (clamp high) | `{importance_gte: 10}` |
 | `{importance_gte: 0}` (clamp low) | `{importance_gte: 1}` |
+| `{importance_gte: 7}` (valid passthrough) | `{importance_gte: 7}` |
 | `{importance_gte: 'high'}` (invalid) | `{}` |
+| `{event_type_any: ['relationship_change']}` (scalar payload field) | `{event_type_any: ['relationship_change']}` — and `_buildHybridFilter` produces a `should` clause on the `event_type` key |
+| `{items_any: ['勾魂']}` (CJK proper noun, original script) | `{items_any: ['勾魂']}` — bytes preserved exactly |
 | `{unknown_field: ['x']}` | `{}` |
 | Long array (>8 items) | trimmed to 8 |
 | `agentic_filters_enabled: false` settings | always `{}` |
@@ -486,6 +521,7 @@ Pass criterion: precision@8 improves ≥ 5% on character-anchored questions with
 | `_buildHybridFilter` regression breaks non-agentic chunk queries | Empty `filters = {}` produces exactly today's output (only `must_not: [sentinel]` plus any pre-existing scalar matches). Unit test the empty case explicitly. |
 | Filter signal too aggressive on Latin / English chats (planner over-extracts characters) | Validator drops empty strings; planner prompt already warns against over-filtering. Benchmark gates the default flip. |
 | A1/A2 callers accidentally pass filters and silently get unfiltered results | `queryCollection` logs a one-shot warning when `filters` is non-empty on a Standard-backend path. |
+| Qdrant `match: { any: [...] }` is **byte-exact** — planner case / whitespace / script drift (e.g. "mayla" vs "Mayla", "潮音鎮 " trailing-space) silently drops candidates | Validator already `.trim()`s and de-dups; planner prompt repeatedly emphasizes "AS-IS in your queries" for proper nouns. If A/B benchmark shows recall misses traceable to case drift, add `.toLowerCase()` to both ingestion AND filter (invasive — defer to Phase 2). Do NOT lowercase only one side — that breaks both old and new data. |
 
 ---
 

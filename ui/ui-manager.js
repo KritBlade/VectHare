@@ -1218,6 +1218,16 @@ export function renderSettings(containerId, settings, callbacks) {
                                 <small class="VectFox_hint">Hard timeout for the planner call. Default <b>30000 ms (30s)</b>. On timeout, agent mode falls back to pre-search only. Increase if your planner model is slow (large models / free-tier providers often take 10-20s on a 1500-token prompt).</small>
                             </div>
 
+                            <!-- Apply planner filters (Phase 1.5) -->
+                            <div class="vectfox-form-group">
+                                <label class="checkbox_label" for="VectFox_agentic_filters_enabled">
+                                    <input id="VectFox_agentic_filters_enabled" type="checkbox" />
+                                    <span><b>Apply planner filters</b></span>
+                                </label>
+                                <small class="VectFox_hint" style="display:block; margin-top:6px;">
+                                    When on, the planner's character / location / concept / importance filters narrow each Qdrant query. Turn off to run all queries without filters (useful for A/B comparison). Has no effect on the pre-search. Qdrant only.
+                                </small>
+                            </div>
 
                         </div>
                     </div>
@@ -2469,6 +2479,14 @@ function bindSettingsEvents(settings, callbacks) {
         .prop('checked', !!settings.agentic_retrieval_debug_logging)
         .on('change', function() {
             settings.agentic_retrieval_debug_logging = $(this).prop('checked');
+            Object.assign(extension_settings.vectfox, settings);
+            saveSettingsDebounced();
+        });
+
+    $('#VectFox_agentic_filters_enabled')
+        .prop('checked', settings.agentic_filters_enabled !== false)
+        .on('change', function() {
+            settings.agentic_filters_enabled = $(this).prop('checked');
             Object.assign(extension_settings.vectfox, settings);
             saveSettingsDebounced();
         });

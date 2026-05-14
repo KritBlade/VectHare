@@ -10,10 +10,9 @@
  * Purely additive — never replaces the existing flow. Every failure path falls
  * back cleanly to the pre-search output. Qdrant (A3) only.
  *
- * Phase 1 limitations (intentional):
- *   - Planner-emitted payload filters are accepted in JSON but NOT applied to
- *     queries — filter handling lives in Similharity's _buildHybridFilter and
- *     doesn't yet understand the *_any shape. Filters become active in Phase 1.5.
+ * Phase 1.5: planner-emitted *_any / importance_gte filters are validated and
+ * threaded into each queryCollection call when agentic_filters_enabled is true
+ * (the default). Disable via settings to run unfiltered for A/B comparison.
  *   - OpenRouter only. vLLM support is Phase 2.
  *
  * @see plans/agentic-retrieval-plan.md
@@ -162,7 +161,6 @@ export async function retrieveEventsWithAgent(params) {
     }
 
     // STAGE 4 — run planner queries in parallel against all live collections.
-    // Phase 1 note: planner-emitted filters are ignored (see file header).
     if (!liveCollectionIds?.length) {
         if (agenticDebug) {
             console.log('[VectFox-Agentic] No live collections to query — falling back to pre-search only');
@@ -176,12 +174,21 @@ export async function retrieveEventsWithAgent(params) {
     };
     const topK = (settings.eventbase_retrieval_top_k || 8) * 2;
 
+    const plannerFilters = _validatePlannerFilters(plan?.filters, settings);
+    if (agenticDebug) {
+        if (Object.keys(plannerFilters).length === 0) {
+            console.log('[VectFox-Agentic] Planner filters: (none — running unfiltered)');
+        } else {
+            console.log(`[VectFox-Agentic] Planner filters applied: ${JSON.stringify(plannerFilters)}`);
+        }
+    }
+
     const tFanoutStart = (typeof performance !== 'undefined' ? performance.now() : Date.now());
     const fanoutPromises = [];
     for (const colId of liveCollectionIds) {
         for (const queryText of validatedQueries) {
             fanoutPromises.push(
-                queryCollection(colId, queryText, topK, ebSettings)
+                queryCollection(colId, queryText, topK, ebSettings, plannerFilters)
                     .then(({ hashes, metadata }) => {
                         if (!hashes?.length) return { queryText, hits: [] };
                         const hits = metadata.map((meta, i) => ({ ...meta, _hash: hashes[i] }));
@@ -395,6 +402,36 @@ function _firstNWords(text, n) {
     const parts = trimmed.split(' ');
     if (parts.length <= n) return trimmed;
     return parts.slice(0, n).join(' ') + '...';
+}
+
+/**
+ * Sanitize planner-emitted filters. Drops unknown keys, trims arrays to a
+ * reasonable max, clamps importance_gte to 1-10. Returns {} on empty / invalid
+ * input so callers can check `Object.keys(out).length === 0`.
+ */
+export function _validatePlannerFilters(raw, settings) {
+    if (!raw || typeof raw !== 'object') return {};
+    if (settings?.agentic_filters_enabled === false) return {};
+
+    const MAX_VALUES_PER_FIELD = 8;
+    const out = {};
+    const arrayFields = ['characters_any', 'locations_any', 'factions_any',
+        'items_any', 'concepts_any', 'event_type_any'];
+    for (const key of arrayFields) {
+        const v = raw[key];
+        if (Array.isArray(v) && v.length > 0) {
+            const cleaned = [...new Set(
+                v.filter(x => typeof x === 'string')
+                 .map(x => x.trim())
+                 .filter(x => x.length > 0)
+            )].slice(0, MAX_VALUES_PER_FIELD);
+            if (cleaned.length > 0) out[key] = cleaned;
+        }
+    }
+    if (typeof raw.importance_gte === 'number' && Number.isFinite(raw.importance_gte)) {
+        out.importance_gte = Math.max(1, Math.min(10, Math.round(raw.importance_gte)));
+    }
+    return out;
 }
 
 /**
