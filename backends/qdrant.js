@@ -79,9 +79,12 @@ function getPluginProviderParams(settings) {
                 : textgenerationwebui_settings.server_urls[textgen_types.LLAMACPP];
             break;
         case 'vllm':
-            params.apiUrl = settings.use_alt_endpoint
+            params.apiUrl = (settings.use_alt_endpoint
                 ? settings.alt_endpoint_url
-                : textgenerationwebui_settings.server_urls[textgen_types.VLLM];
+                : textgenerationwebui_settings.server_urls[textgen_types.VLLM])
+                ?.replace(/\/$/, '')
+                .replace(/\/v1\/embeddings$/, '')
+                .replace(/\/embeddings$/, '');
             if (settings.vllm_api_key) params.apiKey = settings.vllm_api_key;
             break;
         case 'koboldcpp':

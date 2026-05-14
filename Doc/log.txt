@@ -1,10 +1,10 @@
 [EventBase] Live collection skipped (not locked to chat): vf_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0
 eventbase-workflow.js:362 [EventBase] Live collection skipped (not locked to chat): vf_eventbase_qdrant_rabbit_fuka_shikuzaki_d609a3e2-8a7b-4cc6-a559-5c024c8dd831
 eventbase-workflow.js:395 [EventBase] Live retrieval: uuid=a5c606bc-589b-471f-b475-955382ea7267, lockedLiveCollections=1, ids=["vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267"]
-eventbase-workflow.js:409 [EventBase] Phase A: live=true, archiveCollections=0, searchText length=3
-eventbase-workflow.js:425 [EventBase] Keyword query (user last message, 3 chars): sdf
+eventbase-workflow.js:409 [EventBase] Phase A: live=true, archiveCollections=0, searchText length=9
+eventbase-workflow.js:425 [EventBase] Keyword query (user last message, 9 chars): charlotte
 eventbase-retrieval.js:359 [EventBase] Retrieval start — topK overfetch=20, minImportance=1, method=bm25, nativePrefer=true, liveCollections=1, nativeRerank=true
-qdrant.js:963 [EventBase] Hybrid+rerank request: collection=vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267, topK=20, sparse=1 tokens, preview="sdf"
+qdrant.js:963 [EventBase] Hybrid+rerank request: collection=vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267, topK=20, sparse=1 tokens, preview="charlotte"
 character.ts:107  POST https://st.sduteam.com/api/plugins/similharity/chunks/hybrid-query-rerank 500 (Internal Server Error)
 (anonymous) @ character.ts:107
 hybridQueryWithRerank @ qdrant.js:969
@@ -18,7 +18,7 @@ await in runEventBaseRetrieval
 await in (anonymous)
 dispatch @ jquery-3.5.1.min.js:2
 v.handle @ jquery-3.5.1.min.js:2
-qdrant.js:1002 [Qdrant timing] hybrid+rerank FAILED after 256.8ms (HTTP 500), falling back to hybridQuery. Server said: {"error":"VLLM: Failed to get vector for text: Not Found Not Found"}
+qdrant.js:1002 [Qdrant timing] hybrid+rerank FAILED after 248.1ms (HTTP 500), falling back to hybridQuery. Server said: {"error":"VLLM: Failed to get vector for text: Not Found Not Found"}
 hybridQueryWithRerank @ qdrant.js:1002
 await in hybridQueryWithRerank
 _runOneLiveQuery @ eventbase-retrieval.js:165
@@ -30,7 +30,7 @@ await in runEventBaseRetrieval
 await in (anonymous)
 dispatch @ jquery-3.5.1.min.js:2
 v.handle @ jquery-3.5.1.min.js:2
-qdrant.js:831 [EventBase] Hybrid request: collection=vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267, topK=20, sparse=1 tokens, terms=[sdf], preview="sdf"
+qdrant.js:831 [EventBase] Hybrid request: collection=vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267, topK=20, sparse=1 tokens, terms=[charlott], preview="charlotte"
 character.ts:107  POST https://st.sduteam.com/api/plugins/similharity/chunks/hybrid-query 500 (Internal Server Error)
 (anonymous) @ character.ts:107
 hybridQuery @ qdrant.js:840
@@ -46,7 +46,7 @@ await in runEventBaseRetrieval
 await in (anonymous)
 dispatch @ jquery-3.5.1.min.js:2
 v.handle @ jquery-3.5.1.min.js:2
-qdrant.js:873 [Qdrant timing] FAILED after 239.6ms (HTTP 500), falling back to vector-only. Server said: {"error":"VLLM: Failed to get vector for text: Not Found Not Found"}
+qdrant.js:873 [Qdrant timing] FAILED after 235.3ms (HTTP 500), falling back to vector-only. Server said: {"error":"VLLM: Failed to get vector for text: Not Found Not Found"}
 hybridQuery @ qdrant.js:873
 await in hybridQuery
 hybridQueryWithRerank @ qdrant.js:1011
@@ -86,16 +86,16 @@ await in runEventBaseRetrieval
 await in (anonymous)
 dispatch @ jquery-3.5.1.min.js:2
 v.handle @ jquery-3.5.1.min.js:2
-core-vector-api.js:882 [VectFox] Hybrid search (native), dispatching to hybrid search module
+core-vector-api.js:883 [VectFox] Hybrid search (native), dispatching to hybrid search module
 hybrid-search.js:92 [HybridSearch] Using native hybrid search (QdrantBackend)
-qdrant.js:831 [EventBase] Hybrid request: collection=vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267, topK=20, sparse=1 tokens, terms=[sdf], preview="sdf"
+qdrant.js:831 [EventBase] Hybrid request: collection=vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267, topK=20, sparse=1 tokens, terms=[charlott], preview="charlotte"
 character.ts:107  POST https://st.sduteam.com/api/plugins/similharity/chunks/hybrid-query 500 (Internal Server Error)
 (anonymous) @ character.ts:107
 hybridQuery @ qdrant.js:840
 await in hybridQuery
 hybridSearch @ hybrid-search.js:95
 await in hybridSearch
-queryCollection @ core-vector-api.js:886
+queryCollection @ core-vector-api.js:887
 await in queryCollection
 _runOneLiveQuery @ eventbase-retrieval.js:212
 await in _runOneLiveQuery
@@ -106,12 +106,12 @@ await in runEventBaseRetrieval
 await in (anonymous)
 dispatch @ jquery-3.5.1.min.js:2
 v.handle @ jquery-3.5.1.min.js:2
-qdrant.js:873 [Qdrant timing] FAILED after 239.0ms (HTTP 500), falling back to vector-only. Server said: {"error":"VLLM: Failed to get vector for text: Not Found Not Found"}
+qdrant.js:873 [Qdrant timing] FAILED after 234.8ms (HTTP 500), falling back to vector-only. Server said: {"error":"VLLM: Failed to get vector for text: Not Found Not Found"}
 hybridQuery @ qdrant.js:873
 await in hybridQuery
 hybridSearch @ hybrid-search.js:95
 await in hybridSearch
-queryCollection @ core-vector-api.js:886
+queryCollection @ core-vector-api.js:887
 await in queryCollection
 _runOneLiveQuery @ eventbase-retrieval.js:212
 await in _runOneLiveQuery
@@ -129,7 +129,7 @@ hybridQuery @ qdrant.js:879
 await in hybridQuery
 hybridSearch @ hybrid-search.js:95
 await in hybridSearch
-queryCollection @ core-vector-api.js:886
+queryCollection @ core-vector-api.js:887
 await in queryCollection
 _runOneLiveQuery @ eventbase-retrieval.js:212
 await in _runOneLiveQuery
@@ -143,7 +143,7 @@ v.handle @ jquery-3.5.1.min.js:2
 hybrid-search.js:103 [HybridSearch] Native hybrid failed, falling back to client-side: [Qdrant] Failed to query collection vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267: 500  - {"error":"VLLM: Failed to get vector for text: Not Found Not Found"}
 hybridSearch @ hybrid-search.js:103
 await in hybridSearch
-queryCollection @ core-vector-api.js:886
+queryCollection @ core-vector-api.js:887
 await in queryCollection
 _runOneLiveQuery @ eventbase-retrieval.js:212
 await in _runOneLiveQuery
@@ -163,7 +163,7 @@ queryCollection @ qdrant.js:467
 clientSideHybridSearch @ hybrid-search.js:155
 hybridSearch @ hybrid-search.js:113
 await in hybridSearch
-queryCollection @ core-vector-api.js:886
+queryCollection @ core-vector-api.js:887
 await in queryCollection
 _runOneLiveQuery @ eventbase-retrieval.js:212
 await in _runOneLiveQuery
@@ -177,7 +177,7 @@ v.handle @ jquery-3.5.1.min.js:2
 hybrid-search.js:164 [HybridSearch] Vector query failed: Error: [Qdrant] Failed to query collection vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267: 500  - {"error":"VLLM: Failed to get vector for text: Not Found Not Found"}
     at QdrantBackend.queryCollection (qdrant.js:475:19)
     at async clientSideHybridSearch (hybrid-search.js:155:25)
-    at async queryCollection (core-vector-api.js:886:28)
+    at async queryCollection (core-vector-api.js:887:28)
     at async _runOneLiveQuery (eventbase-retrieval.js:212:34)
     at async Promise.all (/index 0)
     at async retrieveEvents (eventbase-retrieval.js:408:28)
@@ -187,7 +187,7 @@ clientSideHybridSearch @ hybrid-search.js:164
 await in clientSideHybridSearch
 hybridSearch @ hybrid-search.js:113
 await in hybridSearch
-queryCollection @ core-vector-api.js:886
+queryCollection @ core-vector-api.js:887
 await in queryCollection
 _runOneLiveQuery @ eventbase-retrieval.js:212
 await in _runOneLiveQuery
@@ -198,7 +198,7 @@ await in runEventBaseRetrieval
 await in (anonymous)
 dispatch @ jquery-3.5.1.min.js:2
 v.handle @ jquery-3.5.1.min.js:2
-core-vector-api.js:892 [VectFox] Hybrid search (RRF) response: 0 result(s) in 747ms, scores=[]
+core-vector-api.js:893 [VectFox] Hybrid search (RRF) response: 0 result(s) in 719ms, scores=[]
 eventbase-retrieval.js:423 [EventBase] Live query: 1 collection(s) × 1 query/queries → 0 unique events
 eventbase-retrieval.js:447 [EventBase] After importance filter (>=1): 0 candidates
 eventbase-retrieval.js:644 [EventBase] Final events after dedup + trim: 0
