@@ -190,9 +190,13 @@ Both searches run **inside Qdrant vector database in a single API call** — but
 
 3. **Server-side filtering** — Minimum importance threshold and context dedup cutoff (events already visible in recent chat) are enforced inside Qdrant, not after the results arrive. Events below the threshold never leave the server.
 
+4. **AgentMode semantic pre-filtering + multi-angle querying** — AgentMode does two things that compound each other. First, the planner LLM decomposes the user's question into multiple sub-queries from different angles — not just the surface meaning, but also *how did this happen?*, *what led up to it?*, *what were the consequences?*, *who else was involved?* Each angle runs as a separate vector search. Second, the planner emits structured entity filters (`characters_any`, `locations_any`, `factions_any`, `concepts_any`, `event_type_any`, `importance_gte`) applied as Qdrant payload clauses in the same call, narrowing the candidate pool *before* vector search even runs. The combination is powerful: multi-angle queries cast a wide semantic net while pinpoint filters ensure every search stays scoped to the right entities — irrelevant characters, locations, or event types never compete for recall slots.
+
 The browser only handles anchor boost (phrase matching), pairwise dedup, and the final merge across multiple collections.
 
 **Example:** Searching "I cast Fireball at the dragon." Qdrant searches dense (spell/attack meanings) and sparse (literal "Fireball" + "dragon") at the same time, fuses via RRF, ranks by importance/recency formula, filters low-importance events — and returns the final ready-to-inject list in one call.
+
+**AgentMode example:** Asking "What deal did we make with Shadowheart?" The planner emits `characters_any: ["Shadowheart"]` and fans out into sub-queries: the original question, *"what agreement or promise involving Shadowheart"*, *"what event led to the deal with Shadowheart"*, *"what did Shadowheart ask for in return"*. Each sub-query runs against a Qdrant candidate pool already restricted to Shadowheart-tagged events — broad semantic recall, zero cross-character noise.
 
 **Tradeoff:** Best accuracy, fastest at scale. Requires a Qdrant instance (free, open-source). → [Qdrant installation guide](Doc/Qdrant_install.md)
 
@@ -204,7 +208,8 @@ The browser only handles anchor boost (phrase matching), pairwise dedup, and the
 | Importance / recency re-ranking | Browser JS | Browser JS | **Server-side formula** (Qdrant ≥ 1.13) |
 | Minimum importance filter | Browser JS | Browser JS | **Server-side** |
 | Context dedup filter | Browser JS | Browser JS | **Server-side** |
-| Network calls per query | 1 | 1 | **1** (hybrid + rerank + filter all in one) |
+| AgentMode semantic pre-filtering | ❌ Not supported | ❌ Not supported | **Server-side** (characters, locations, factions, concepts, event type) |
+| Network calls per query | 1 | 1 | **1** (hybrid + rerank + filter, all in one) |
 | Scale ceiling | ~500 events | ~500 events | **10,000+ events** |
 
 | Backend setting | Path you get |
@@ -357,10 +362,10 @@ That's it! VectFox will be downloaded and enabled automatically.
 ### Step 2: Configure VectFox
 1. Open **VectFox Settings** (Core tab in the extensions panel).
 2. Choose your vector storage (Standard or Qdrant).
-3. Select your embedding provider (Transformers, OpenAI, Ollama, BananaBread, OpenRouter, etc.).
-   - 💡 **Recommended:** use `qwen/qwen3-embedding-8b` through **OpenRouter**. It's extremely cheap, multilingual (excellent CJK + Latin), and produces high-quality dense vectors for the corpus size VectFox targets.
+3. Select your embedding provider (Transformers, vLLM, Ollama, OpenRouter, etc.).
+   - 💡 **Recommended:** use `qwen/qwen3-embedding-8b` through **OpenRouter**. It's extremely cheap ($0.00000015/run), multilingual (excellent CJK + Latin), and produces high-quality dense vectors for the corpus size VectFox targets.
 4. Select your Summarization LLM (OpenRouter or vLLM) — used by EventBase extraction during vectorization.
-   - 💡 **Recommended cheap & fast models:** `openai/gpt-4o-mini` or `x-ai/grok-4.1-fast` through OpenRouter. Both are very cheap and fast enough to keep ingestion latency low. Same recommendation applies to the **Agent Mode LLM** (configured separately in the AgentMode tab) — if you leave the AgentMode model field blank it inherits this summarizer setting.
+   - 💡 **Recommended cheap & fast models:** `openai/gpt-4o-mini` or `x-ai/grok-4.1-fast` ($0.0004/run) through OpenRouter. Both are very cheap and fast enough to keep ingestion latency low. Same recommendation applies to the **Agent Mode LLM** (configured separately in the AgentMode tab) — if you leave the AgentMode model field blank it inherits this summarizer setting.
 5. Configure API keys if using cloud providers (OpenRouter / vLLM / OpenAI / Cohere).
 6. Under **Keyword Extraction**, choose the language of your story.
 7. Most settings work fine on default — feel free to tweak.
@@ -436,6 +441,8 @@ Scene support was removed (it was a chunk-based-chat-era feature, and chat now r
 **"No embeddings available"** — Enable Vectors extension in main ST settings, select an embedding provider, add API key if needed, run Diagnostics.
 
 **Events/chunks not retrieved** — Click Vectorize to index, lower the score threshold (try 0.3), confirm the collection is "Active for current chat" or has matching triggers.
+
+**"What would the AI actually recall for this message?"** — Use the **Debug Query** button in the Actions tab for "what-if" testing. Type any text and run it against the live database to see exactly which events would be retrieved and their scores, without sending a real chat message. Useful for tuning thresholds and verifying that important events are indexed correctly.
 
 **"Backend health check failed"** — On Qdrant, make sure the Qdrant server is running and the Similharity plugin is installed.
 
