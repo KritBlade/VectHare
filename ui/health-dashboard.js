@@ -16,7 +16,7 @@
  * ============================================================================
  */
 
-import { getBackendMetrics } from '../backends/backend-manager.js';
+import { getBackendMetrics, probeBackendHealth } from '../backends/backend-manager.js';
 import { extension_settings } from '../../../../extensions.js';
 
 let refreshInterval = null;
@@ -211,9 +211,12 @@ function renderDashboard() {
 }
 
 /**
- * Update the dashboard content
+ * Update the dashboard content — probes backend health first for a live reading
  */
-function updateDashboard() {
+async function updateDashboard() {
+    const currentBackend = getCurrentBackend();
+    const settings = extension_settings.vectfox;
+    await probeBackendHealth(currentBackend, settings);
     const content = document.getElementById('VectFox_health_content');
     if (content && isModalOpen) {
         content.innerHTML = renderDashboard();
@@ -329,12 +332,13 @@ export function initializeHealthDashboard() {
     // Refresh button
     $(document).on('click', '#VectFox_health_refresh', updateDashboard);
 
-    // Update health indicator periodically
-    setInterval(() => {
+    // Update health indicator periodically with an active probe
+    setInterval(async () => {
         const indicator = document.getElementById('VectFox_health_indicator');
         if (indicator) {
-            const metrics = getBackendMetrics();
             const currentBackend = getCurrentBackend();
+            await probeBackendHealth(currentBackend, extension_settings.vectfox);
+            const metrics = getBackendMetrics();
             const currentMetrics = metrics.backends.find(b => b.name === currentBackend);
             const healthy = currentMetrics?.healthy ?? false;
             const errors = currentMetrics?.errors ?? 0;

@@ -450,6 +450,38 @@ export function invalidateBackendHealth(backendName, error = null) {
 }
 
 /**
+ * Actively probe the backend health and update backendHealthStatus.
+ * Used by the health dashboard to get a real-time reading instead of relying on
+ * cached operational state (which can be stale after invalidateBackendHealth calls).
+ * @param {string} backendName - Backend to probe
+ * @param {object} settings - VectFox settings
+ * @returns {Promise<boolean>} true if healthy
+ */
+export async function probeBackendHealth(backendName, settings) {
+    const normalizedName = normalizeBackendName(backendName);
+    initBackendMetrics(normalizedName);
+
+    if (backendInstances[normalizedName]) {
+        try {
+            const healthy = await backendInstances[normalizedName].healthCheck();
+            recordHealthCheck(normalizedName, healthy);
+            backendHealthStatus[normalizedName] = healthy;
+            if (healthy) backendHealthTimestamps[normalizedName] = Date.now();
+            return healthy;
+        } catch (error) {
+            recordHealthCheck(normalizedName, false);
+            recordError(normalizedName, error);
+            backendHealthStatus[normalizedName] = false;
+            return false;
+        }
+    }
+
+    // No cached instance — try to initialize (don't throw on failure)
+    const backend = await initializeBackend(backendName, settings, false);
+    return backend !== null;
+}
+
+/**
  * Get available backend names
  * @returns {string[]}
  */
