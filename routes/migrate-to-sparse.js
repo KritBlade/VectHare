@@ -75,7 +75,7 @@ export function registerMigrationRoutes(router, pluginName = 'similharity') {
                 // Exclude the sentinel from the data being migrated; we write a fresh sentinel
                 // on the target at finalize time.
                 filter: {
-                    must_not: [{ key: 'type', match: { value: '_vecthare_meta' } }],
+                    must_not: [{ key: 'type', match: { value: '_vectfox_meta' } }],
                 },
             };
             if (offset) body.offset = offset;
@@ -244,7 +244,7 @@ export function registerMigrationRoutes(router, pluginName = 'similharity') {
                     limit: 250,
                     with_payload: true,
                     with_vector: true,
-                    filter: { must_not: [{ key: 'type', match: { value: '_vecthare_meta' } }] },
+                    filter: { must_not: [{ key: 'type', match: { value: '_vectfox_meta' } }] },
                 };
                 if (nextOffset) scrollBody.offset = nextOffset;
                 const page = await qdrantBackend._request('POST', `/collections/${targetCollection}/points/scroll`, scrollBody);

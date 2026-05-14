@@ -528,6 +528,14 @@ export async function init(router) {
     });
 
     /**
+     * GET /api/plugins/similharity/version
+     * Return plugin version for cross-repo version checking
+     */
+    router.get('/version', (req, res) => {
+        res.json({ pluginVersion });
+    });
+
+    /**
      * POST /api/plugins/similharity/open-folder
      * Opens collection folder in file explorer
      */
@@ -1563,6 +1571,118 @@ async function _getLegacySingleEmbedding(source, text, model, directories, req) 
         }
     });
 
+    // ──── DELETE-IN-FOLLOWUP: VectFox v2 one-shot upgrade route ────
+    // After confirming the single existing collection has been upgraded,
+    // this entire block (down to the matching END marker) can be removed
+    // in a single revert-style commit. No external code references it.
+    router.post('/chunks/upgrade-vectfox-v2', async (req, res) => {
+        // Function-local legacy strings — no module-level legacy constants.
+        const LEGACY_SENTINEL_TYPE = '_vecthare_meta';
+        const LEGACY_SENTINEL_FLAG = '_vecthare_sentinel';
+        const LEGACY_MT_COLLECTION = 'vecthare_main';
+        const SENTINEL_POINT_TYPE = '_vectfox_meta';
+        const SENTINEL_FLAG_KEY = '_vectfox_sentinel';
+        const MULTITENANCY_COLLECTION = 'vectfox_main';
+
+        // Helpers — local, NOT class methods (so they disappear with the route).
+        const scrollByPayloadFilter = async (collection, filter) => {
+            const out = [];
+            let offset = null;
+            do {
+                const body = { filter, limit: 256, with_payload: true, with_vector: true };
+                if (offset !== null) body.offset = offset;
+                const resp = await qdrantBackend._request('POST', `/collections/${collection}/points/scroll`, body);
+                out.push(...(resp?.result?.points || []));
+                offset = resp?.result?.next_page_offset ?? null;
+            } while (offset !== null);
+            return out;
+        };
+        const upsertPoint = (collection, id, vector, payload) =>
+            qdrantBackend._request('PUT', `/collections/${collection}/points?wait=true`, {
+                points: [{ id, vector, payload }],
+            });
+        const copyCollection = async (src, dst) => {
+            const srcInfo = await qdrantBackend._request('GET', `/collections/${src}`);
+            // Create dst mirroring src's vector/sparse config. The exact shape of
+            // srcInfo.result.config.params is what PUT /collections/{dst} expects.
+            await qdrantBackend._request('PUT', `/collections/${dst}`, srcInfo.result.config.params);
+            const points = await scrollByPayloadFilter(src, { must: [] });
+            let copied = 0;
+            for (const pt of points) {
+                await upsertPoint(dst, pt.id, pt.vector, pt.payload);
+                copied++;
+            }
+            return copied;
+        };
+
+        try {
+            const report = { sentinelRewrites: [], multitenancyRename: null, errors: [] };
+
+            // Step 1 — per-collection sentinel rewrite
+            const collections = await qdrantBackend.getCollections();
+            for (const colName of collections) {
+                if (colName === LEGACY_MT_COLLECTION) continue;
+                try {
+                    const legacyPoints = await scrollByPayloadFilter(
+                        colName,
+                        { must: [{ key: 'type', match: { value: LEGACY_SENTINEL_TYPE } }] }
+                    );
+                    if (legacyPoints.length === 0) {
+                        report.sentinelRewrites.push({ collection: colName, hadLegacy: false, rewroteCount: 0 });
+                        continue;
+                    }
+                    // D6: detect & refuse if both old + new sentinels coexist in same collection.
+                    const newPoints = await scrollByPayloadFilter(
+                        colName,
+                        { must: [{ key: 'type', match: { value: SENTINEL_POINT_TYPE } }] }
+                    );
+                    if (newPoints.length > 0) {
+                        report.errors.push({
+                            collection: colName, phase: 'sentinel',
+                            error: `Collection has BOTH '${LEGACY_SENTINEL_TYPE}' and '${SENTINEL_POINT_TYPE}' sentinels — refusing to auto-resolve. Delete one manually (see D6 in plan).`,
+                        });
+                        continue;
+                    }
+                    for (const pt of legacyPoints) {
+                        const newPayload = { ...pt.payload };
+                        delete newPayload[LEGACY_SENTINEL_FLAG];
+                        newPayload.type = SENTINEL_POINT_TYPE;
+                        newPayload[SENTINEL_FLAG_KEY] = true;
+                        await upsertPoint(colName, pt.id, pt.vector, newPayload);
+                    }
+                    report.sentinelRewrites.push({
+                        collection: colName, hadLegacy: true, rewroteCount: legacyPoints.length,
+                    });
+                } catch (err) {
+                    report.errors.push({ collection: colName, phase: 'sentinel', error: err.message });
+                }
+            }
+
+            // Step 2 — multitenancy collection rename (clone + delete; Qdrant has no rename op)
+            const hasLegacyMT = collections.includes(LEGACY_MT_COLLECTION);
+            const hasNewMT = collections.includes(MULTITENANCY_COLLECTION);
+            if (hasLegacyMT && hasNewMT) {
+                // D6 — surface to user, do not auto-resolve.
+                report.errors.push({
+                    phase: 'multitenancy',
+                    error: `Both '${LEGACY_MT_COLLECTION}' and '${MULTITENANCY_COLLECTION}' exist — refusing to auto-resolve. See D6 in plan.`,
+                });
+            } else if (hasLegacyMT) {
+                const pointCount = await copyCollection(LEGACY_MT_COLLECTION, MULTITENANCY_COLLECTION);
+                await qdrantBackend._request('DELETE', `/collections/${LEGACY_MT_COLLECTION}`);
+                report.multitenancyRename = {
+                    from: LEGACY_MT_COLLECTION, to: MULTITENANCY_COLLECTION, pointCount, success: true,
+                };
+            }
+
+            res.json({ success: report.errors.length === 0, report });
+        } catch (error) {
+            console.error('[similharity] upgrade-vectfox-v2 error:', error);
+            res.status(500).json({ error: error.message });
+        }
+    });
+    // ──── END DELETE-IN-FOLLOWUP ────
+
     // MIGRATE-DELETE: dev-only sparse-vector migration tool. Remove when migration is no longer needed.
     registerMigrationRoutes(router, pluginName);
 
@@ -1771,9 +1891,7 @@ async function scanAllSourcesForCollections(vectorsPath) {
             if (qdrantBackend.baseUrl) {
                 const healthy = await qdrantBackend.healthCheck();
                 if (healthy) {
-                    // List items from vecthare_main collection
                     const collections = await qdrantBackend.getCollections();
-                    const hasVecthareMain = collections.some(col => col.name === 'vecthare_main'); //just-in-case support for multitenancy?
 
                     for (const collectionName of collections) {
                         const items = await qdrantBackend.listItems(collectionName, {});

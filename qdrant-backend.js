@@ -15,18 +15,25 @@
  * This backend runs server-side so CORS is not an issue here.
  *
  * Multitenancy Strategy:
- * - ONE collection: "vecthare_main" (kept verbatim for on-disk compatibility)
+ * - ONE collection: "vectfox_main"
  * - Payload fields: type, sourceId, timestamp, etc.
  * - Filters for isolation: {type: "chat", sourceId: "chat_001"}
- *
- * NOTE: `vecthare_main` and `_vecthare_meta` are kept verbatim for on-disk
- * compatibility with existing user Qdrant data. Do not rebrand. 
- * See plans/vectfox-rename-plan.md §1.10.
  *
  * @author VectFox
  * @version 3.0.0
  * ============================================================================
  */
+
+// Qdrant on-disk constants. NEVER change these without an upgrade routine —
+// they live inside user Qdrant databases.
+const SENTINEL_POINT_TYPE = '_vectfox_meta';
+const SENTINEL_FLAG_KEY = '_vectfox_sentinel';
+
+// D1: One-shot legacy-data warning. Fires once per process when a query result
+// still contains the old _vecthare_meta sentinel, meaning the user hasn't run
+// the upgrade button yet.
+let _legacyDataWarningFired = false;
+const MULTITENANCY_COLLECTION = 'vectfox_main';
 
 /**
  * Qdrant Backend Manager
@@ -245,8 +252,8 @@ class QdrantBackend {
             this.serverVersion = null;
         }
 
-        // Ensure indexes exist on any existing vecthare_main collection
-        await this.ensurePayloadIndexes('vecthare_main');
+        // Ensure indexes exist on any existing multitenancy collection
+        await this.ensurePayloadIndexes(MULTITENANCY_COLLECTION);
         const collections = await this.getCollections();
         for (const collectionName of collections || []) {
             await this.ensurePayloadIndexes(collectionName);
@@ -358,14 +365,14 @@ class QdrantBackend {
     }
 
     /**
-     * Sentinel point ID used to store per-collection VectHare metadata
+     * Sentinel point ID used to store per-collection VectFox metadata
      * (e.g. the CJK tokenizer mode this collection was built with).
      * Uses a fixed UUID so it never collides with hash-derived integer IDs.
      */
     _SENTINEL_ID = '00000000-0000-0000-0000-0000feedf00d';
 
     /**
-     * Read VectHare's sentinel metadata point for a collection. Returns null when
+     * Read VectFox's sentinel metadata point for a collection. Returns null when
      * the collection or the sentinel point is missing.
      *
      * @param {string} collectionName
@@ -389,7 +396,7 @@ class QdrantBackend {
     }
 
     /**
-     * Write VectHare's sentinel metadata point. Creates or overwrites the
+     * Write VectFox's sentinel metadata point. Creates or overwrites the
      * sentinel; uses a zero dense vector so the point exists but won't surface
      * in any normal vector search (also filtered out by the `type` payload).
      *
@@ -402,8 +409,8 @@ class QdrantBackend {
         const zero = new Array(vectorSize).fill(0);
         const payload = {
             ...metadata,
-            type: '_vecthare_meta',
-            _vecthare_sentinel: true,
+            type: SENTINEL_POINT_TYPE,
+            [SENTINEL_FLAG_KEY]: true,
             updated_at: Date.now(),
         };
         // Inspect the collection so we know whether it has named sparse vectors;
@@ -444,7 +451,7 @@ class QdrantBackend {
 
     /**
      * Insert vector items into collection (MULTITENANCY)
-     * @param {string} collectionName - Collection name (always "vecthare_main")
+     * @param {string} collectionName - Collection name (always "vectfox_main")
      * @param {Array} items - Items with {hash, text, vector, sparseVector?, metadata}
      * @param {object} tenantMetadata - Tenant info {type, sourceId, embeddingSource}
      * @param {object} [opts]
@@ -456,7 +463,7 @@ class QdrantBackend {
         if (!this.baseUrl) throw new Error('Qdrant not initialized');
         if (items.length === 0) return;
 
-        // MULTITENANCY: Always use vecthare_main collection
+        // MULTITENANCY: Always use vectfox_main collection
         collectionName = this._parseCollectionName(collectionName);
         const mainCollection = collectionName;
 
@@ -559,17 +566,12 @@ class QdrantBackend {
                 // EventBase: source_window_start + 1) — persist it here so the field is queryable.
                 messageIndex: item.index ?? item.metadata?.messageIndex ?? null,
 
-                // ===== LEGACY VECTHARE FEATURES =====
+                // ===== LEGACY FIELDS =====
                 // Fall back to item.metadata.* when the top-level field is undefined.
-                // EventBase items store importance inside metadata only; legacy chunk
-                // items set it at the top level. EventBase summary is no longer stored —
-                // it lives inside `text` and is parsed back at injection time.
-                // Scene chunks DO store summary (user-editable search hint, not AI-derived).
+                // EventBase items store these inside metadata; older chunk items set them
+                // at the top level. Both shapes coexist.
                 importance: item.importance !== undefined ? item.importance : (item.metadata?.importance ?? 100),
                 keywords: item.keywords || item.metadata?.keywords || [],
-                customWeights: item.customWeights || item.metadata?.customWeights || {},
-                disabledKeywords: item.disabledKeywords || item.metadata?.disabledKeywords || [],
-                chunkGroup: item.chunkGroup !== undefined ? item.chunkGroup : (item.metadata?.chunkGroup ?? null),
                 conditions: item.conditions !== undefined ? item.conditions : (item.metadata?.conditions ?? null),
                 isSummaryChunk: item.isSummaryChunk !== undefined ? item.isSummaryChunk : (item.metadata?.isSummaryChunk ?? false),
                 parentHash: item.parentHash !== undefined ? item.parentHash : (item.metadata?.parentHash ?? null),
@@ -607,7 +609,7 @@ class QdrantBackend {
 
     /**
      * Query collection for similar vectors (MULTITENANCY)
-     * @param {string} collectionName - Collection name (always "vecthare_main")
+     * @param {string} collectionName - Collection name (always "vectfox_main")
      * @param {number[]} queryVector - Query vector
      * @param {number} topK - Number of results
      * @param {object} filters - Payload filters {type, sourceId, minImportance, timestampAfter, etc.}
@@ -672,13 +674,6 @@ class QdrantBackend {
                 });
             }
 
-            if (filters.chunkGroup) {
-                must.push({
-                    key: 'chunkGroup.name',
-                    match: { value: filters.chunkGroup }
-                });
-            }
-
             if (filters.embeddingSource) {
                 must.push({
                     key: 'embeddingSource',
@@ -716,8 +711,8 @@ class QdrantBackend {
 
 
     /**
-     * Build a Qdrant filter object from VectHare's filter shape. Shared by all hybrid paths.
-     * Always excludes the `_vecthare_meta` sentinel point.
+     * Build a Qdrant filter object from VectFox's filter shape. Shared by all hybrid paths.
+     * Always excludes the VectFox sentinel point.
      * Returns `null` when there are no must clauses (only sentinel exclusion stays).
      * @private
      * @returns {object|null}
@@ -731,11 +726,10 @@ class QdrantBackend {
         if (filters.timestampAfter !== undefined) add('timestamp', { range: { gte: filters.timestampAfter } });
         if (filters.characterName)      add('characterName',   { match: { value: filters.characterName } });
         if (filters.chatId)             add('chatId',          { match: { value: filters.chatId } });
-        if (filters.chunkGroup)         add('chunkGroup.name', { match: { value: filters.chunkGroup } });
         if (filters.embeddingSource)    add('embeddingSource', { match: { value: filters.embeddingSource } });
         if (filters.content_type)       add('content_type',    { match: { value: filters.content_type } });
         // Always exclude the sentinel metadata point.
-        const must_not = [{ key: 'type', match: { value: '_vecthare_meta' } }];
+        const must_not = [{ key: 'type', match: { value: SENTINEL_POINT_TYPE } }];
 
         const out = {};
         if (must.length > 0) out.must = must;
@@ -805,6 +799,12 @@ class QdrantBackend {
             throw err;
         }
         const points = resp.result?.points || [];
+
+        // D1: Loud one-shot warning if legacy sentinel still present on-disk.
+        if (!_legacyDataWarningFired && points.some(p => p.payload?.type === '_vecthare_meta')) {
+            _legacyDataWarningFired = true;
+            console.warn('[VectFox] LEGACY DATA DETECTED — run the "Upgrade to VectFox v2" button in the Action tab before querying.');
+        }
 
         console.log(`[Qdrant] Native hybrid (fusion=${fusion}) returned ${points.length} results from ${collectionName}`);
 
@@ -892,7 +892,7 @@ class QdrantBackend {
         // before formula scoring runs.
         if (tenantFilter?.must) outerMust.push(...tenantFilter.must);
         // Always carry the sentinel exclusion (must_not) from the tenant filter — it
-        // excludes `_vecthare_meta` points regardless of whether outerMust has any
+        // excludes sentinel metadata points regardless of whether outerMust has any
         // conditions of its own.
         const outerFilter = {};
         if (outerMust.length > 0) outerFilter.must = outerMust;
@@ -960,6 +960,12 @@ class QdrantBackend {
         }
         const points = resp.result?.points || [];
 
+        // D1: Loud one-shot warning if legacy sentinel still present on-disk.
+        if (!_legacyDataWarningFired && points.some(p => p.payload?.type === '_vecthare_meta')) {
+            _legacyDataWarningFired = true;
+            console.warn('[VectFox] LEGACY DATA DETECTED — run the "Upgrade to VectFox v2" button in the Action tab before querying.');
+        }
+
         console.log(`[Qdrant] Native hybrid + rerank returned ${points.length} results from ${collectionName}`);
 
         if (debug) {
@@ -983,7 +989,7 @@ class QdrantBackend {
 
     /**
      * List all items in a collection (MULTITENANCY)
-     * @param {string} collectionName - Collection name (always "vecthare_main")
+     * @param {string} collectionName - Collection name (always "vectfox_main")
      * @param {object} filters - Payload filters {type, sourceId}
      * @param {object} options - Options { includeVectors }
      * @returns {Promise<Array>} Array of items with {hash, text, metadata, vector?}
@@ -991,7 +997,7 @@ class QdrantBackend {
     async listItems(collectionName, filters = {}, options = {}) {
         if (!this.baseUrl) throw new Error('Qdrant not initialized');
 
-        // MULTITENANCY: Always use vecthare_main collection
+        // MULTITENANCY: Always use vectfox_main collection
         collectionName = this._parseCollectionName(collectionName);
         const mainCollection = collectionName;
 
@@ -1018,10 +1024,10 @@ class QdrantBackend {
                 });
             }
 
-            // Always exclude the VectHare sentinel metadata point — it has no `hash` field,
+            // Always exclude the VectFox sentinel metadata point — it has no `hash` field,
             // and surfacing it in chunk listings breaks delete-by-hash flows (chunk.hash is
             // undefined → Qdrant rejects the delete with 400 PointsSelector format error).
-            const must_not = [{ key: 'type', match: { value: '_vecthare_meta' } }];
+            const must_not = [{ key: 'type', match: { value: SENTINEL_POINT_TYPE } }];
 
             // Scroll through all points
             const items = [];
@@ -1061,7 +1067,7 @@ class QdrantBackend {
 
     /**
      * Get all saved hashes from a collection (MULTITENANCY)
-     * @param {string} collectionName - Collection name (always "vecthare_main")
+     * @param {string} collectionName - Collection name (always "vectfox_main")
      * @param {object} filters - Payload filters {type, sourceId}
      * @returns {Promise<number[]>} Array of hashes
      */
@@ -1129,7 +1135,7 @@ class QdrantBackend {
 
     /**
      * Delete specific items by hash (MULTITENANCY)
-     * @param {string} collectionName - Collection name (always "vecthare_main")
+     * @param {string} collectionName - Collection name (always "vectfox_main")
      * @param {number[]} hashes - Hashes to delete
      * @returns {Promise<void>}
      */
@@ -1154,7 +1160,7 @@ class QdrantBackend {
             }
         }
         if (invalidHashes.length > 0) {
-            throw new Error(`[Qdrant] Cannot delete: ${invalidHashes.length} item(s) have invalid hashes (${JSON.stringify(invalidHashes.slice(0, 3))}). These items likely have no \`hash\` payload field — e.g. the VectHare sentinel point. Listing now filters the sentinel out, so this should not happen for normal chunks.`);
+            throw new Error(`[Qdrant] Cannot delete: ${invalidHashes.length} item(s) have invalid hashes (${JSON.stringify(invalidHashes.slice(0, 3))}). These items likely have no \`hash\` payload field — e.g. the VectFox sentinel point. Listing now filters the sentinel out, so this should not happen for normal chunks.`);
         }
         if (numericHashes.length === 0) {
             throw new Error(`[Qdrant] Cannot delete: all ${hashes.length} hash(es) were invalid.`);
@@ -1171,7 +1177,7 @@ class QdrantBackend {
     /**
      * Purge collection for a specific source (MULTITENANCY)
      * Deletes all points matching type and sourceId filters
-     * @param {string} collectionName - Collection name (always "vecthare_main")
+     * @param {string} collectionName - Collection name (always "vectfox_main")
      * @param {object} filters - Payload filters {type, sourceId}
      * @returns {Promise<void>}
      */
@@ -1225,11 +1231,11 @@ class QdrantBackend {
     }
 
     /**
-     * Purge entire vecthare_main collection (MULTITENANCY)
+     * Purge entire vectfox_main collection (MULTITENANCY)
      * WARNING: Deletes ALL data from ALL sources
      * @returns {Promise<void>}
      */
-    async purgeAll(collectionName = 'vecthare_main') {
+    async purgeAll(collectionName = MULTITENANCY_COLLECTION) {
         if (!this.baseUrl) throw new Error('Qdrant not initialized');
 
         collectionName = this._parseCollectionName(collectionName);
@@ -1266,7 +1272,7 @@ class QdrantBackend {
 
     /**
      * Get a single item by hash (MULTITENANCY)
-     * @param {string} collectionName - Collection name (always "vecthare_main")
+     * @param {string} collectionName - Collection name (always "vectfox_main")
      * @param {number} hash - Item hash to find
      * @param {object} filters - Payload filters {type, sourceId}
      * @returns {Promise<object|null>} Item or null if not found
