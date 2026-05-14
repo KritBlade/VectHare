@@ -317,6 +317,21 @@ export function getHealthModalHtml() {
 }
 
 /**
+ * Run a health probe and refresh the indicator dot.
+ */
+async function refreshIndicator() {
+    const indicator = document.getElementById('VectFox_health_indicator');
+    if (!indicator) return;
+    const currentBackend = getCurrentBackend();
+    await probeBackendHealth(currentBackend, extension_settings.vectfox);
+    const metrics = getBackendMetrics();
+    const currentMetrics = metrics.backends.find(b => b.name === currentBackend);
+    const healthy = currentMetrics?.healthy ?? false;
+    const errors = currentMetrics?.errors ?? 0;
+    indicator.className = `vectfox-health-indicator ${getHealthClass(healthy, errors)}`;
+}
+
+/**
  * Initialize health dashboard event handlers
  */
 export function initializeHealthDashboard() {
@@ -332,20 +347,18 @@ export function initializeHealthDashboard() {
     // Refresh button
     $(document).on('click', '#VectFox_health_refresh', updateDashboard);
 
-    // Update health indicator periodically with an active probe
-    setInterval(async () => {
-        const indicator = document.getElementById('VectFox_health_indicator');
-        if (indicator) {
-            const currentBackend = getCurrentBackend();
-            await probeBackendHealth(currentBackend, extension_settings.vectfox);
-            const metrics = getBackendMetrics();
-            const currentMetrics = metrics.backends.find(b => b.name === currentBackend);
-            const healthy = currentMetrics?.healthy ?? false;
-            const errors = currentMetrics?.errors ?? 0;
+    // Probe when the VectFox panel drawer is expanded
+    $(document).on('click', '#VectFox_settings .inline-drawer-toggle', function() {
+        const isOpening = $(this).closest('.inline-drawer').find('.inline-drawer-content').is(':hidden')
+            || $(this).find('.inline-drawer-icon').hasClass('down');
+        if (isOpening) refreshIndicator();
+    });
 
-            indicator.className = `vectfox-health-indicator ${getHealthClass(healthy, errors)}`;
-        }
-    }, 10000);
+    // Probe immediately on init (panel is being rendered / re-rendered)
+    refreshIndicator();
+
+    // Update health indicator periodically with an active probe
+    setInterval(refreshIndicator, 30000);
 }
 
 /**
