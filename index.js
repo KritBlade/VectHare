@@ -7,7 +7,7 @@
  * All chunk operations go through unified /chunks/* endpoints.
  * Backend is specified via `backend` parameter in request body.
  *
- * @version 3.2.0
+ * @version 3.3.0
  */
 
 import path from 'node:path';
@@ -20,7 +20,7 @@ import { DEFAULT_STOP_WORD_SET } from './stop-words.js';
 import { registerMigrationRoutes } from './routes/migrate-to-sparse.js'; // MIGRATE-DELETE
 
 const pluginName = 'similharity';
-const pluginVersion = '3.2.0';
+const pluginVersion = '3.3.0';
 
 // ─── CJK-aware query keyword extractor ───────────────────────────────────────
 
