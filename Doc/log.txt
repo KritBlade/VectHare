@@ -1,98 +1,180 @@
-[VectFox] LLM config check (start-vectorization): {provider: 'openrouter', model: 'openai/gpt-4o-mini', hasOpenRouterKey: true, hasVllmUrl: true}
-content-vectorizer.js:2712 [EventBase] _runEventBaseBackfill: starting...
-content-vectorizer.js:2750 [EventBase] Context chat length: 710
-content-vectorizer.js:2759 [EventBase] Start-from message 700 — skipping first 699 messages, 11 remaining
-content-vectorizer.js:2777 [EventBase] Filtered messages: 11
-content-vectorizer.js:2778 [EventBase] Starting ingestion with settings: {eventbase_window_size: 2, eventbase_window_overlap: 0, eventbase_debug_logging: true, legacy_progress_strategy: 'per_message', legacy_total_chunks: 11}
-eventbase-workflow.js:123 [EventBase] Ingestion: 11 messages → 5 windows (size=2, overlap=0)
-eventbase-extractor.js:453 [EventBase] Extracting events — window=0, provider=openrouter, messages=2
-eventbase-extractor.js:453 [EventBase] Extracting events — window=1, provider=openrouter, messages=2
-eventbase-extractor.js:453 [EventBase] Extracting events — window=2, provider=openrouter, messages=2
-eventbase-extractor.js:465 [EventBase] Raw LLM reply (window=1): [{"event_type":"relationship_change","importance":8,"summary":"Francisca successfully finds Jakob Sullivan in the Rusty Anchor Tavern and introduces Rabbit as her new boss, indicating a shift in her allegiance and professional dynamics. This moment signifies her transition from independence to a subordinate role under Rabbit's leadership, which could impact future interactions and decisions.","cause":"Francisca's mission to recruit Jakob Sullivan for the Claymore Empire.","result":"The introduct
-eventbase-extractor.js:112 [EventBase] Parser window=1: raw length=1193, preview: [{"event_type":"relationship_change","importance":8,"summary":"Francisca successfully finds Jakob Sullivan in the Rusty Anchor Tavern and introduces R
-eventbase-extractor.js:222 [EventBase] Parser window=1: 10 candidate array(s) found: (10) ['[0] len=1 firstType=object keys/val=event_type,importance,summary,cause,result', '[1] len=1 firstType=object keys/val=event_type,importance,summary,cause,result', '[2] len=4 firstType=string keys/val="Francisca"', '[3] len=1 firstType=string keys/val="Portsmouth.Rusty_Anchor_Tavern"', '[4] len=1 firstType=string keys/val="Claymore Empire"', '[5] len=0 firstType=undefined keys/val=undefined', '[6] len=3 firstType=string keys/val="recruitment"', '[7] len=11 firstType=string keys/val="Francisca"', `[8] len=2 firstType=string keys/val="How will Jakob respond to Rabbit's posi`, '[9] len=1 firstType=object keys/val=event_type,importance,summary,cause,result']
-eventbase-extractor.js:261 [EventBase] Parser window=1: chose candidate[0] len=1
-eventbase-extractor.js:482 [EventBase] Window 1: parsed 1 event candidate(s)
-eventbase-extractor.js:492 [EventBase] Parsed array (window=1): 1 items, types: [object]
-eventbase-extractor.js:550 [EventBase] Window 1: extracted 1 valid events
-eventbase-store.js:97 [EventBase] Inserting 1 event(s) into collection "vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267"
-core-vector-api.js:673 VectFox: Processing 1 items in 1 batch(es) of up to 50 with rate limit (Max 5 calls / 60s)
-qdrant.js:305 VectFox Qdrant: Inserting 1 vectors in 1 batch(es) of up to 100 items
-eventbase-extractor.js:465 [EventBase] Raw LLM reply (window=2): [{"event_type":"relationship_change","importance":9,"summary":"Rabbit向Jakob Sullivan提出招募提議，揭示自己是杜蘭二王子，並計劃成立一個新的勢力，讓Jakob、Francisca和Aarav成為海軍上將。這一提議改變了Jakob的立場，讓他考慮加入Rabbit的計劃。","cause":"Rabbit希望招募Jakob，並展示他與Francisca和Aarav的關係以增強說服力。","result":"Jakob對Rabbit的提議產生興趣，並考慮加入他的計劃，這可能會改變他們之間的權力動態。","characters":["Rabbit","Jakob Sullivan","Francisca","Aarav"],"locations":["Anchor's Rest Cafe"],"factions":["Claymore Empire"],"DateTime":null,"items":[],"concepts":["招募","新勢力","海軍上將"],"keywords":["招募","杜蘭二王子
-eventbase-extractor.js:112 [EventBase] Parser window=2: raw length=646, preview: [{"event_type":"relationship_change","importance":9,"summary":"Rabbit向Jakob Sullivan提出招募提議，揭示自己是杜蘭二王子，並計劃成立一個新的勢力，讓Jakob、Francisca和Aarav成為海軍上將。這一提議改變了
-eventbase-extractor.js:222 [EventBase] Parser window=2: 10 candidate array(s) found: (10) ['[0] len=1 firstType=object keys/val=event_type,importance,summary,cause,result', '[1] len=1 firstType=object keys/val=event_type,importance,summary,cause,result', '[2] len=4 firstType=string keys/val="Rabbit"', `[3] len=1 firstType=string keys/val="Anchor's Rest Cafe"`, '[4] len=1 firstType=string keys/val="Claymore Empire"', '[5] len=0 firstType=undefined keys/val=undefined', '[6] len=3 firstType=string keys/val="招募"', '[7] len=10 firstType=string keys/val="招募"', '[8] len=2 firstType=string keys/val="Jakob會接受Rabbit的提議嗎？"', '[9] len=1 firstType=object keys/val=event_type,importance,summary,cause,result']
-eventbase-extractor.js:261 [EventBase] Parser window=2: chose candidate[0] len=1
-eventbase-extractor.js:482 [EventBase] Window 2: parsed 1 event candidate(s)
-eventbase-extractor.js:492 [EventBase] Parsed array (window=2): 1 items, types: [object]
-eventbase-extractor.js:550 [EventBase] Window 2: extracted 1 valid events
-eventbase-store.js:97 [EventBase] Inserting 1 event(s) into collection "vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267"
-core-vector-api.js:673 VectFox: Processing 1 items in 1 batch(es) of up to 50 with rate limit (Max 5 calls / 60s)
-qdrant.js:305 VectFox Qdrant: Inserting 1 vectors in 1 batch(es) of up to 100 items
-2qdrant.js:386 VectFox Qdrant: Batch 1/1 completed (1 vectors)
-collection-loader.js:119 VectFox: Registered collection: vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267
-collection-metadata.js:248 VectFox: Updated metadata for collection vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267
-collection-loader.js:142 VectFox: Stamped creatorHandle="rabbit" on vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267
-qdrant.js:397 VectFox Qdrant: Inserted 1 vectors into vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267 (separate mode, content_type: vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267)
-collection-loader.js:119 VectFox: Registered collection: qdrant:vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267
-collection-metadata.js:248 VectFox: Updated metadata for collection vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267
-collection-metadata.js:527 VectFox: Collection vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267 locks updated: ['Your Wives - 2026-05-14@11h36m39s913ms imported']
-eventbase-store.js:117 [EventBase] Locked collection "vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267" to current chat "Your Wives - 2026-05-14@11h36m39s913ms imported"
-eventbase-store.js:122 [EventBase] Insert complete for collection "vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267"
-qdrant.js:397 VectFox Qdrant: Inserted 1 vectors into vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267 (separate mode, content_type: vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267)
-collection-metadata.js:248 VectFox: Updated metadata for collection vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267
-collection-metadata.js:527 VectFox: Collection vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267 locks updated: ['Your Wives - 2026-05-14@11h36m39s913ms imported']
-eventbase-store.js:117 [EventBase] Locked collection "vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267" to current chat "Your Wives - 2026-05-14@11h36m39s913ms imported"
-eventbase-store.js:122 [EventBase] Insert complete for collection "vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267"
-eventbase-extractor.js:465 [EventBase] Raw LLM reply (window=0): [{"event_type":"relationship_change","importance":8,"summary":"Francisca將戰術決策的權力交給我，這顯示出她對我的信任，並讓我有機會在她面前展示我的價值。這一舉動不僅改變了我們之間的動態，也讓她在其他成員面前獲得認可。","cause":"Francisca在面對一個陌生的環境時，選擇信任我來做出決策。","result":"我們的關係從單純的指揮官與下屬轉變為更深層的合作夥伴。","characters":["Francisca","我"],"locations":["Rusty Anchor"],"factions":[],"DateTime":null,"items":[],"concepts":["信任","合作","戰術決策"],"keywords":["信任","決策","戰術","合作","認可","關係變化","指揮官","下屬"],"open_threads":["Francisca的信任會如何影響未來的決策？"],"should_persist":true},{"event_type":"disc
-eventbase-extractor.js:112 [EventBase] Parser window=0: raw length=1392, preview: [{"event_type":"relationship_change","importance":8,"summary":"Francisca將戰術決策的權力交給我，這顯示出她對我的信任，並讓我有機會在她面前展示我的價值。這一舉動不僅改變了我們之間的動態，也讓她在其他成員面前獲得認可。","cau
-eventbase-extractor.js:222 [EventBase] Parser window=0: 24 candidate array(s) found: (24) ['[0] len=3 firstType=object keys/val=event_type,importance,summary,cause,result', '[1] len=3 firstType=object keys/val=event_type,importance,summary,cause,result', '[2] len=2 firstType=string keys/val="Francisca"', '[3] len=1 firstType=string keys/val="Rusty Anchor"', '[4] len=0 firstType=undefined keys/val=undefined', '[5] len=0 firstType=undefined keys/val=undefined', '[6] len=3 firstType=string keys/val="信任"', '[7] len=8 firstType=string keys/val="信任"', '[8] len=1 firstType=string keys/val="Francisca的信任會如何影響未來的決策？"', '[9] len=5 firstType=string keys/val="Francisca"', '[10] len=1 firstType=string keys/val="Rusty Anchor"', '[11] len=0 firstType=undefined keys/val=undefined', '[12] len=0 firstType=undefined keys/val=undefined', '[13] len=3 firstType=string keys/val="潛在威脅"', '[14] len=8 firstType=string keys/val="威脅"', '[15] len=1 firstType=string keys/val="我們的計劃能否成功？"', '[16] len=2 firstType=string keys/val="我"', '[17] len=1 firstType=string keys/val="Rusty Anchor"', '[18] len=0 firstType=undefined keys/val=undefined', '[19] len=0 firstType=undefined keys/val=undefined', '[20] len=3 firstType=string keys/val="承諾"', '[21] len=8 firstType=string keys/val="承諾"', '[22] len=1 firstType=string keys/val="Charlotte會如何反應我的承諾？"', '[23] len=3 firstType=object keys/val=event_type,importance,summary,cause,result']
-eventbase-extractor.js:261 [EventBase] Parser window=0: chose candidate[0] len=3
-eventbase-extractor.js:482 [EventBase] Window 0: parsed 3 event candidate(s)
-eventbase-extractor.js:492 [EventBase] Parsed array (window=0): 3 items, types: [object, object, object]
-eventbase-extractor.js:550 [EventBase] Window 0: extracted 3 valid events
-eventbase-store.js:97 [EventBase] Inserting 3 event(s) into collection "vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267"
+[EventBase] Live collection skipped (not locked to chat): vf_eventbase_qdrant_critblade_artificrealm創世域_67d28099-167f-4c07-a7cb-1b62e44f43d0
+eventbase-workflow.js:395 [EventBase] Live retrieval: uuid=d609a3e2-8a7b-4cc6-a559-5c024c8dd831, lockedLiveCollections=1, ids=["vf_eventbase_qdrant_rabbit_fuka_shikuzaki_d609a3e2-8a7b-4cc6-a559-5c024c8dd831"]
+eventbase-workflow.js:409 [EventBase] Phase A: live=true, archiveCollections=0, searchText length=7
+eventbase-workflow.js:425 [EventBase] Keyword query (user last message, 7 chars): cookies
+eventbase-retrieval.js:359 [EventBase] Retrieval start — topK overfetch=20, minImportance=1, method=bm25, nativePrefer=true, liveCollections=1, nativeRerank=true
 backend-manager.js:274 VectFox: Health cache stale for qdrant, re-verifying...
-core-vector-api.js:673 VectFox: Processing 3 items in 1 batch(es) of up to 50 with rate limit (Max 5 calls / 60s)
-qdrant.js:305 VectFox Qdrant: Inserting 3 vectors in 1 batch(es) of up to 100 items
-qdrant.js:386 VectFox Qdrant: Batch 1/1 completed (3 vectors)
-qdrant.js:397 VectFox Qdrant: Inserted 3 vectors into vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267 (separate mode, content_type: vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267)
-collection-metadata.js:248 VectFox: Updated metadata for collection vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267
-collection-metadata.js:527 VectFox: Collection vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267 locks updated: ['Your Wives - 2026-05-14@11h36m39s913ms imported']
-eventbase-store.js:117 [EventBase] Locked collection "vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267" to current chat "Your Wives - 2026-05-14@11h36m39s913ms imported"
-eventbase-store.js:122 [EventBase] Insert complete for collection "vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267"
-eventbase-extractor.js:453 [EventBase] Extracting events — window=3, provider=openrouter, messages=2
-eventbase-extractor.js:453 [EventBase] Extracting events — window=4, provider=openrouter, messages=2
-eventbase-extractor.js:465 [EventBase] Raw LLM reply (window=4): [{"event_type":"relationship_change","importance":9,"summary":"Jakob Sullivan formally pledges his allegiance to Rabbit, accepting the vision of a meritocratic society and the mission to defeat Skaag. This marks a significant shift in Jakob's loyalties and establishes him as a key ally in the Claymore Empire's plans.","cause":"Rabbit clarifies his vision for the empire, emphasizing meritocracy and the need for allies to combat Skaag.","result":"Jakob's acceptance transforms him from a potential 
-eventbase-extractor.js:112 [EventBase] Parser window=4: raw length=1146, preview: [{"event_type":"relationship_change","importance":9,"summary":"Jakob Sullivan formally pledges his allegiance to Rabbit, accepting the vision of a mer
-eventbase-extractor.js:222 [EventBase] Parser window=4: 10 candidate array(s) found: (10) ['[0] len=1 firstType=object keys/val=event_type,importance,summary,cause,result', '[1] len=1 firstType=object keys/val=event_type,importance,summary,cause,result', '[2] len=6 firstType=string keys/val="Rabbit"', '[3] len=1 firstType=string keys/val="Portsmouth.Anchors_Rest_Cafe"', '[4] len=1 firstType=string keys/val="Claymore Empire"', '[5] len=0 firstType=undefined keys/val=undefined', '[6] len=3 firstType=string keys/val="meritocracy"', '[7] len=10 firstType=string keys/val="pledge"', '[8] len=2 firstType=string keys/val="What will be the next steps for Rabbit ', '[9] len=1 firstType=object keys/val=event_type,importance,summary,cause,result']
-eventbase-extractor.js:261 [EventBase] Parser window=4: chose candidate[0] len=1
-eventbase-extractor.js:482 [EventBase] Window 4: parsed 1 event candidate(s)
-eventbase-extractor.js:492 [EventBase] Parsed array (window=4): 1 items, types: [object]
-eventbase-extractor.js:550 [EventBase] Window 4: extracted 1 valid events
-eventbase-store.js:97 [EventBase] Inserting 1 event(s) into collection "vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267"
-core-vector-api.js:673 VectFox: Processing 1 items in 1 batch(es) of up to 50 with rate limit (Max 5 calls / 60s)
-qdrant.js:305 VectFox Qdrant: Inserting 1 vectors in 1 batch(es) of up to 100 items
-eventbase-extractor.js:465 [EventBase] Raw LLM reply (window=3): [{"event_type":"relationship_change","importance":9,"summary":"Rabbit reveals his identity as the lost second prince of Duran and invites Jakob to become one of the three Admirals of the newly forming Claymore Empire. Jakob, initially shocked, ultimately accepts the offer after confirming Rabbit's credibility through Francisca and Aarav's support, marking a significant shift in his allegiances.","cause":"Rabbit's recruitment pitch aims to establish a new power structure independent of Flora and 
-eventbase-extractor.js:112 [EventBase] Parser window=3: raw length=1234, preview: [{"event_type":"relationship_change","importance":9,"summary":"Rabbit reveals his identity as the lost second prince of Duran and invites Jakob to bec
-eventbase-extractor.js:222 [EventBase] Parser window=3: 10 candidate array(s) found: (10) ['[0] len=1 firstType=object keys/val=event_type,importance,summary,cause,result', '[1] len=1 firstType=object keys/val=event_type,importance,summary,cause,result', '[2] len=6 firstType=string keys/val="Rabbit"', '[3] len=1 firstType=string keys/val="Portsmouth.Anchors_Rest_Cafe"', '[4] len=1 firstType=string keys/val="Claymore Empire"', '[5] len=0 firstType=undefined keys/val=undefined', '[6] len=5 firstType=string keys/val="recruitment"', '[7] len=11 firstType=string keys/val="recruitment"', '[8] len=2 firstType=string keys/val="What is the vision for the Claymore Emp', '[9] len=1 firstType=object keys/val=event_type,importance,summary,cause,result']
-eventbase-extractor.js:261 [EventBase] Parser window=3: chose candidate[0] len=1
-eventbase-extractor.js:482 [EventBase] Window 3: parsed 1 event candidate(s)
-eventbase-extractor.js:492 [EventBase] Parsed array (window=3): 1 items, types: [object]
-eventbase-extractor.js:550 [EventBase] Window 3: extracted 1 valid events
-eventbase-store.js:97 [EventBase] Inserting 1 event(s) into collection "vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267"
-core-vector-api.js:673 VectFox: Processing 1 items in 1 batch(es) of up to 50 with rate limit (Max 5 calls / 60s)
-qdrant.js:305 VectFox Qdrant: Inserting 1 vectors in 1 batch(es) of up to 100 items
-qdrant.js:386 VectFox Qdrant: Batch 1/1 completed (1 vectors)
-qdrant.js:397 VectFox Qdrant: Inserted 1 vectors into vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267 (separate mode, content_type: vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267)
-collection-metadata.js:248 VectFox: Updated metadata for collection vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267
-collection-metadata.js:527 VectFox: Collection vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267 locks updated: ['Your Wives - 2026-05-14@11h36m39s913ms imported']
-eventbase-store.js:117 [EventBase] Locked collection "vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267" to current chat "Your Wives - 2026-05-14@11h36m39s913ms imported"
-eventbase-store.js:122 [EventBase] Insert complete for collection "vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267"
-qdrant.js:386 VectFox Qdrant: Batch 1/1 completed (1 vectors)
-qdrant.js:397 VectFox Qdrant: Inserted 1 vectors into vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267 (separate mode, content_type: vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267)
-collection-metadata.js:248 VectFox: Updated metadata for collection vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267
-collection-metadata.js:527 VectFox: Collection vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267 locks updated: ['Your Wives - 2026-05-14@11h36m39s913ms imported']
-eventbase-store.js:117 [EventBase] Locked collection "vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267" to current chat "Your Wives - 2026-05-14@11h36m39s913ms imported"
-eventbase-store.js:122 [EventBase] Insert complete for collection "vf_eventbase_qdrant_rabbit_your_wives_a5c606bc-589b-471f-b475-955382ea7267"
-eventbase-workflow.js:278 [EventBase] Ingestion complete: extracted=7, processed=5, skipped=0
-content-vectorizer.js:2802 [EventBase] Ingestion result: {eventsExtracted: 7, windowsProcessed: 5, windowsSkipped: 0}
+qdrant.js:963 [EventBase] Hybrid+rerank request: collection=vf_eventbase_qdrant_rabbit_fuka_shikuzaki_d609a3e2-8a7b-4cc6-a559-5c024c8dd831, topK=20, sparse=1 tokens, preview="cookies"
+character.ts:107  POST https://st.sduteam.com/api/plugins/similharity/chunks/hybrid-query-rerank 500 (Internal Server Error)
+(anonymous) @ character.ts:107
+hybridQueryWithRerank @ qdrant.js:969
+await in hybridQueryWithRerank
+_runOneLiveQuery @ eventbase-retrieval.js:165
+await in _runOneLiveQuery
+retrieveEvents @ eventbase-retrieval.js:386
+runEventBaseRetrieval @ eventbase-workflow.js:462
+await in runEventBaseRetrieval
+(anonymous) @ search-debug.js:1749
+await in (anonymous)
+dispatch @ jquery-3.5.1.min.js:2
+v.handle @ jquery-3.5.1.min.js:2
+qdrant.js:1002 [Qdrant timing] hybrid+rerank FAILED after 263.9ms (HTTP 500), falling back to hybridQuery. Server said: {"error":"VLLM: Failed to get vector for text: Not Found Not Found"}
+hybridQueryWithRerank @ qdrant.js:1002
+await in hybridQueryWithRerank
+_runOneLiveQuery @ eventbase-retrieval.js:165
+await in _runOneLiveQuery
+retrieveEvents @ eventbase-retrieval.js:386
+runEventBaseRetrieval @ eventbase-workflow.js:462
+await in runEventBaseRetrieval
+(anonymous) @ search-debug.js:1749
+await in (anonymous)
+dispatch @ jquery-3.5.1.min.js:2
+v.handle @ jquery-3.5.1.min.js:2
+qdrant.js:831 [EventBase] Hybrid request: collection=vf_eventbase_qdrant_rabbit_fuka_shikuzaki_d609a3e2-8a7b-4cc6-a559-5c024c8dd831, topK=20, sparse=1 tokens, terms=[cooki], preview="cookies"
+character.ts:107  POST https://st.sduteam.com/api/plugins/similharity/chunks/hybrid-query 500 (Internal Server Error)
+(anonymous) @ character.ts:107
+hybridQuery @ qdrant.js:840
+await in hybridQuery
+hybridQueryWithRerank @ qdrant.js:1011
+await in hybridQueryWithRerank
+_runOneLiveQuery @ eventbase-retrieval.js:165
+await in _runOneLiveQuery
+retrieveEvents @ eventbase-retrieval.js:386
+runEventBaseRetrieval @ eventbase-workflow.js:462
+await in runEventBaseRetrieval
+(anonymous) @ search-debug.js:1749
+await in (anonymous)
+dispatch @ jquery-3.5.1.min.js:2
+v.handle @ jquery-3.5.1.min.js:2
+qdrant.js:873 [Qdrant timing] FAILED after 225.0ms (HTTP 500), falling back to vector-only. Server said: {"error":"VLLM: Failed to get vector for text: Not Found Not Found"}
+hybridQuery @ qdrant.js:873
+await in hybridQuery
+hybridQueryWithRerank @ qdrant.js:1011
+await in hybridQueryWithRerank
+_runOneLiveQuery @ eventbase-retrieval.js:165
+await in _runOneLiveQuery
+retrieveEvents @ eventbase-retrieval.js:386
+runEventBaseRetrieval @ eventbase-workflow.js:462
+await in runEventBaseRetrieval
+(anonymous) @ search-debug.js:1749
+await in (anonymous)
+dispatch @ jquery-3.5.1.min.js:2
+v.handle @ jquery-3.5.1.min.js:2
+character.ts:107  POST https://st.sduteam.com/api/plugins/similharity/chunks/query 500 (Internal Server Error)
+(anonymous) @ character.ts:107
+queryCollection @ qdrant.js:467
+hybridQuery @ qdrant.js:879
+await in hybridQuery
+hybridQueryWithRerank @ qdrant.js:1011
+await in hybridQueryWithRerank
+_runOneLiveQuery @ eventbase-retrieval.js:165
+await in _runOneLiveQuery
+retrieveEvents @ eventbase-retrieval.js:386
+runEventBaseRetrieval @ eventbase-workflow.js:462
+await in runEventBaseRetrieval
+(anonymous) @ search-debug.js:1749
+await in (anonymous)
+dispatch @ jquery-3.5.1.min.js:2
+v.handle @ jquery-3.5.1.min.js:2
+eventbase-retrieval.js:207 [EventBase] Native rerank backend resolution failed for vf_eventbase_qdrant_rabbit_fuka_shikuzaki_d609a3e2-8a7b-4cc6-a559-5c024c8dd831 (falling back): [Qdrant] Failed to query collection vf_eventbase_qdrant_rabbit_fuka_shikuzaki_d609a3e2-8a7b-4cc6-a559-5c024c8dd831: 500  - {"error":"VLLM: Failed to get vector for text: Not Found Not Found"}
+_runOneLiveQuery @ eventbase-retrieval.js:207
+await in _runOneLiveQuery
+retrieveEvents @ eventbase-retrieval.js:386
+runEventBaseRetrieval @ eventbase-workflow.js:462
+await in runEventBaseRetrieval
+(anonymous) @ search-debug.js:1749
+await in (anonymous)
+dispatch @ jquery-3.5.1.min.js:2
+v.handle @ jquery-3.5.1.min.js:2
+core-vector-api.js:879 [VectFox] Hybrid search (native), dispatching to hybrid search module
+hybrid-search.js:92 [HybridSearch] Using native hybrid search (QdrantBackend)
+qdrant.js:831 [EventBase] Hybrid request: collection=vf_eventbase_qdrant_rabbit_fuka_shikuzaki_d609a3e2-8a7b-4cc6-a559-5c024c8dd831, topK=20, sparse=1 tokens, terms=[cooki], preview="cookies"
+character.ts:107  POST https://st.sduteam.com/api/plugins/similharity/chunks/hybrid-query 500 (Internal Server Error)
+(anonymous) @ character.ts:107
+hybridQuery @ qdrant.js:840
+await in hybridQuery
+hybridSearch @ hybrid-search.js:95
+await in hybridSearch
+queryCollection @ core-vector-api.js:883
+await in queryCollection
+_runOneLiveQuery @ eventbase-retrieval.js:212
+await in _runOneLiveQuery
+retrieveEvents @ eventbase-retrieval.js:386
+runEventBaseRetrieval @ eventbase-workflow.js:462
+await in runEventBaseRetrieval
+(anonymous) @ search-debug.js:1749
+await in (anonymous)
+dispatch @ jquery-3.5.1.min.js:2
+v.handle @ jquery-3.5.1.min.js:2
+qdrant.js:873 [Qdrant timing] FAILED after 250.4ms (HTTP 500), falling back to vector-only. Server said: {"error":"VLLM: Failed to get vector for text: Not Found Not Found"}
+hybridQuery @ qdrant.js:873
+await in hybridQuery
+hybridSearch @ hybrid-search.js:95
+await in hybridSearch
+queryCollection @ core-vector-api.js:883
+await in queryCollection
+_runOneLiveQuery @ eventbase-retrieval.js:212
+await in _runOneLiveQuery
+retrieveEvents @ eventbase-retrieval.js:386
+runEventBaseRetrieval @ eventbase-workflow.js:462
+await in runEventBaseRetrieval
+(anonymous) @ search-debug.js:1749
+await in (anonymous)
+dispatch @ jquery-3.5.1.min.js:2
+v.handle @ jquery-3.5.1.min.js:2
+character.ts:107  POST https://st.sduteam.com/api/plugins/similharity/chunks/query 500 (Internal Server Error)
+(anonymous) @ character.ts:107
+queryCollection @ qdrant.js:467
+hybridQuery @ qdrant.js:879
+await in hybridQuery
+hybridSearch @ hybrid-search.js:95
+await in hybridSearch
+queryCollection @ core-vector-api.js:883
+await in queryCollection
+_runOneLiveQuery @ eventbase-retrieval.js:212
+await in _runOneLiveQuery
+retrieveEvents @ eventbase-retrieval.js:386
+runEventBaseRetrieval @ eventbase-workflow.js:462
+await in runEventBaseRetrieval
+(anonymous) @ search-debug.js:1749
+await in (anonymous)
+dispatch @ jquery-3.5.1.min.js:2
+v.handle @ jquery-3.5.1.min.js:2
+hybrid-search.js:103 [HybridSearch] Native hybrid failed, falling back to client-side: [Qdrant] Failed to query collection vf_eventbase_qdrant_rabbit_fuka_shikuzaki_d609a3e2-8a7b-4cc6-a559-5c024c8dd831: 500  - {"error":"VLLM: Failed to get vector for text: Not Found Not Found"}
+hybridSearch @ hybrid-search.js:103
+await in hybridSearch
+queryCollection @ core-vector-api.js:883
+await in queryCollection
+_runOneLiveQuery @ eventbase-retrieval.js:212
+await in _runOneLiveQuery
+retrieveEvents @ eventbase-retrieval.js:386
+runEventBaseRetrieval @ eventbase-workflow.js:462
+await in runEventBaseRetrieval
+(anonymous) @ search-debug.js:1749
+await in (anonymous)
+dispatch @ jquery-3.5.1.min.js:2
+v.handle @ jquery-3.5.1.min.js:2
+hybrid-search.js:111 [HybridSearch] Using client-side RRF fusion
+eventbase-retrieval.js:401 [EventBase] Live query failed (vf_eventbase_qdrant_rabbit_fuka_shikuzaki_d609a3e2-8a7b-4cc6-a559-5c024c8dd831): ReferenceError: debugLog is not defined
+    at clientSideHybridSearch (hybrid-search.js:147:5)
+    at hybridSearch (hybrid-search.js:113:12)
+    at async queryCollection (core-vector-api.js:883:28)
+    at async _runOneLiveQuery (eventbase-retrieval.js:212:34)
+    at async Promise.all (/index 0)
+    at async retrieveEvents (eventbase-retrieval.js:408:28)
+    at async runEventBaseRetrieval (eventbase-workflow.js:462:31)
+    at async HTMLButtonElement.<anonymous> (search-debug.js:1749:28)
+(anonymous) @ eventbase-retrieval.js:401
+Promise.catch
+retrieveEvents @ eventbase-retrieval.js:400
+runEventBaseRetrieval @ eventbase-workflow.js:462
+await in runEventBaseRetrieval
+(anonymous) @ search-debug.js:1749
+await in (anonymous)
+dispatch @ jquery-3.5.1.min.js:2
+v.handle @ jquery-3.5.1.min.js:2
+eventbase-retrieval.js:423 [EventBase] Live query: 1 collection(s) × 1 query/queries → 0 unique events
+eventbase-retrieval.js:447 [EventBase] After importance filter (>=1): 0 candidates
+eventbase-retrieval.js:644 [EventBase] Final events after dedup + trim: 0
+eventbase-workflow.js:474 [EventBase] Retrieval debug: {dualQuery: false, keywordScoringMethod: 'bm25', nativeHybridPrefer: true, fusionMethod: 'rrf', nativeRerank: true, …}
+eventbase-workflow.js:478 [EventBase] No events to inject

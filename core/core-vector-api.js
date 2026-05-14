@@ -219,7 +219,10 @@ export function getVectorsRequestBody(args = {}, settings) {
             console.log(`VectFox DEBUG llamacpp (core-vector-api): use_alt_endpoint=${settings.use_alt_endpoint}, alt_endpoint_url="${settings.alt_endpoint_url}", ST_url="${textgenerationwebui_settings.server_urls[textgen_types.LLAMACPP]}", final apiUrl="${body.apiUrl}"`);
             break;
         case 'vllm':
-            body.apiUrl = settings.use_alt_endpoint ? settings.alt_endpoint_url : textgenerationwebui_settings.server_urls[textgen_types.VLLM];
+            body.apiUrl = (settings.use_alt_endpoint ? settings.alt_endpoint_url : textgenerationwebui_settings.server_urls[textgen_types.VLLM])
+                ?.replace(/\/$/, '')
+                .replace(/\/v1\/embeddings$/, '')
+                .replace(/\/embeddings$/, '');
             body.model = settings.vllm_model;
             if (settings.vllm_api_key) body.apiKey = settings.vllm_api_key;
             break;

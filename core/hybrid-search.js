@@ -116,7 +116,7 @@ export async function hybridSearch(collectionId, searchText, topK, settings, opt
         searchText,
         topK,
         settings,
-        { fusionMethod, vectorWeight, textWeight, rrfK, queryVector }
+        { fusionMethod, vectorWeight, textWeight, rrfK, queryVector, debugLog }
     );
 }
 
@@ -137,7 +137,8 @@ async function clientSideHybridSearch(backend, collectionId, searchText, topK, s
         vectorWeight,
         textWeight,
         rrfK,
-        queryVector
+        queryVector,
+        debugLog,
     } = options;
 
     // Fetch more results for fusion (need candidates from both methods)
