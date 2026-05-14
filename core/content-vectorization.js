@@ -5,8 +5,8 @@
  * Unified vectorization handler for all content types.
  * Uses the same pipeline infrastructure, just with type-appropriate settings.
  *
- * @author Coneja Chibi
- * @version 2.2.0-alpha
+ * @author Kritblade
+ * @version 3.3.1
  * ============================================================================
  */
 

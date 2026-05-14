@@ -5,8 +5,8 @@
  * Evaluates conditions to determine if chunks should be activated
  * Ported from legacy VectFox with enhanced structure
  *
- * @author Coneja Chibi
- * @version 2.2.0-alpha
+ * @author Kritblade
+ * @version 3.3.1
  * ============================================================================
  */
 

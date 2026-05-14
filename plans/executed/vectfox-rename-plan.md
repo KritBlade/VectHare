@@ -85,8 +85,8 @@ Scanned the workspace; the following name surfaces exist:
 | `"display_name": "VectHarePlus"` | `"VectFox"` | `manifest.json` |
 | `"generate_interceptor": "vecthare_rearrangeChat"` | `"vectfox_rearrangeChat"` | `manifest.json` (must match `window[...]` registration in `index.js`) |
 | `"css": "vecthare.css"` | `"vectfox.css"` | `manifest.json` (and rename the file) |
-| `"homePage": "https://github.com/Coneja-Chibi/VectHare"` | new VectFox repo URL (TBD by maintainer) | `manifest.json` |
-| `"author": "Coneja Chibi"` | keep — original author attribution | `manifest.json` (leave as‑is) |
+| `"homePage": "https://github.com/KritBlade/VectFox"` | new VectFox repo URL (TBD by maintainer) | `manifest.json` |
+| `"author": "Kritblade"` | keep — original author attribution | `manifest.json` (leave as‑is) |
 | `package.json "name": "vecthare-tests"` | `"vectfox-tests"` | `package.json` |
 | `package.json "description"` mentioning VectHare | update to VectFox | `package.json` |
 

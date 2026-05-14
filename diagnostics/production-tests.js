@@ -4,8 +4,8 @@
  * ============================================================================
  * Integration tests for embedding, storage, and retrieval
  *
- * @author Coneja Chibi
- * @version 2.2.0-alpha
+ * @author Kritblade
+ * @version 3.3.1
  * ============================================================================
  *
  * NOTE — DEAD-CHUNK-CHAT branches present in this file:

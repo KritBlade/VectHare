@@ -5,8 +5,8 @@
  * Unit tests for chunk visualizer operations across all backends
  * Tests: delete, edit/re-vectorize, summary vectors, metadata operations
  *
- * @author Coneja Chibi
- * @version 2.2.0-alpha
+ * @author Kritblade
+ * @version 3.3.1
  * ============================================================================
  */
 

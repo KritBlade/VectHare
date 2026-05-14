@@ -12,8 +12,8 @@
  * On import, if user's settings match the export's source/model, vectors are
  * imported directly. Otherwise, user is warned to switch settings.
  *
- * @author Coneja Chibi
- * @version 1.0.0
+ * @author Kritblade
+ * @version 3.3.1
  * ============================================================================
  */
 

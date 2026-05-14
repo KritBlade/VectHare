@@ -5,8 +5,8 @@
  * Clean SVG icons from Lucide via Iconify
  * Usage: icons.pause, icons.play, etc.
  *
- * @author Coneja Chibi
- * @version 2.2.0-alpha
+ * @author Kritblade
+ * @version 3.3.1
  * ============================================================================
  */
 

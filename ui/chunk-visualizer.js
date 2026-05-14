@@ -6,8 +6,8 @@
  * Left panel: scrollable chunk list with search/filter/sort
  * Right panel: full details of selected chunk
  *
- * @author Coneja Chibi
- * @version 2.2.0-alpha
+ * @author Kritblade
+ * @version 3.3.1
  * ============================================================================
  */
 

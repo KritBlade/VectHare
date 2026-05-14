@@ -5,8 +5,8 @@
  * Pre-vectorization text cleaning with regex patterns.
  * Strips HTML, metadata blocks, and custom tags before chunking.
  *
- * @author Coneja Chibi
- * @version 1.0.0
+ * @author Kritblade
+ * @version 3.3.1
  * ============================================================================
  */
 

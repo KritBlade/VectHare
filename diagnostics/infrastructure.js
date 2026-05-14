@@ -4,8 +4,8 @@
  * ============================================================================
  * Backend, provider, and plugin availability checks
  *
- * @author Coneja Chibi
- * @version 2.2.0-alpha
+ * @author Kritblade
+ * @version 3.3.1
  * ============================================================================
  */
 

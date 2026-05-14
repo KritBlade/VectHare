@@ -5,8 +5,8 @@
  * Main entry point for diagnostics system
  * Every potential failure point needs a check and fix here
  *
- * @author Coneja Chibi
- * @version 2.2.0-alpha
+ * @author Kritblade
+ * @version 3.3.1
  * ============================================================================
  */
 

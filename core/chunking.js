@@ -21,8 +21,8 @@
  * - per_field: Each character field = one chunk
  * - combined: Merge then chunk with adaptive
  *
- * @author Coneja Chibi
- * @version 3.0.0
+ * @author Kritblade
+ * @version 3.3.1
  * ============================================================================
  */
 

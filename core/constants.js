@@ -5,8 +5,8 @@
  * Centralized configuration values used across the extension.
  * Change these values here instead of hunting through the codebase.
  *
- * @author Coneja Chibi
- * @version 3.0.0
+ * @author Kritblade
+ * @version 3.3.1
  * ============================================================================
  */
 

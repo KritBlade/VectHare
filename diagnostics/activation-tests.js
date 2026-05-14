@@ -6,8 +6,8 @@
  * Tests all 11 condition types + activation triggers + chunk-only features
  * Returns individual test results for each condition type
  *
- * @author Coneja Chibi
- * @version 2.2.0-alpha
+ * @author Kritblade
+ * @version 3.3.1
  * ============================================================================
  */
 

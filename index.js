@@ -5,8 +5,8 @@
  * Entry point - lean and clean
  * All logic is in separate modules - see project guidelines
  *
- * @author Coneja Chibi
- * @version 3.0.0
+ * @author Kritblade
+ * @version 3.3.0
  * ============================================================================
  */
 

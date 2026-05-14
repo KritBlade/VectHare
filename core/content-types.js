@@ -9,8 +9,8 @@
  * - "unit" strategies (per_message, conversation_turns, message_batch, per_entry, per_field) = no size controls
  * - "text" strategies (adaptive, paragraph, section, sentence) = show size controls where applicable
  *
- * @author Coneja Chibi
- * @version 3.0.0
+ * @author Kritblade
+ * @version 3.3.1
  * ============================================================================
  */
 

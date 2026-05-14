@@ -9,8 +9,8 @@
  * - Condition filtering
  * - Final injection results
  *
- * @author Coneja Chibi
- * @version 2.2.0-alpha
+ * @author Kritblade
+ * @version 3.3.1
  * ============================================================================
  */
 

@@ -5,8 +5,8 @@
  * Standalone UI for managing text cleaning regex patterns.
  * Accessible from the Actions panel.
  *
- * @author Coneja Chibi
- * @version 1.0.0
+ * @author Kritblade
+ * @version 3.3.1
  * ============================================================================
  */
 

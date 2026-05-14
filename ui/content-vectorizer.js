@@ -5,8 +5,8 @@
  * Modal interface for vectorizing different content types with intelligent
  * settings that adapt based on selected content type.
  *
- * @author Coneja Chibi
- * @version 2.2.0-alpha
+ * @author Kritblade
+ * @version 3.3.1
  * ============================================================================
  */
 

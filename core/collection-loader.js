@@ -4,8 +4,8 @@
  * ============================================================================
  * Data access layer for managing vector collections and chunks
  *
- * @author Coneja Chibi
- * @version 2.2.0-alpha
+ * @author Kritblade
+ * @version 3.3.1
  * ============================================================================
  */
 
