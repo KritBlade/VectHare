@@ -952,7 +952,28 @@ async function _getLegacySingleEmbedding(source, text, model, directories, req) 
         case 'vllm': {
             const apiUrl = req.body?.apiUrl || 'http://localhost:8000';
             const apiKey = req.body?.apiKey || '';
-            return await _getVllmEmbedding(text, apiUrl, model, apiKey, directories);
+            console.log(`[similharity] DEBUG vllm embed: apiUrl="${apiUrl}", model="${model}", hasKey=${!!apiKey}`);
+            if (!apiKey) {
+                const { getVllmVector } = await import('../../src/vectors/vllm-vectors.js');
+                return await getVllmVector(text, apiUrl, model, directories);
+            }
+            const { trimV1 } = await import('../../src/util.js');
+            const urlJoinMod = await import('url-join');
+            const urlJoin2 = urlJoinMod.default;
+            const vllmUrl = new URL(urlJoin2(trimV1(apiUrl), '/v1/embeddings'));
+            const vllmResp = await fetch(vllmUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+                body: JSON.stringify({ input: [text], model }),
+            });
+            if (!vllmResp.ok) {
+                const errText = await vllmResp.text();
+                throw new Error(`VLLM: Failed to get vector for text: ${vllmResp.statusText} ${errText}`);
+            }
+            const vllmData = await vllmResp.json();
+            if (!Array.isArray(vllmData?.data)) throw new Error('VLLM: API response was not an array');
+            vllmData.data.sort((a, b) => a.index - b.index);
+            return vllmData.data[0].embedding;
         }
         case 'palm':
         case 'vertexai': {
@@ -1741,7 +1762,28 @@ async function getEmbeddingForSource(source, text, model, directories, req) {
         case 'vllm': {
             const apiUrl = req.body?.apiUrl || 'http://localhost:8000';
             const apiKey = req.body?.apiKey || '';
-            return await _getVllmEmbedding(text, apiUrl, model, apiKey, directories);
+            console.log(`[similharity] DEBUG vllm embed: apiUrl="${apiUrl}", model="${model}", hasKey=${!!apiKey}`);
+            if (!apiKey) {
+                const { getVllmVector } = await import('../../src/vectors/vllm-vectors.js');
+                return await getVllmVector(text, apiUrl, model, directories);
+            }
+            const { trimV1 } = await import('../../src/util.js');
+            const urlJoinMod = await import('url-join');
+            const urlJoin2 = urlJoinMod.default;
+            const vllmUrl = new URL(urlJoin2(trimV1(apiUrl), '/v1/embeddings'));
+            const vllmResp = await fetch(vllmUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+                body: JSON.stringify({ input: [text], model }),
+            });
+            if (!vllmResp.ok) {
+                const errText = await vllmResp.text();
+                throw new Error(`VLLM: Failed to get vector for text: ${vllmResp.statusText} ${errText}`);
+            }
+            const vllmData = await vllmResp.json();
+            if (!Array.isArray(vllmData?.data)) throw new Error('VLLM: API response was not an array');
+            vllmData.data.sort((a, b) => a.index - b.index);
+            return vllmData.data[0].embedding;
         }
         case 'palm':
         case 'vertexai': {
