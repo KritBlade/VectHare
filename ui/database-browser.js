@@ -801,7 +801,7 @@ async function refreshCollections() {
 /**
  * Renders collections list based on current filters
  */
-function renderCollections() {
+export function renderCollections() {
   const container = $("#vectfox_collections_list");
 
     // Apply filters
