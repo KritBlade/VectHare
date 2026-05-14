@@ -1,8 +1,8 @@
 # Similharity Server Plugin
 
-**Version 2.0.0**
+**Version 3.3.1**
 
-Server-side plugin for [the VectFox](https://github.com/Conejachibi/VectFox) extension that provides enhanced vector database backends and full metadata storage capabilities.
+Server-side plugin for [the VectFox](https://github.com/KritBlade/VectFox) extension that provides enhanced vector database backends and full metadata storage capabilities.
 
 ---
 
@@ -33,7 +33,7 @@ Open a terminal/command prompt in your SillyTavern folder and run:
 
 ```bash
 cd plugins
-git clone -b Similharity-Plugin https://github.com/Coneja-Chibi/VectFox.git similharity
+git clone -b Similharity-Plugin https://github.com/KritBlade/VectFox.git similharity
 cd similharity
 npm install
 ```
@@ -54,7 +54,7 @@ SillyTavern/
 
 Check console for:
 ```
-[similharity] Initializing v3.0.0...
+[similharity] Initializing v3.3.1...
 [similharity] Plugin initialized successfully
 ```
 
@@ -107,7 +107,7 @@ Returns plugin status and capabilities.
 {
   "status": "ok",
   "plugin": "similharity",
-  "version": "2.0.0",
+  "version": "3.3.1",
   "features": [
     "vectra-full-metadata",
     "qdrant",
@@ -776,4 +776,4 @@ Coneja-Chibi
 
 ## Repository
 
-[https://github.com/Conejachibi/VectFox](https://github.com/Conejachibi/VectFox)
+[https://github.com/KritBlade/VectFox](https://github.com/KritBlade/VectFox)
