@@ -345,6 +345,15 @@ class QdrantBackend {
             // EventBase event-source window end — used by formula recency decay and
             // dedup-depth range filter when the EventBase native rerank path is on.
             { field: 'source_window_end', schema: 'integer' },
+            // EventBase planner-filterable fields (Phase 1.5 agentic filters).
+            // keyword schema handles both scalar and array-of-string payloads —
+            // match: { any: [...] } works on either shape.
+            { field: 'characters',  schema: 'keyword' },
+            { field: 'locations',   schema: 'keyword' },
+            { field: 'factions',    schema: 'keyword' },
+            { field: 'concepts',    schema: 'keyword' },
+            { field: 'items',       schema: 'keyword' },
+            { field: 'event_type',  schema: 'keyword' },
         ];
 
         for (const { field, schema } of indexConfigs) {
@@ -719,6 +728,7 @@ class QdrantBackend {
      */
     _buildHybridFilter(filters) {
         const must = [];
+        const should = [];
         const add = (key, clause) => must.push({ key, ...clause });
         if (filters.type)               add('type',            { match: { value: filters.type } });
         if (filters.sourceId)           add('sourceId',        { match: { value: filters.sourceId } });
@@ -728,12 +738,46 @@ class QdrantBackend {
         if (filters.chatId)             add('chatId',          { match: { value: filters.chatId } });
         if (filters.embeddingSource)    add('embeddingSource', { match: { value: filters.embeddingSource } });
         if (filters.content_type)       add('content_type',    { match: { value: filters.content_type } });
+
+        // Planner-emitted *_any filters: OR within and across fields.
+        // match: { any: [...] } works on both scalar and array payload fields.
+        const anyMap = {
+            characters_any: 'characters',
+            locations_any:  'locations',
+            factions_any:   'factions',
+            concepts_any:   'concepts',
+            items_any:      'items',
+            event_type_any: 'event_type',
+        };
+        for (const [src, payloadKey] of Object.entries(anyMap)) {
+            const vals = filters[src];
+            if (Array.isArray(vals) && vals.length > 0) {
+                should.push({ key: payloadKey, match: { any: vals } });
+            }
+        }
+
+        // Planner-emitted hard importance floor.
+        if (typeof filters.importance_gte === 'number') {
+            must.push({ key: 'importance', range: { gte: filters.importance_gte } });
+        }
+
         // Always exclude the sentinel metadata point.
         const must_not = [{ key: 'type', match: { value: SENTINEL_POINT_TYPE } }];
 
         const out = {};
         if (must.length > 0) out.must = must;
         out.must_not = must_not;
+        if (should.length > 0) {
+            out.should = should;
+            // Require at least one *_any match unless a hard constraint already
+            // qualifies candidates (importance_gte, minImportance, etc.). Tenant
+            // fields (type, sourceId, content_type) don't count as hard constraints.
+            const hasHardConstraint = must.some(c =>
+                c.key !== 'type' && c.key !== 'sourceId' && c.key !== 'content_type');
+            if (!hasHardConstraint) {
+                out.min_should = { conditions: 1 };
+            }
+        }
         return out;
     }
 

@@ -1430,6 +1430,31 @@ async function _getLegacySingleEmbedding(source, text, model, directories, req) 
     });
 
     /**
+     * POST /api/plugins/similharity/chunks/ensure-eventbase-indexes
+     *
+     * One-time backfill: create the 6 Phase-1.5 EventBase payload indexes
+     * (characters, locations, factions, concepts, items, event_type) on an
+     * existing collection that was created before Phase 1.5 shipped.
+     *
+     * Body: { collectionId } — required.
+     * Response: { ensured: true, collectionId }
+     * Idempotent — createPayloadIndexes() swallows 409 Already Exists errors.
+     */
+    router.post('/chunks/ensure-eventbase-indexes', async (req, res) => {
+        try {
+            const { collectionId } = req.body;
+            if (!collectionId) {
+                return res.status(400).json({ error: 'collectionId is required' });
+            }
+            await qdrantBackend.createPayloadIndexes(collectionId);
+            return res.json({ ensured: true, collectionId });
+        } catch (error) {
+            console.error(`[${pluginName}] chunks/ensure-eventbase-indexes error:`, error);
+            res.status(500).json({ error: error.message });
+        }
+    });
+
+    /**
      * POST /api/plugins/similharity/chunks/purge
      * Purge all chunks in a collection
      * Body: { backend, collectionId, source?, model? }
