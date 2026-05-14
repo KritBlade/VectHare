@@ -952,7 +952,7 @@ async function _getLegacySingleEmbedding(source, text, model, directories, req) 
         case 'vllm': {
             const apiUrl = req.body?.apiUrl || 'http://localhost:8000';
             const apiKey = req.body?.apiKey || '';
-            console.log(`[similharity] DEBUG vllm embed: apiUrl="${apiUrl}", model="${model}", hasKey=${!!apiKey}`);
+            if (req.body?.hybridOptions?.eventbaseDebug || req.body?.options?.eventbaseDebug) console.log(`[similharity] DEBUG vllm embed: apiUrl="${apiUrl}", model="${model}", hasKey=${!!apiKey}`);
             if (!apiKey) {
                 const { getVllmVector } = await import('../../src/vectors/vllm-vectors.js');
                 return await getVllmVector(text, apiUrl, model, directories);
@@ -1762,7 +1762,7 @@ async function getEmbeddingForSource(source, text, model, directories, req) {
         case 'vllm': {
             const apiUrl = req.body?.apiUrl || 'http://localhost:8000';
             const apiKey = req.body?.apiKey || '';
-            console.log(`[similharity] DEBUG vllm embed: apiUrl="${apiUrl}", model="${model}", hasKey=${!!apiKey}`);
+            if (req.body?.hybridOptions?.eventbaseDebug || req.body?.options?.eventbaseDebug) console.log(`[similharity] DEBUG vllm embed: apiUrl="${apiUrl}", model="${model}", hasKey=${!!apiKey}`);
             if (!apiKey) {
                 const { getVllmVector } = await import('../../src/vectors/vllm-vectors.js');
                 return await getVllmVector(text, apiUrl, model, directories);
