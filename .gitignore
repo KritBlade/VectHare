@@ -15,4 +15,5 @@ yarn-debug.log**
 yarn-error.log*
 .vscode/
 Doc/settings.json
-
+log.txt
+serverlog.txt
