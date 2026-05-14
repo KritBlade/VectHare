@@ -1620,6 +1620,7 @@ async function _getLegacySingleEmbedding(source, text, model, directories, req) 
 
             // Step 1 — per-collection sentinel rewrite
             const collections = await qdrantBackend.getCollections();
+            console.log(`[similharity] upgrade-vectfox-v2: found ${collections.length} collections:`, collections);
             for (const colName of collections) {
                 if (colName === LEGACY_MT_COLLECTION) continue;
                 try {
@@ -1627,7 +1628,12 @@ async function _getLegacySingleEmbedding(source, text, model, directories, req) 
                         colName,
                         { must: [{ key: 'type', match: { value: LEGACY_SENTINEL_TYPE } }] }
                     );
+                    console.log(`[similharity] upgrade-vectfox-v2: ${colName} → legacy sentinel points: ${legacyPoints.length}`);
                     if (legacyPoints.length === 0) {
+                        // Also log a sample of what types ARE in this collection to diagnose unexpected naming.
+                        const sample = await scrollByPayloadFilter(colName, { must: [] });
+                        const types = [...new Set(sample.map(p => p.payload?.type).filter(Boolean))];
+                        console.log(`[similharity] upgrade-vectfox-v2: ${colName} → no legacy found. types present: [${types.join(', ')}], total points: ${sample.length}`);
                         report.sentinelRewrites.push({ collection: colName, hadLegacy: false, rewroteCount: 0 });
                         continue;
                     }
@@ -1661,6 +1667,7 @@ async function _getLegacySingleEmbedding(source, text, model, directories, req) 
             // Step 2 — multitenancy collection rename (clone + delete; Qdrant has no rename op)
             const hasLegacyMT = collections.includes(LEGACY_MT_COLLECTION);
             const hasNewMT = collections.includes(MULTITENANCY_COLLECTION);
+            console.log(`[similharity] upgrade-vectfox-v2: hasLegacyMT=${hasLegacyMT} (${LEGACY_MT_COLLECTION}), hasNewMT=${hasNewMT} (${MULTITENANCY_COLLECTION})`);
             if (hasLegacyMT && hasNewMT) {
                 // D6 — surface to user, do not auto-resolve.
                 report.errors.push({
