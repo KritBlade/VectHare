@@ -768,14 +768,16 @@ class QdrantBackend {
         if (must.length > 0) out.must = must;
         out.must_not = must_not;
         if (should.length > 0) {
-            out.should = should;
-            // Require at least one *_any match unless a hard constraint already
-            // qualifies candidates (importance_gte, minImportance, etc.). Tenant
-            // fields (type, sourceId, content_type) don't count as hard constraints.
+            // Tenant fields (type, sourceId, content_type) don't count as hard constraints.
             const hasHardConstraint = must.some(c =>
                 c.key !== 'type' && c.key !== 'sourceId' && c.key !== 'content_type');
-            if (!hasHardConstraint) {
-                out.min_should = 1;
+            if (hasHardConstraint) {
+                // Hard constraint already qualifies candidates; treat *_any as soft boosts.
+                out.should = should;
+            } else {
+                // No hard constraint — require at least one *_any condition to match.
+                // min_should.conditions holds the clause list; min_count is the threshold.
+                out.min_should = { conditions: should, min_count: 1 };
             }
         }
         return out;
