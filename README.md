@@ -772,7 +772,7 @@ MIT
 
 ## Author
 
-Coneja-Chibi
+Kritblade
 
 ## Repository
 
