@@ -1425,25 +1425,15 @@ class QdrantBackend {
     async updateItemMetadata(collectionName, hash, metadata, filters = {}) {
         if (!this.baseUrl) throw new Error('Qdrant not initialized');
 
-        // Get existing item (need the vector)
-        const existing = await this.getItem(collectionName, hash, filters);
-        if (!existing) {
-            throw new Error(`Item with hash ${hash} not found`);
-        }
+        collectionName = this._parseCollectionName(collectionName);
+        const numericHash = typeof hash === 'string' ? parseInt(hash, 10) : hash;
 
-        // Delete old item
-        await this.deleteVectors(collectionName, [hash]);
-
-        // Create updated item with same text/vector but new metadata
-        const updatedItem = {
-            hash: hash,
-            text: existing.text,
-            vector: existing.vector,
-            metadata: { ...existing.metadata, ...metadata },
-        };
-
-        // Insert updated item
-        await this.insertVectors(collectionName, [updatedItem], filters);
+        // Use Qdrant's native payload-update endpoint — no vector fetch/delete/reinsert needed.
+        // This works correctly for both plain-vector and named-vector (hybrid) collections.
+        await this._request('POST', `/collections/${collectionName}/points/payload?wait=true`, {
+            payload: metadata,
+            points: [numericHash],
+        });
 
         console.log(`[Qdrant] Updated metadata for item ${hash}`);
     }
