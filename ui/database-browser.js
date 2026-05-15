@@ -740,9 +740,8 @@ const _PERSONA_SCOPED_PREFIXES = [
  * collision-proof regardless of underscores in handle or charName.
  *
  * Chat-scoped collections without a `creatorHandle` are treated as foreign and hidden.
- * If a legitimate collection ends up hidden (e.g. created before the stamp logic landed
- * or imported externally), re-trigger registerCollection while logged in as the owning
- * persona — opening this Database Browser does that automatically.
+ * loadAllCollections() calls registerCollection() for every registry entry on each open,
+ * so the stamp is always applied before this filter runs — even for pre-stamp or imported entries.
  *
  * UI-only filter — not access control. The server still stores everything;
  * a determined user could load another persona's collection by knowing its ID.

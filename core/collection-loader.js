@@ -935,6 +935,11 @@ export async function loadAllCollections(settings, autoDiscover = true) {
             const registrySource = parsedKey.source;
             const registryBackend = parsedKey.backend;
 
+            // Ensure creatorHandle is stamped for any entry that was registered before the stamp
+            // logic landed, or imported from another session. registerCollection() is idempotent:
+            // won't duplicate, won't overwrite an existing handle, and only saves for truly new entries.
+            registerCollection(registryKey);
+
             if (debugLog) console.log(`VectFox: Loading collection: ${collectionId} (backend: ${registryBackend || 'unknown'}, source: ${registrySource || 'unknown'})`);
 
             // First check stored metadata for user-defined contentType (authoritative source)
