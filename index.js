@@ -17,7 +17,6 @@ import sanitize from 'sanitize-filename';
 import vectra from 'vectra';
 import qdrantBackend from './qdrant-backend.js';
 import { DEFAULT_STOP_WORD_SET } from './stop-words.js';
-import { registerMigrationRoutes } from './routes/migrate-to-sparse.js'; // MIGRATE-DELETE
 
 const pluginName = 'similharity';
 const pluginVersion = '3.3.1';
@@ -1665,9 +1664,6 @@ async function _getLegacySingleEmbedding(source, text, model, directories, req) 
             res.status(500).json({ error: error.message });
         }
     });
-
-    // MIGRATE-DELETE: dev-only sparse-vector migration tool. Remove when migration is no longer needed.
-    registerMigrationRoutes(router, pluginName);
 
     console.log(`[${pluginName}] Plugin initialized successfully`);
 }
