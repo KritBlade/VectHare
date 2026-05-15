@@ -175,7 +175,8 @@ export const CONTENT_TYPES = {
         description: 'Vectorize conversation history for semantic recall',
 
         features: {
-            temporalDecay: true,
+            temporalDecay: false,
+            keywordExtraction: false,
             speakerAware: true,
             autoSync: true,
         },
@@ -190,8 +191,6 @@ export const CONTENT_TYPES = {
         defaults: {
             chunkSize: 500,
             batchSize: 4,
-            temporalDecay: { enabled: true, halfLife: 50, floor: 0.3 },
-            autoKeywords: false,
         },
 
         sourceType: 'chat',
@@ -209,6 +208,7 @@ export const CONTENT_TYPES = {
 
         features: {
             temporalDecay: false,
+            keywordExtraction: true,
             keyInheritance: true,
             scopeControl: true,
             respectDisabled: true,
@@ -239,6 +239,7 @@ export const CONTENT_TYPES = {
 
         features: {
             temporalDecay: false,
+            keywordExtraction: true,
             fieldSelection: true,
             scopeControl: true,
             characterScoped: true,
@@ -279,6 +280,7 @@ export const CONTENT_TYPES = {
 
         features: {
             temporalDecay: false,
+            keywordExtraction: true,
             scopeControl: true,
             sectionHeaders: true,
         },
@@ -306,6 +308,7 @@ export const CONTENT_TYPES = {
 
         features: {
             temporalDecay: false,
+            keywordExtraction: true,
             scopeControl: true,
             sectionHeaders: true,
         },
@@ -336,6 +339,7 @@ export const CONTENT_TYPES = {
 
         features: {
             temporalDecay: false,
+            keywordExtraction: true,
             scopeControl: true,
             sectionHeaders: true,
             requiresPlugin: true,
@@ -372,6 +376,7 @@ export const CONTENT_TYPES = {
 
         features: {
             temporalDecay: false,
+            keywordExtraction: true,
             scopeControl: true,
             timestamps: true,
         },

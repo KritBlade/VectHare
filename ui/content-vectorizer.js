@@ -867,46 +867,49 @@ function updateOptionsSection(type) {
     // Text Cleaning settings
     html += renderTextCleaningOptions();
 
-    // Keyword extraction settings
-    html += `
-        <div class="vectfox-cv-option-row vectfox-cv-keyword-settings">
-            <div class="vectfox-cv-keyword-header">
-                <span>Keyword Extraction</span>
-            </div>
-            <div class="vectfox-cv-keyword-controls">
-                <div class="vectfox-cv-keyword-level">
-                    <label for="vectfox_cv_keyword_level">Level:</label>
-                    <select id="vectfox_cv_keyword_level" class="vectfox-select">
-                        <option value="off" ${currentSettings.keywordLevel === 'off' ? 'selected' : ''}>
-                            Off - Manual only
-                        </option>
-                        <option value="minimal" ${currentSettings.keywordLevel === 'minimal' ? 'selected' : ''}>
-                            Minimal - Intro section (5 max)
-                        </option>
-                        <option value="balanced" ${currentSettings.keywordLevel === 'balanced' || !currentSettings.keywordLevel ? 'selected' : ''}>
-                            Balanced - Header area (12 max)
-                        </option>
-                        <option value="aggressive" ${currentSettings.keywordLevel === 'aggressive' ? 'selected' : ''}>
-                            Aggressive - Full text (15 max)
-                        </option>
-                    </select>
+    // Keyword extraction settings (only for types whose ingestion path reads them —
+    // EventBase chat ingestion does not, so this is hidden for the chat type).
+    if (hasFeature(type.id, 'keywordExtraction')) {
+        html += `
+            <div class="vectfox-cv-option-row vectfox-cv-keyword-settings">
+                <div class="vectfox-cv-keyword-header">
+                    <span>Keyword Extraction</span>
                 </div>
-                <div class="vectfox-cv-keyword-weight">
-                    <label for="vectfox_cv_keyword_weight">Base Weight:</label>
-                    <input type="number" id="vectfox_cv_keyword_weight"
-                           min="0.01" max="3.0" step="0.01"
-                           value="${currentSettings.keywordBaseWeight || 1.5}"
-                           class="vectfox-input-number">
-                    <span class="vectfox-cv-weight-hint">×</span>
+                <div class="vectfox-cv-keyword-controls">
+                    <div class="vectfox-cv-keyword-level">
+                        <label for="vectfox_cv_keyword_level">Level:</label>
+                        <select id="vectfox_cv_keyword_level" class="vectfox-select">
+                            <option value="off" ${currentSettings.keywordLevel === 'off' ? 'selected' : ''}>
+                                Off - Manual only
+                            </option>
+                            <option value="minimal" ${currentSettings.keywordLevel === 'minimal' ? 'selected' : ''}>
+                                Minimal - Intro section (5 max)
+                            </option>
+                            <option value="balanced" ${currentSettings.keywordLevel === 'balanced' || !currentSettings.keywordLevel ? 'selected' : ''}>
+                                Balanced - Header area (12 max)
+                            </option>
+                            <option value="aggressive" ${currentSettings.keywordLevel === 'aggressive' ? 'selected' : ''}>
+                                Aggressive - Full text (15 max)
+                            </option>
+                        </select>
+                    </div>
+                    <div class="vectfox-cv-keyword-weight">
+                        <label for="vectfox_cv_keyword_weight">Base Weight:</label>
+                        <input type="number" id="vectfox_cv_keyword_weight"
+                               min="0.01" max="3.0" step="0.01"
+                               value="${currentSettings.keywordBaseWeight || 1.5}"
+                               class="vectfox-input-number">
+                        <span class="vectfox-cv-weight-hint">×</span>
+                    </div>
                 </div>
+                <span class="vectfox-cv-option-hint">
+                    ${type.id === 'lorebook'
+                        ? 'WI trigger keys always included. Auto-extraction adds more based on text frequency.'
+                        : 'Higher frequency words get higher weights. Base weight applies to all extracted keywords.'}
+                </span>
             </div>
-            <span class="vectfox-cv-option-hint">
-                ${type.id === 'lorebook'
-                    ? 'WI trigger keys always included. Auto-extraction adds more based on text frequency.'
-                    : 'Higher frequency words get higher weights. Base weight applies to all extracted keywords.'}
-            </span>
-        </div>
-    `;
+        `;
+    }
 
     // Temporal decay (only for types that support it)
     if (hasFeature(type.id, 'temporalDecay')) {
