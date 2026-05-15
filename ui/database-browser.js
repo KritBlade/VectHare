@@ -2570,6 +2570,13 @@ function saveActivation() {
   if (scopeOverride) metaUpdate.scope = scopeOverride;
   setCollectionMeta(state.collectionId, metaUpdate);
 
+  // Sync the cached collection object so renderCollections() reflects the new scope
+  // without a full reload from the registry.
+  if (scopeOverride) {
+    const cached = browserState.collections.find(c => (c.registryKey || c.id) === state.collectionId || c.id === state.collectionId);
+    if (cached) cached.scope = scopeOverride;
+  }
+
   // Save conditions
   const conditions = {
     enabled: $("#vectfox_conditions_enabled").prop("checked"),
