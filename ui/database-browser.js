@@ -978,15 +978,28 @@ function renderCollectionCard(collection) {
   // Lock badge — show only when locked to the CURRENT chat. Locks to other chats
   // still exist (visible in the Settings modal as "X lock (other chat)"), but the
   // listing badge would be misleading there since the collection isn't active here.
+  // The "active for current chat" badge fires whenever this collection would
+  // activate in the current chat — chat lock, character lock match, OR global scope.
+  // Matches the runtime logic in shouldCollectionActivate() (priorities 1.5 and 4).
   const lockCount = getCollectionLockCount(collection.id);
   const currentChatId = getCurrentChatId();
-  const lockedToCurrent = currentChatId && isCollectionLockedToChat(collection.id, currentChatId);
+  const currentCharacterId = getContext()?.characterId;
+  const isChatLocked = currentChatId && isCollectionLockedToChat(collection.id, currentChatId);
+  const isCharLocked = currentCharacterId && isCollectionLockedToCharacter(collection.id, String(currentCharacterId));
+  const isGlobalScope = collection.scope === 'global';
   let lockBadge = "";
-  if (lockedToCurrent) {
-    const otherCount = lockCount - 1;
-    const lockTitle = otherCount > 0
-      ? `Active for current chat (also locked to ${otherCount} other chat${otherCount !== 1 ? "s" : ""})`
-      : "Active for current chat";
+  if (isChatLocked || isCharLocked || isGlobalScope) {
+    let lockTitle;
+    if (isGlobalScope) {
+      lockTitle = "Active (global scope — every chat)";
+    } else if (isChatLocked) {
+      const otherCount = lockCount - 1;
+      lockTitle = otherCount > 0
+        ? `Active for current chat (also locked to ${otherCount} other chat${otherCount !== 1 ? "s" : ""})`
+        : "Active for current chat";
+    } else {
+      lockTitle = "Active for current chat (via character lock)";
+    }
     lockBadge = `<span class="vectfox-badge vectfox-badge-lock" title="${lockTitle}">🔒</span>`;
   }
 
