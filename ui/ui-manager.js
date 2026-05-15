@@ -1730,17 +1730,32 @@ export async function refreshWIStatus() {
 
     const chatId = getCurrentChatId();
     const { getChatLockedCollections, getCollectionMeta } = await import('../core/collection-metadata.js');
-    const lockedIds = getChatLockedCollections(chatId).filter(id => id.startsWith('vf_lorebook_'));
 
-    if (lockedIds.length === 0) {
+    // Lorebooks locked to this specific chat
+    const chatLockedIds = getChatLockedCollections(chatId).filter(id => id.startsWith('vf_lorebook_'));
+
+    // Lorebooks with global scope are active in every chat without needing a lock
+    const globalLorebookIds = (Array.isArray(registry) ? registry : [])
+        .filter(key => {
+            const id = parseRegistryKey(key).collectionId;
+            if (!id.startsWith('vf_lorebook_')) return false;
+            if (!isSuperadmin && extractLorebookHandle(id) !== ownHandle) return false;
+            const meta = getCollectionMeta(key) || getCollectionMeta(id);
+            return (meta?.scope || 'global') === 'global';
+        })
+        .map(key => parseRegistryKey(key).collectionId);
+
+    const activeIds = [...new Set([...chatLockedIds, ...globalLorebookIds])];
+
+    if (activeIds.length === 0) {
         $status.html(
             '<i class="fa-solid fa-circle-exclamation" style="color: var(--warning-color, #f39c12);"></i> ' +
-            'Lorebook vectorized but not locked to this chat — open Database Browser → Collection Settings to lock it'
+            'Lorebook vectorized but not active for this chat — lock it in Database Browser → Collection Settings'
         );
         return;
     }
 
-    const names = lockedIds.map(id => getCollectionMeta(id)?.sourceName || id);
+    const names = activeIds.map(id => getCollectionMeta(id)?.sourceName || id);
     const nameList = names.map(n => `<span style="font-style:italic;">${n}</span>`).join(', ');
     $status.html(
         `<i class="fa-solid fa-circle-check" style="color: var(--success-color, #27ae60);"></i> ` +
@@ -2861,12 +2876,21 @@ function bindSettingsEvents(settings, callbacks) {
                     return;
                 }
 
-                // Lorebook exists for this persona — verify one is locked to this chat
+                // Lorebook exists for this persona — verify one is active for this chat.
+                // Global-scope lorebooks are active everywhere (no lock needed).
+                // Chat-scoped lorebooks need a chat lock.
                 const chatId = getCurrentChatId();
-                const { getChatLockedCollections } = await import('../core/collection-metadata.js');
-                const lockedLorebooks = getChatLockedCollections(chatId).filter(id => id.startsWith('vf_lorebook_'));
+                const { getChatLockedCollections, getCollectionMeta } = await import('../core/collection-metadata.js');
+                const chatLockedLorebooks = getChatLockedCollections(chatId).filter(id => id.startsWith('vf_lorebook_'));
+                const globalLorebooks = Array.isArray(registry) ? registry.filter(key => {
+                    const id = parseRegistryKey(key).collectionId;
+                    if (!id.startsWith('vf_lorebook_')) return false;
+                    if (!isSuperadmin && extractLorebookHandle(id) !== ownHandle) return false;
+                    const meta = getCollectionMeta(key) || getCollectionMeta(id);
+                    return (meta?.scope || 'global') === 'global';
+                }) : [];
 
-                if (lockedLorebooks.length === 0) {
+                if (chatLockedLorebooks.length === 0 && globalLorebooks.length === 0) {
                     $checkbox.prop('checked', false);
                     toastr.info('Lock a lorebook to this chat in Database Browser → Collection Settings');
                     openDatabaseBrowser();

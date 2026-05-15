@@ -2685,6 +2685,10 @@ async function startContinueVectorization() {
             toastr.success(`Inserted ${result.chunkCount} new chunks`, 'VectFox');
         }
         closeContentVectorizer();
+        if (currentContentType === 'lorebook') {
+            const { refreshWIStatus } = await import('./ui-manager.js');
+            await refreshWIStatus();
+        }
     } catch (e) {
         const isStopped = e?.name === 'AbortError' || String(e?.message || '').toLowerCase().includes('stopped by user');
         if (isStopped) {
@@ -2936,6 +2940,13 @@ async function startVectorization() {
         toastr.success(`Vectorized ${result.chunkCount} chunks`, 'VectFox');
         renderCollections();
         closeContentVectorizer();
+
+        // After lorebook vectorization, refresh the WI status so the checkbox
+        // auto-enables if the new collection is now active (global scope or chat-locked).
+        if (currentContentType === 'lorebook') {
+            const { refreshWIStatus } = await import('./ui-manager.js');
+            await refreshWIStatus();
+        }
 
     } catch (e) {
         const isStopped = e?.name === 'AbortError' || String(e?.message || '').toLowerCase().includes('stopped by user');
