@@ -22,7 +22,8 @@ import { openTextCleaningManager } from './text-cleaning-manager.js';
 import { progressTracker } from './progress-tracker.js';
 import { resetBackendHealth } from '../backends/backend-manager.js';
 import { getHealthIndicatorHtml, getHealthModalHtml, initializeHealthDashboard, refreshIndicator as refreshHealthIndicator } from './health-dashboard.js';
-import { doesChatHaveVectors, getCollectionRegistry } from '../core/collection-loader.js';
+import { doesChatHaveVectors, getCollectionRegistry, registerCollection, sanitizeHandleId } from '../core/collection-loader.js';
+import { getCollectionMeta } from '../core/collection-metadata.js';
 import { parseRegistryKey } from '../core/collection-ids.js';
 import { getModelField } from '../core/providers.js';
 import { getChunkingStrategies } from '../core/content-types.js';
@@ -1697,49 +1698,41 @@ export async function refreshWIStatus() {
     const $status = $('#VectFox_wi_status');
     if (!$status.length) return;
 
-    // State 1: no lorebooks vectorized for this persona (in-memory registry scan, no backend call).
-    // superadmin=true bypasses the handle filter and counts lorebooks for any persona.
     const settings = extension_settings.vectfox || {};
-    const ownHandle = String(getContext()?.name1 || 'user')
-        .normalize('NFC')
-        .toLowerCase()
-        .replace(/[^\p{L}\p{N}]+/gu, '_')
-        .replace(/^_|_$/g, '')
-        .substring(0, 30) || 'user';
+    const ownHandle = sanitizeHandleId(getContext()?.name1);
     const isSuperadmin = settings.superadmin === true;
-    const knownBackends = ['standard', 'vectra', 'qdrant'];
-    const extractLorebookHandle = (id) => {
-        const idLower = String(id || '').toLowerCase();
-        const prefix = 'vf_lorebook_';
-        if (!idLower.startsWith(prefix)) return null;
-        const segs = idLower.slice(prefix.length).split('_');
-        const handleIdx = knownBackends.includes(segs[0]) ? 1 : 0;
-        return segs[handleIdx] || null;
-    };
+
     const registry = getCollectionRegistry();
-    const anyLorebook = Array.isArray(registry) && registry.some(key => {
+
+    // Check ownership via creatorHandle stamp (reliable for handles with underscores).
+    // registerCollection() stamps the handle using a substring search (_handle_), which
+    // correctly handles handles containing underscores unlike a split-based approach.
+    const _isOwnLorebook = (key) => {
         const id = parseRegistryKey(key).collectionId;
         if (!id.startsWith('vf_lorebook_')) return false;
         if (isSuperadmin) return true;
-        return extractLorebookHandle(id) === ownHandle;
-    });
+        registerCollection(key); // no-op if already stamped; stamps handle if missing
+        const meta = getCollectionMeta(key) || getCollectionMeta(id);
+        return String(meta?.creatorHandle || '').toLowerCase() === ownHandle;
+    };
+
+    const anyLorebook = Array.isArray(registry) && registry.some(_isOwnLorebook);
     if (!anyLorebook) {
         $status.html('<i class="fa-solid fa-circle-exclamation" style="color: var(--warning-color, #f39c12);"></i> No lorebooks vectorized — vectorize one first');
         return;
     }
 
     const chatId = getCurrentChatId();
-    const { getChatLockedCollections, getCollectionMeta } = await import('../core/collection-metadata.js');
+    const { getChatLockedCollections } = await import('../core/collection-metadata.js');
 
     // Lorebooks locked to this specific chat
     const chatLockedIds = getChatLockedCollections(chatId).filter(id => id.startsWith('vf_lorebook_'));
 
-    // Lorebooks with global scope are active in every chat without needing a lock
+    // Global-scope lorebooks are active in every chat — no lock needed
     const globalLorebookIds = (Array.isArray(registry) ? registry : [])
         .filter(key => {
+            if (!_isOwnLorebook(key)) return false;
             const id = parseRegistryKey(key).collectionId;
-            if (!id.startsWith('vf_lorebook_')) return false;
-            if (!isSuperadmin && extractLorebookHandle(id) !== ownHandle) return false;
             const meta = getCollectionMeta(key) || getCollectionMeta(id);
             return (meta?.scope || 'global') === 'global';
         })
@@ -2844,30 +2837,21 @@ function bindSettingsEvents(settings, callbacks) {
             if (enabled) {
                 // Filter lorebook collections to only those owned by the current persona handle.
                 // superadmin=true (hand-edited into settings.json) bypasses the handle filter.
-                const ownHandle = String(getContext()?.name1 || 'user')
-                    .normalize('NFC')
-                    .toLowerCase()
-                    .replace(/[^\p{L}\p{N}]+/gu, '_')
-                    .replace(/^_|_$/g, '')
-                    .substring(0, 30) || 'user';
+                const ownHandle = sanitizeHandleId(getContext()?.name1);
                 const isSuperadmin = settings.superadmin === true;
-                const knownBackends = ['standard', 'vectra', 'qdrant'];
-                const extractLorebookHandle = (id) => {
-                    const idLower = String(id || '').toLowerCase();
-                    const prefix = 'vf_lorebook_';
-                    if (!idLower.startsWith(prefix)) return null;
-                    const segs = idLower.slice(prefix.length).split('_');
-                    const handleIdx = knownBackends.includes(segs[0]) ? 1 : 0;
-                    return segs[handleIdx] || null;
-                };
 
                 const registry = getCollectionRegistry();
-                const hasLorebookVectors = Array.isArray(registry) && registry.some(key => {
+                // Use creatorHandle stamp (set via substring search) — reliable for handles with underscores.
+                const _isOwnLorebook = (key) => {
                     const id = parseRegistryKey(key).collectionId;
                     if (!id.startsWith('vf_lorebook_')) return false;
                     if (isSuperadmin) return true;
-                    return extractLorebookHandle(id) === ownHandle;
-                });
+                    registerCollection(key); // stamps creatorHandle if missing
+                    const meta = getCollectionMeta(key) || getCollectionMeta(id);
+                    return String(meta?.creatorHandle || '').toLowerCase() === ownHandle;
+                };
+
+                const hasLorebookVectors = Array.isArray(registry) && registry.some(_isOwnLorebook);
 
                 if (!hasLorebookVectors) {
                     $checkbox.prop('checked', false);
@@ -2880,12 +2864,11 @@ function bindSettingsEvents(settings, callbacks) {
                 // Global-scope lorebooks are active everywhere (no lock needed).
                 // Chat-scoped lorebooks need a chat lock.
                 const chatId = getCurrentChatId();
-                const { getChatLockedCollections, getCollectionMeta } = await import('../core/collection-metadata.js');
+                const { getChatLockedCollections } = await import('../core/collection-metadata.js');
                 const chatLockedLorebooks = getChatLockedCollections(chatId).filter(id => id.startsWith('vf_lorebook_'));
                 const globalLorebooks = Array.isArray(registry) ? registry.filter(key => {
+                    if (!_isOwnLorebook(key)) return false;
                     const id = parseRegistryKey(key).collectionId;
-                    if (!id.startsWith('vf_lorebook_')) return false;
-                    if (!isSuperadmin && extractLorebookHandle(id) !== ownHandle) return false;
                     const meta = getCollectionMeta(key) || getCollectionMeta(id);
                     return (meta?.scope || 'global') === 'global';
                 }) : [];

@@ -17,6 +17,7 @@ import {
   unregisterCollection,
   clearCollectionRegistry,
   deleteCollection,
+  sanitizeHandleId,
 } from "../core/collection-loader.js";
 import { COLLECTION_PREFIXES } from "../core/collection-ids.js";
 import {
@@ -682,14 +683,7 @@ function switchTab(tabName) {
  * @param {string} name
  * @returns {string}
  */
-function _sanitizeHandleForFilter(name) {
-  return String(name || "user")
-    .normalize("NFC")
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, "_")
-    .replace(/^_|_$/g, "")
-    .substring(0, 30) || "user";
-}
+const _sanitizeHandleForFilter = sanitizeHandleId;
 
 /**
  * Extract the persona handle embedded in a VECTFOX collection ID name.

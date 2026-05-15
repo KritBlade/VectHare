@@ -98,7 +98,7 @@ export function getCollectionRegistry() {
  * Sanitize a persona name into the handleId form used by collection-ID builders.
  * Must match buildChatCollectionId / buildEventBaseCollectionId / buildArchiveEventCollectionId.
  */
-function _sanitizeHandleId(name) {
+export function sanitizeHandleId(name) {
     return String(name || 'user')
         .normalize('NFC')
         .toLowerCase()
@@ -106,6 +106,8 @@ function _sanitizeHandleId(name) {
         .replace(/^_|_$/g, '')
         .substring(0, 30) || 'user';
 }
+
+function _sanitizeHandleId(name) { return sanitizeHandleId(name); }
 
 export function registerCollection(collectionId) {
     if (!collectionId) {
