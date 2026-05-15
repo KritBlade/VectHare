@@ -220,7 +220,7 @@ export const CONTENT_TYPES = {
         defaults: {
             chunkSize: 600,
             autoKeywords: true,
-            scope: 'global',
+            scope: 'character',
         },
 
         sourceType: 'select',
@@ -289,7 +289,7 @@ export const CONTENT_TYPES = {
         defaults: {
             chunkSize: 400,
             autoKeywords: true,
-            scope: 'global',
+            scope: 'character',
         },
 
         sourceType: 'url',
@@ -316,7 +316,7 @@ export const CONTENT_TYPES = {
         defaults: {
             chunkSize: 400,
             autoKeywords: false,
-            scope: 'global',
+            scope: 'character',
         },
 
         sourceType: 'input',
@@ -348,7 +348,7 @@ export const CONTENT_TYPES = {
         defaults: {
             chunkSize: 600,
             autoKeywords: true,
-            scope: 'global',
+            scope: 'character',
             wikiType: 'fandom',
         },
 
@@ -382,7 +382,7 @@ export const CONTENT_TYPES = {
         defaults: {
             chunkSize: 400,
             autoKeywords: true,
-            scope: 'global',
+            scope: 'character',
         },
 
         sourceType: 'youtube',
@@ -443,7 +443,6 @@ export function hasFeature(typeId, feature) {
  * Scope options available for content types that support it
  */
 export const SCOPE_OPTIONS = [
-    { id: 'global', name: 'Global', description: 'Available in all chats', icon: 'fa-globe' },
     { id: 'character', name: 'Character', description: 'Only with current character', icon: 'fa-user' },
     { id: 'chat', name: 'This Chat', description: 'Only in current conversation', icon: 'fa-comment' },
 ];

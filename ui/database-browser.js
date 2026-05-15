@@ -2515,26 +2515,47 @@ function saveActivation() {
 
   const isChecked = $("#vectfox_always_active").prop("checked");
   const currentChatId = getCurrentChatId();
+  const currentCharacterId = getContext()?.characterId;
   const saveMeta = getCollectionMeta(state.collectionId);
-  const isGlobalScopeCollection = saveMeta.scope === 'global';
-  console.log(`[VectFox] saveActivation: alwaysActive checkbox=${isChecked}, chatId=${currentChatId || 'none'}, collection=${state.collectionId}, globalScope=${isGlobalScopeCollection}`);
-  // Global-scope collections activate everywhere — chat lock is irrelevant, skip it.
-  if (!isGlobalScopeCollection) {
+  const wasGlobalScope = saveMeta.scope === 'global';
+  console.log(`[VectFox] saveActivation: alwaysActive checkbox=${isChecked}, chatId=${currentChatId || 'none'}, charId=${currentCharacterId ?? 'none'}, collection=${state.collectionId}, wasGlobalScope=${wasGlobalScope}`);
+
+  // Uncheck = clean everything: remove chat lock, character lock, and demote legacy global scope.
+  // After saving, shouldCollectionActivate() must return false for this collection.
+  let scopeOverride = null;
+  if (!isChecked) {
     if (currentChatId) {
-      if (isChecked) {
+      removeCollectionLock(state.collectionId, currentChatId);
+    }
+    if (currentCharacterId) {
+      removeCollectionCharacterLock(state.collectionId, String(currentCharacterId));
+    }
+    // Demote legacy global scope so priority 1.5 in shouldCollectionActivate stops returning true.
+    if (wasGlobalScope) {
+      scopeOverride = 'character';
+    }
+  } else {
+    // Check = apply the lock matching the collection's scope.
+    if (saveMeta.scope === 'chat') {
+      if (currentChatId) {
         setCollectionLock(state.collectionId, currentChatId);
       } else {
-        removeCollectionLock(state.collectionId, currentChatId);
+        toastr.info('No active chat context; "Active for current chat" was not changed');
       }
-    } else {
-      toastr.info('No active chat context; "Active for current chat" was not changed');
+    } else if (saveMeta.scope === 'character') {
+      if (currentCharacterId) {
+        setCollectionCharacterLock(state.collectionId, String(currentCharacterId));
+      } else {
+        toastr.info('No active character; "Active for current chat" was not changed');
+      }
     }
+    // wasGlobalScope + checked = no-op (collection is already global-active everywhere).
   }
 
   const alwaysActiveValue = false;
 
   // Update metadata (all in one call)
-  setCollectionMeta(state.collectionId, {
+  const metaUpdate = {
     alwaysActive: alwaysActiveValue,
     triggers: triggers,
     triggerMatchMode: $("#vectfox_trigger_match_mode").val(),
@@ -2545,7 +2566,9 @@ function saveActivation() {
     xmlTag: xmlTag,
     position: position,
     depth: depth,
-  });
+  };
+  if (scopeOverride) metaUpdate.scope = scopeOverride;
+  setCollectionMeta(state.collectionId, metaUpdate);
 
   // Save conditions
   const conditions = {

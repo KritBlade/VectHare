@@ -938,7 +938,7 @@ function updateOptionsSection(type) {
  * Renders scope selection options with actual character/chat names
  */
 function renderScopeOptions(type) {
-    const defaultScope = type.defaults?.scope || 'global';
+    const defaultScope = type.defaults?.scope || 'character';
     const context = getContext();
 
     // Get current character name (if any)
@@ -958,13 +958,6 @@ function renderScopeOptions(type) {
     }
 
     const scopeData = [
-        {
-            id: 'global',
-            name: 'Global',
-            desc: 'Available in all chats',
-            icon: 'fa-globe',
-            enabled: true,
-        },
         {
             id: 'character',
             name: hasCharacter ? characterName : 'Character',
