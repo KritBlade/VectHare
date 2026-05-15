@@ -17,8 +17,6 @@ import {
     getChunkMetadata,
     saveChunkMetadata,
     deleteChunkMetadata,
-    getCollectionMeta,
-    setCollectionMeta,
 } from '../core/collection-metadata.js';
 import {
     deleteVectorItems,
@@ -27,11 +25,6 @@ import {
     updateChunkMetadata,
 } from '../core/core-vector-api.js';
 import { getStringHash } from '../../../../utils.js';
-import {
-    createGroup,
-    validateGroup,
-    getGroupStats,
-} from '../core/chunk-groups.js';
 import { getContext } from '../../../../extensions.js';
 import { eventSource, getRequestHeaders } from '../../../../../script.js';
 
@@ -59,7 +52,6 @@ let selectedHashes = new Set();
 let hasUnsavedChanges = false;
 let pendingChanges = new Map(); // hash -> {keywords, enabled, conditions, etc.}
 let plaintextKeywordMode = false; // Toggle for plaintext keyword editing
-let activeTab = 'chunks'; // 'chunks' or 'groups'
 
 // ============================================================================
 // COLLECTION TYPE HELPERS
@@ -252,7 +244,6 @@ export function openVisualizer(results, collectionId, settings, onReload = null)
     selectedHashes.clear();
     pendingChanges.clear();
     hasUnsavedChanges = false;
-    activeTab = 'chunks'; // Reset to chunks tab on open
 
     // Process chunks - add unique identifier for each chunk
     allChunks = (results?.chunks || []).map((chunk, idx) => ({
@@ -441,18 +432,8 @@ function createModal() {
                     </div>
                 </div>
 
-                <!-- Tab Bar -->
-                <div class="vectfox-visualizer-tabs">
-                    <button class="vectfox-visualizer-tab active" data-tab="chunks">
-                        <i class="fa-solid fa-puzzle-piece"></i> Chunks
-                    </button>
-                    <button class="vectfox-visualizer-tab" data-tab="groups">
-                        <i class="fa-solid fa-layer-group"></i> Groups
-                    </button>
-                </div>
-
-                <!-- Body: Split Panel (Chunks Tab) -->
-                <div class="vectfox-visualizer-body vectfox-vis-tab-content active" data-tab="chunks">
+                <!-- Body: Chunk Split Panel -->
+                <div class="vectfox-visualizer-body">
                     <!-- Left: Chunk List -->
                     <div class="vectfox-chunk-list-panel">
                         <div class="vectfox-list-toolbar">
@@ -503,23 +484,6 @@ function createModal() {
                     </div>
                 </div>
 
-                <!-- Groups Tab Content -->
-                <div class="vectfox-visualizer-body vectfox-vis-tab-content vectfox-groups-tab" data-tab="groups">
-                    <div class="vectfox-groups-toolbar">
-                        <button class="vectfox-btn-primary" id="VectFox_create_group">
-                            <i class="fa-solid fa-plus"></i> New Group
-                        </button>
-                        <div class="vectfox-groups-stats" id="VectFox_groups_stats"></div>
-                    </div>
-                    <div class="vectfox-groups-container" id="VectFox_groups_container">
-                        <div class="vectfox-groups-empty">
-                            <i class="fa-solid fa-layer-group"></i>
-                            <p>No groups defined</p>
-                            <span>Groups let you bundle chunks together for collective activation or mutual exclusion</span>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Read-only collection metadata footer (sentinel point). Populated async after modal opens. -->
                 <div class="vectfox-visualizer-meta-footer" id="VectFox_collection_meta_footer" style="display:none; padding: 8px 16px; border-top: 1px solid var(--grey30); font-size: 0.78em; color: var(--SmartThemeBodyColor); opacity: 0.7; font-family: monospace;"></div>
             </div>
@@ -527,433 +491,6 @@ function createModal() {
     `;
 
     $('body').append(html);
-}
-
-// ============================================================================
-// GROUPS TAB STATE & RENDERING
-// ============================================================================
-
-let selectedGroupId = null;
-
-/**
- * Gets groups from collection metadata
- * @returns {object[]} Array of group definitions
- */
-function getGroups() {
-    if (!currentCollectionId) return [];
-    const meta = getCollectionMeta(currentCollectionId);
-    return meta.groups || [];
-}
-
-/**
- * Saves groups to collection metadata
- * @param {object[]} groups - Array of group definitions
- */
-function saveGroups(groups) {
-    if (!currentCollectionId) return;
-    setCollectionMeta(currentCollectionId, { groups });
-}
-
-/**
- * Renders the groups tab content
- */
-function renderGroupsTab() {
-    const container = $('#VectFox_groups_container');
-    if (!container.length) return;
-
-    const groups = getGroups();
-    const stats = getGroupStats(groups);
-
-    // Update stats display
-    $('#VectFox_groups_stats').html(
-        groups.length > 0
-            ? `<span>${stats.totalGroups} group${stats.totalGroups !== 1 ? 's' : ''}</span>
-               <span class="vectfox-stat-divider">|</span>
-               <span>${stats.inclusiveGroups} inclusive</span>
-               <span class="vectfox-stat-divider">|</span>
-               <span>${stats.exclusiveGroups} exclusive</span>`
-            : ''
-    );
-    bindGroupsTabEvents();
-    if (groups.length === 0) {
-        container.html(`
-            <div class="vectfox-groups-empty">
-                <i class="fa-solid fa-layer-group"></i>
-                <p>No groups defined</p>
-                <span>Groups let you bundle chunks together for collective activation or mutual exclusion</span>
-            </div>
-        `);
-        return;
-    }
-
-    // Split-panel layout
-    container.html(`
-        <div class="vectfox-group-list-panel">
-            <div class="vectfox-group-list" id="VectFox_group_list"></div>
-        </div>
-        <div class="vectfox-group-detail-panel" id="VectFox_group_detail">
-            <div class="vectfox-detail-empty">Select a group to view details</div>
-        </div>
-    `);
-    renderGroupList();    
-}
-
-/**
- * Renders the group list (left panel)
- */
-function renderGroupList() {
-    const container = $('#VectFox_group_list');
-    const groups = getGroups();
-
-    const html = groups.map(group => {
-        const memberCount = group.members?.length || 0;
-        const isSelected = group.id === selectedGroupId;
-        const modeIcon = group.mode === 'inclusive' ? 'fa-link' : 'fa-code-branch';
-        const modeLabel = group.mode === 'inclusive'
-            ? (group.linkType === 'hard' ? 'Hard Link' : 'Soft Link')
-            : (group.mandatory ? 'Exclusive (Mandatory)' : 'Exclusive');
-
-        return `
-            <div class="vectfox-group-item ${isSelected ? 'selected' : ''}" data-group-id="${group.id}">
-                <div class="vectfox-group-item-header">
-                    <i class="fa-solid ${modeIcon}"></i>
-                    <span class="vectfox-group-name">${escapeHtml(group.name)}</span>
-                </div>
-                <div class="vectfox-group-item-meta">
-                    <span class="vectfox-group-mode">${modeLabel}</span>
-                    <span class="vectfox-group-count">${memberCount} chunk${memberCount !== 1 ? 's' : ''}</span>
-                </div>
-            </div>
-        `;
-    }).join('');
-
-    container.html(html);
-}
-
-/**
- * Renders the group detail panel (right panel)
- */
-function renderGroupDetailPanel() {
-    const container = $('#VectFox_group_detail');
-    const groups = getGroups();
-    const group = groups.find(g => g.id === selectedGroupId);
-
-    if (!group) {
-        container.html('<div class="vectfox-detail-empty">Select a group to view details</div>');
-        return;
-    }
-
-    const memberChunks = (group.members || []).map(hash => {
-        const chunk = allChunks.find(c => String(c.hash) === String(hash));
-        return chunk ? { hash, chunk } : { hash, chunk: null };
-    });
-
-    const modeOptions = `
-        <option value="inclusive" ${group.mode === 'inclusive' ? 'selected' : ''}>Inclusive</option>
-        <option value="exclusive" ${group.mode === 'exclusive' ? 'selected' : ''}>Exclusive</option>
-    `;
-
-    const linkTypeOptions = `
-        <option value="soft" ${group.linkType === 'soft' ? 'selected' : ''}>Soft Link (Score Boost)</option>
-        <option value="hard" ${group.linkType === 'hard' ? 'selected' : ''}>Hard Link (Force Include)</option>
-    `;
-
-    container.html(`
-        <div class="vectfox-group-detail-content">
-            <div class="vectfox-group-detail-header">
-                <input type="text" class="vectfox-group-name-input" id="VectFox_group_name"
-                       value="${escapeHtml(group.name)}" placeholder="Group name">
-                <button class="vectfox-btn-danger" id="VectFox_delete_group" title="Delete group">
-                    <i class="fa-solid fa-trash"></i>
-                </button>
-            </div>
-
-            <div class="vectfox-group-settings">
-                <div class="vectfox-group-setting-row">
-                    <label>Mode</label>
-                    <select id="VectFox_group_mode" class="vectfox-group-select">
-                        ${modeOptions}
-                    </select>
-                </div>
-
-                <div class="vectfox-group-setting-row vectfox-inclusive-settings" style="${group.mode !== 'inclusive' ? 'display:none' : ''}">
-                    <label>Link Type</label>
-                    <select id="VectFox_group_link_type" class="vectfox-group-select">
-                        ${linkTypeOptions}
-                    </select>
-                </div>
-
-                <div class="vectfox-group-setting-row vectfox-inclusive-settings vectfox-soft-settings"
-                     style="${group.mode !== 'inclusive' || group.linkType !== 'soft' ? 'display:none' : ''}">
-                    <label>Score Boost</label>
-                    <input type="number" id="VectFox_group_boost" class="vectfox-group-input"
-                           value="${group.boost || 0.15}" min="0" max="1" step="0.05">
-                </div>
-
-                <div class="vectfox-group-setting-row vectfox-exclusive-settings" style="${group.mode !== 'exclusive' ? 'display:none' : ''}">
-                    <label>
-                        <input type="checkbox" id="VectFox_group_mandatory" ${group.mandatory ? 'checked' : ''}>
-                        Mandatory (at least one must be included)
-                    </label>
-                </div>
-            </div>
-
-            <div class="vectfox-group-members-section">
-                <div class="vectfox-group-members-header">
-                    <h4><i class="fa-solid fa-puzzle-piece"></i> Members (${memberChunks.length})</h4>
-                    <button class="vectfox-btn-small" id="VectFox_add_group_member">
-                        <i class="fa-solid fa-plus"></i> Add
-                    </button>
-                </div>
-                <div class="vectfox-group-members-list" id="VectFox_group_members">
-                    ${memberChunks.length === 0 ? '<div class="vectfox-empty-hint">No members yet. Click "Add" to add chunks.</div>' : ''}
-                    ${memberChunks.map(({ hash, chunk }) => `
-                        <div class="vectfox-group-member" data-hash="${hash}">
-                            <div class="vectfox-group-member-info">
-                                ${chunk
-                                    ? `<span class="vectfox-member-preview">${escapeHtml((chunk.data?.text || '').substring(0, 60))}...</span>
-                                       <span class="vectfox-member-hash">#${String(hash).substring(0, 8)}</span>`
-                                    : `<span class="vectfox-member-missing">Chunk not found</span>
-                                       <span class="vectfox-member-hash">#${String(hash).substring(0, 8)}</span>`
-                                }
-                            </div>
-                            <button class="vectfox-member-remove" data-hash="${hash}" title="Remove from group">
-                                <i class="fa-solid fa-times"></i>
-                            </button>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-        </div>
-    `);
-
-    bindGroupDetailEvents();
-}
-
-/**
- * Opens the add member dialog
- */
-function openAddMemberDialog() {
-    const groups = getGroups();
-    const group = groups.find(g => g.id === selectedGroupId);
-    if (!group) return;
-
-    const existingMembers = new Set(group.members || []);
-    const availableChunks = allChunks.filter(c => !existingMembers.has(String(c.hash)));
-
-    if (availableChunks.length === 0) {
-        toastr.info('All chunks are already in this group');
-        return;
-    }
-
-    const overlay = $(`
-        <div class="vectfox-editor-overlay">
-            <div class="vectfox-editor-dialog vectfox-add-member-dialog">
-                <div class="vectfox-editor-header">
-                    <h3><i class="fa-solid fa-plus"></i> Add Chunk to Group</h3>
-                    <button class="vectfox-editor-close" id="VectFox_member_close">
-                        <i class="fa-solid fa-times"></i>
-                    </button>
-                </div>
-                <div class="vectfox-editor-body">
-                    <div class="vectfox-member-search">
-                        <input type="text" id="VectFox_member_search" placeholder="Search chunks...">
-                    </div>
-                    <div class="vectfox-member-list" id="VectFox_available_members">
-                        ${availableChunks.slice(0, 50).map(c => `
-                            <div class="vectfox-member-option" data-hash="${c.hash}">
-                                <span class="vectfox-member-preview">${escapeHtml((c.data?.text || '').substring(0, 80))}...</span>
-                                <span class="vectfox-member-hash">#${String(c.hash).substring(0, 8)}</span>
-                            </div>
-                        `).join('')}
-                        ${availableChunks.length > 50 ? `<div class="vectfox-member-more">${availableChunks.length - 50} more chunks (use search)</div>` : ''}
-                    </div>
-                </div>
-            </div>
-        </div>
-    `);
-
-    $('.vectfox-visualizer-container').append(overlay);
-
-    // Stop propagation to prevent extension panel close
-    overlay.on('click', function(e) {
-        e.stopPropagation();
-        if (e.target === this) overlay.remove();
-    });
-
-    $('#VectFox_member_close').on('click', () => overlay.remove());
-
-    // Search filtering
-    $('#VectFox_member_search').on('input', function() {
-        const query = $(this).val().toLowerCase();
-        const filtered = availableChunks.filter(c =>
-            (c.data?.text || '').toLowerCase().includes(query) ||
-            String(c.hash).includes(query)
-        );
-
-        $('#VectFox_available_members').html(
-            filtered.slice(0, 50).map(c => `
-                <div class="vectfox-member-option" data-hash="${c.hash}">
-                    <span class="vectfox-member-preview">${escapeHtml((c.data?.text || '').substring(0, 80))}...</span>
-                    <span class="vectfox-member-hash">#${String(c.hash).substring(0, 8)}</span>
-                </div>
-            `).join('') +
-            (filtered.length > 50 ? `<div class="vectfox-member-more">${filtered.length - 50} more results</div>` : '') +
-            (filtered.length === 0 ? '<div class="vectfox-empty-hint">No matching chunks</div>' : '')
-        );
-    });
-
-    // Click to add
-    overlay.on('click', '.vectfox-member-option', function (e) {
-        e.stopPropagation(); // Prevent overlay close
-        const hash = $(this).data('hash');
-        addMemberToGroup(String(hash));
-        overlay.remove();
-    });
-}
-
-/**
- * Adds a chunk to the current group
- */
-function addMemberToGroup(hash) {
-    const groups = getGroups();
-    const groupIdx = groups.findIndex(g => g.id === selectedGroupId);
-    if (groupIdx === -1) return;
-
-    if (!groups[groupIdx].members) groups[groupIdx].members = [];
-    if (!groups[groupIdx].members.includes(hash)) {
-        groups[groupIdx].members.push(hash);
-        saveGroups(groups);
-        renderGroupDetailPanel();
-        toastr.success('Chunk added to group');
-    }
-}
-
-/**
- * Removes a chunk from the current group
- */
-function removeMemberFromGroup(hash) {
-    const groups = getGroups();
-    const groupIdx = groups.findIndex(g => g.id === selectedGroupId);
-    if (groupIdx === -1) return;
-
-    groups[groupIdx].members = (groups[groupIdx].members || []).filter(h => String(h) !== String(hash));
-    saveGroups(groups);
-    renderGroupDetailPanel();
-    toastr.info('Chunk removed from group');
-}
-
-/**
- * Creates a new group
- */
-function createNewGroup() {
-    const groups = getGroups();
-    const newGroup = createGroup(`Group ${groups.length + 1}`, 'inclusive');
-    groups.push(newGroup);
-    saveGroups(groups);
-    selectedGroupId = newGroup.id;
-    renderGroupsTab();
-    toastr.success('Group created');
-}
-
-/**
- * Deletes the current group
- */
-function deleteCurrentGroup() {
-    if (!confirm('Delete this group? Chunks will not be affected.')) return;
-
-    const groups = getGroups().filter(g => g.id !== selectedGroupId);
-    saveGroups(groups);
-    selectedGroupId = null;
-    renderGroupsTab();
-    toastr.info('Group deleted');
-}
-
-/**
- * Updates current group settings
- */
-function updateGroupSetting(key, value) {
-    const groups = getGroups();
-    const groupIdx = groups.findIndex(g => g.id === selectedGroupId);
-    if (groupIdx === -1) return;
-
-    groups[groupIdx][key] = value;
-
-    // Clear mode-specific settings when switching modes
-    if (key === 'mode') {
-        if (value === 'inclusive') {
-            groups[groupIdx].linkType = groups[groupIdx].linkType || 'soft';
-            groups[groupIdx].boost = groups[groupIdx].boost ?? 0.15;
-            delete groups[groupIdx].mandatory;
-        } else {
-            groups[groupIdx].mandatory = groups[groupIdx].mandatory ?? false;
-            delete groups[groupIdx].linkType;
-            delete groups[groupIdx].boost;
-        }
-    }
-
-    saveGroups(groups);
-}
-
-/**
- * Binds events for the groups tab (list panel)
- */
-function bindGroupsTabEvents() {
-    // Create new group
-    $('#VectFox_create_group').off('click').on('click', createNewGroup);
-
-    // Select group
-    $(document).off('click', '.vectfox-group-item').on('click', '.vectfox-group-item', function() {
-        selectedGroupId = $(this).data('group-id');
-        renderGroupList();
-        renderGroupDetailPanel();
-    });
-}
-
-/**
- * Binds events for the group detail panel
- */
-function bindGroupDetailEvents() {
-    // Name change
-    $('#VectFox_group_name').off('input').on('input', function() {
-        updateGroupSetting('name', $(this).val());
-        renderGroupList(); // Update name in list
-    });
-
-    // Delete group
-    $('#VectFox_delete_group').off('click').on('click', deleteCurrentGroup);
-
-    // Mode change
-    $('#VectFox_group_mode').off('change').on('change', function() {
-        updateGroupSetting('mode', $(this).val());
-        renderGroupDetailPanel();
-    });
-
-    // Link type change
-    $('#VectFox_group_link_type').off('change').on('change', function() {
-        updateGroupSetting('linkType', $(this).val());
-        renderGroupDetailPanel();
-    });
-
-    // Boost change
-    $('#VectFox_group_boost').off('input').on('input', function() {
-        updateGroupSetting('boost', parseFloat($(this).val()) || 0.15);
-    });
-
-    // Mandatory toggle
-    $('#VectFox_group_mandatory').off('change').on('change', function() {
-        updateGroupSetting('mandatory', $(this).prop('checked'));
-    });
-
-    // Add member
-    $('#VectFox_add_group_member').off('click').on('click', openAddMemberDialog);
-
-    // Remove member
-    $('.vectfox-member-remove').off('click').on('click', function(e) {
-        e.stopPropagation();
-        const hash = $(this).data('hash');
-        removeMemberFromGroup(String(hash));
-    });
 }
 
 // ============================================================================
@@ -1342,27 +879,6 @@ function bindEvents() {
     // Close on background click
     $('#VectFox_visualizer_modal').on('click', function(e) {
         if (e.target === this) closeVisualizer();
-    });
-
-    // Tab switching
-    $('.vectfox-visualizer-tab').on('click', function() {
-        const tab = $(this).data('tab');
-        if (tab === activeTab) return;
-
-        activeTab = tab;
-
-        // Update tab button states
-        $('.vectfox-visualizer-tab').removeClass('active');
-        $(this).addClass('active');
-
-        // Show/hide tab content
-        $('.vectfox-vis-tab-content').removeClass('active');
-        $(`.vectfox-vis-tab-content[data-tab="${tab}"]`).addClass('active');
-
-        // Render tab content when switching
-        if (tab === 'groups') {
-            renderGroupsTab();
-        }
     });
 
     // Search

@@ -204,9 +204,6 @@ export async function exportCollection(collectionId, settings, collectionInfo = 
                     minRelevance: 0.3,
                 },
 
-                // Chunk groups
-                groups: collectionMeta.groups || [],
-
                 // Prompt context
                 context: collectionMeta.context || '',
                 xmlTag: collectionMeta.xmlTag || '',
@@ -313,7 +310,6 @@ export async function exportMultipleCollections(collectionIds, settings) {
                         linearRate: 0.01,
                         minRelevance: 0.3,
                     },
-                    groups: collectionMeta.groups || [],
                     context: collectionMeta.context || '',
                     xmlTag: collectionMeta.xmlTag || '',
                 },
@@ -606,7 +602,6 @@ export async function importCollection(exportData, settings, options = {}) {
                 triggerScanDepth: exportData.settings.triggerScanDepth,
                 conditions: exportData.settings.conditions,
                 temporalDecay: exportData.settings.temporalDecay,
-                groups: exportData.settings.groups || [],
                 context: exportData.settings.context || '',
                 xmlTag: exportData.settings.xmlTag || '',
             });
@@ -774,7 +769,6 @@ async function importCollectionSilent(exportData, settings, options = {}) {
             triggerScanDepth: exportData.settings.triggerScanDepth,
             conditions: exportData.settings.conditions,
             temporalDecay: exportData.settings.temporalDecay,
-            groups: exportData.settings.groups || [],
             context: exportData.settings.context || '',
             xmlTag: exportData.settings.xmlTag || '',
         });

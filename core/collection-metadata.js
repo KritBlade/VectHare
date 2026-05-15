@@ -74,17 +74,6 @@ const defaultCollectionMeta = {
     },
 
     // =========================================================================
-    // CHUNK GROUPS (Per-Collection)
-    // =========================================================================
-    // Groups chunks together for collective activation or mutual exclusion.
-    // - Inclusive mode: When any member matches, affect other members
-    //   - Soft link: Other members get score boost
-    //   - Hard link: Other members are force-included
-    // - Exclusive mode: Only highest-scoring member passes through
-    //   - Mandatory: At least one member MUST be included
-    groups: [],  // Array of ChunkGroup objects (see core/chunk-groups.js)
-
-    // =========================================================================
     // PROMPT CONTEXT (Per-Collection)
     // =========================================================================
     // Wraps all chunks from this collection with context/guidance for the AI.

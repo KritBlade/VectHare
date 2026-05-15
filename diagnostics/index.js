@@ -40,9 +40,6 @@ import {
     checkChatMetadataIntegrity,
     checkConditionRuleValidity,
     checkCollectionRegistryStatus,
-    checkChunkGroupsModule,
-    checkChunkGroupsValidity,
-    checkChunkGroupMemberIntegrity,
     checkPromptContextConfig,
     checkPNGExportCapability
 } from './configuration.js';
@@ -200,11 +197,6 @@ export async function runDiagnostics(settings, includeProductionTests = false) {
     // Collection registry status (verifies collections are discoverable)
     categories.configuration.push(await checkCollectionRegistryStatus(settings));
 
-    // Chunk groups module and validity checks
-    categories.configuration.push(await checkChunkGroupsModule());
-    categories.configuration.push(await checkChunkGroupsValidity(settings));
-    categories.configuration.push(await checkChunkGroupMemberIntegrity(settings));
-
     // Prompt context configuration
     categories.configuration.push(await checkPromptContextConfig(settings));
 
@@ -319,15 +311,6 @@ export function getFixSuggestion(check) {
         case 'Condition Rule Validity':
             return 'Open the Chunk Editor and review the condition rules on affected chunks. Remove invalid operators or fix malformed values.';
 
-        case 'Chunk Groups Module':
-            return 'The chunk groups module failed to load. Try refreshing the page. If this persists, check console for import errors.';
-
-        case 'Chunk Groups Validity':
-            return 'Some groups have invalid configuration. Open the Groups tab in the Chunk Visualizer and review the affected groups.';
-
-        case 'Group Member Integrity':
-            return 'Click "Fix Now" to remove group members that reference deleted chunks. This can happen after purging or deleting vectors.';
-
         case 'WebLLM Extension':
             return 'Install the WebLLM extension from Extensions > Download Extensions, then paste: https://github.com/SillyTavern/Extension-WebLLM. Requires Chrome 113+ or Edge 113+ for WebGPU support.';
 
@@ -362,9 +345,6 @@ export async function executeFixAction(check) {
             }
             return { success: false, message: 'No duplicate data found in check' };
 
-        case 'cleanOrphanedGroupMembers':
-            return await fixOrphanedGroupMembers();
-
         case 'install_webllm':
         case 'update_webllm': {
             // Open the third-party extension menu with WebLLM URL
@@ -377,68 +357,4 @@ export async function executeFixAction(check) {
             return { success: false, message: `Unknown fix action: ${check.fixAction}` };
     }
 }
-
-/**
- * Removes orphaned group members that reference non-existent chunks.
- * @returns {Promise<object>} Fix result
- */
-async function fixOrphanedGroupMembers() {
-    try {
-        const { getCollectionMeta, saveCollectionMeta } = await import('../core/collection-metadata.js');
-        const { getCollectionRegistry } = await import('../core/collection-loader.js');
-        const { getSavedHashes } = await import('../core/core-vector-api.js');
-        const { getVectFoxSettings } = await import('../ui/ui-settings.js');
-
-        const settings = getVectFoxSettings();
-        const registry = getCollectionRegistry();
-        let totalCleaned = 0;
-        let collectionsFixed = 0;
-
-        for (const registryKey of registry) {
-            let collectionId = registryKey;
-            if (registryKey.includes(':')) {
-                collectionId = registryKey.substring(registryKey.indexOf(':') + 1);
-            }
-
-            const meta = getCollectionMeta(collectionId);
-            const groups = meta?.groups || [];
-
-            if (groups.length === 0) continue;
-
-            // Get actual chunk hashes
-            let existingHashes;
-            try {
-                existingHashes = new Set((await getSavedHashes(collectionId, settings)).map(h => String(h)));
-            } catch {
-                continue;
-            }
-
-            let collectionModified = false;
-            for (const group of groups) {
-                const originalLength = group.members?.length || 0;
-                group.members = (group.members || []).filter(hash => existingHashes.has(String(hash)));
-                const removed = originalLength - group.members.length;
-                if (removed > 0) {
-                    totalCleaned += removed;
-                    collectionModified = true;
-                }
-            }
-
-            if (collectionModified) {
-                saveCollectionMeta(collectionId, meta);
-                collectionsFixed++;
-            }
-        }
-
-        if (totalCleaned > 0) {
-            return {
-                success: true,
-                message: `Removed ${totalCleaned} orphaned member(s) from ${collectionsFixed} collection(s)`
-            };
-        }
-
-        return { success: true, message: 'No orphaned members found to clean' };
-    } catch (error) {
-        return { success: false, message: `Fix failed: ${error.message}` };
-    }
-}
+

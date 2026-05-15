@@ -487,24 +487,6 @@
         flex-shrink: 0 !important;
     }
 
-    /* Visualizer tabs (for chat collections) */
-    .vectfox-visualizer-tabs {
-        padding: 0 12px !important;
-        flex-shrink: 0 !important;
-    }
-
-    .vectfox-visualizer-tab {
-        padding: 10px 16px !important;
-        min-height: 44px !important;
-    }
-
-    .vectfox-visualizer-body.vectfox-groups-tab {
-        display: none !important;
-    }
-    .vectfox-visualizer-body.vectfox-groups-tab.active {
-        display: block !important;
-    }
-
     /* ========================================================================
      * CONTENT VECTORIZER INTERNALS
      * ======================================================================== */
