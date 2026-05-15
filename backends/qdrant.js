@@ -553,16 +553,26 @@ export class QdrantBackend extends VectorBackend {
     }
 
     async purgeVectorIndex(collectionId, settings) {
-        const actualCollectionId = this._stripRegistryPrefix(collectionId);
+        const strippedId = this._stripRegistryPrefix(collectionId);
+        const actualCollectionId = getActualCollectionId(strippedId, settings);
+
+        const body = {
+            backend: BACKEND_TYPE,
+            collectionId: actualCollectionId,
+            source: settings.source || 'transformers',
+            model: getModelFromSettings(settings),
+        };
+
+        // Multitenancy: send sourceId filter so the plugin deletes only the logical
+        // collection's points from vectfox_main (instead of the entire shared collection).
+        if (settings?.qdrant_multitenancy) {
+            body.filters = { sourceId: strippedId };
+        }
+
         const response = await fetch('/api/plugins/similharity/chunks/purge', {
             method: 'POST',
             headers: getRequestHeaders(),
-            body: JSON.stringify({
-                backend: BACKEND_TYPE,
-                collectionId: actualCollectionId, // Use separate collection per content type
-                source: settings.source || 'transformers',
-                model: getModelFromSettings(settings),
-            }),
+            body: JSON.stringify(body),
         });
 
         if (!response.ok) {

@@ -165,8 +165,8 @@ export async function openDatabaseBrowser() {
   // Show/hide plugin warning banner
   updatePluginWarningBanner();
 
-  // Load collections
-  await refreshCollections();
+  // Load collections from registry — no backend probe on open; use Refresh Scan button for that
+  await refreshCollections(false);
 
   // Show modal
   $("#vectfox_database_browser_modal").fadeIn(200);
@@ -215,7 +215,12 @@ function createBrowserModal() {
                 <!-- Header -->
                 <div class="vectfox-modal-header">
                     <h3>🗃️ VECTFOX Database Browser</h3>
-                    <button class="vectfox-btn-icon" id="vectfox_browser_close">✕</button>
+                    <div style="display:flex;gap:6px;align-items:center;">
+                        <button class="vectfox-btn vectfox-btn-sm" id="vectfox_browser_refresh_scan" title="Probe standard and qdrant backends, update the registry, and remove stale entries">
+                            ${icons.refreshCw(14)} Refresh Scan
+                        </button>
+                        <button class="vectfox-btn-icon" id="vectfox_browser_close">✕</button>
+                    </div>
                 </div>
 
                 <!-- Plugin Warning Banner (hidden by default, shown when plugin unavailable) -->
@@ -438,6 +443,22 @@ function createBrowserModal() {
  * Binds event handlers for browser UI
  */
 function bindBrowserEvents() {
+  // Refresh Scan button — probes both backends, removes stale entries, updates registry
+  $("#vectfox_browser_refresh_scan").on("click", async function (e) {
+    e.stopPropagation();
+    e.preventDefault();
+    const $btn = $(this);
+    $btn.prop("disabled", true).text("Scanning…");
+    try {
+      await refreshCollections(true);
+      toastr.success("Scan complete — registry updated", "VectFox");
+    } catch (err) {
+      toastr.error(`Scan failed: ${err.message}`, "VectFox");
+    } finally {
+      $btn.prop("disabled", false).html(`${icons.refreshCw(14)} Refresh Scan`);
+    }
+  });
+
   // Close button
   $("#vectfox_browser_close").on("click", function (e) {
     e.stopPropagation();
@@ -508,8 +529,8 @@ function bindBrowserEvents() {
       // Clear the registry
       clearCollectionRegistry();
 
-      // Refresh collections (will rediscover from disk)
-      await refreshCollections();
+      // Probe both backends to repopulate from scratch
+      await refreshCollections(true);
 
       toastr.success("Registry cleared and resynced from disk", "VectFox");
     } catch (error) {
@@ -764,9 +785,9 @@ function _filterCollectionsByCurrentPersona(collections) {
   });
 }
 
-async function refreshCollections() {
+async function refreshCollections(withScan = false) {
   try {
-    const allCollections = await loadAllCollections(browserState.settings);
+    const allCollections = await loadAllCollections(browserState.settings, withScan);
     browserState.collections = _filterCollectionsByCurrentPersona(allCollections);
 
     if (allCollections.length !== browserState.collections.length) {

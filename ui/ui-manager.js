@@ -1697,10 +1697,32 @@ export async function refreshWIStatus() {
     const $status = $('#VectFox_wi_status');
     if (!$status.length) return;
 
-    // State 1: no lorebooks vectorized at all (in-memory registry scan, no backend call)
+    // State 1: no lorebooks vectorized for this persona (in-memory registry scan, no backend call).
+    // superadmin=true bypasses the handle filter and counts lorebooks for any persona.
+    const settings = extension_settings.vectfox || {};
+    const ownHandle = String(getContext()?.name1 || 'user')
+        .normalize('NFC')
+        .toLowerCase()
+        .replace(/[^\p{L}\p{N}]+/gu, '_')
+        .replace(/^_|_$/g, '')
+        .substring(0, 30) || 'user';
+    const isSuperadmin = settings.superadmin === true;
+    const knownBackends = ['standard', 'vectra', 'qdrant'];
+    const extractLorebookHandle = (id) => {
+        const idLower = String(id || '').toLowerCase();
+        const prefix = 'vf_lorebook_';
+        if (!idLower.startsWith(prefix)) return null;
+        const segs = idLower.slice(prefix.length).split('_');
+        const handleIdx = knownBackends.includes(segs[0]) ? 1 : 0;
+        return segs[handleIdx] || null;
+    };
     const registry = getCollectionRegistry();
-    const anyLorebook = Array.isArray(registry) &&
-        registry.some(key => parseRegistryKey(key).collectionId.startsWith('vf_lorebook_'));
+    const anyLorebook = Array.isArray(registry) && registry.some(key => {
+        const id = parseRegistryKey(key).collectionId;
+        if (!id.startsWith('vf_lorebook_')) return false;
+        if (isSuperadmin) return true;
+        return extractLorebookHandle(id) === ownHandle;
+    });
     if (!anyLorebook) {
         $status.html('<i class="fa-solid fa-circle-exclamation" style="color: var(--warning-color, #f39c12);"></i> No lorebooks vectorized — vectorize one first');
         return;
@@ -2805,9 +2827,32 @@ function bindSettingsEvents(settings, callbacks) {
             const $checkbox = $(this);
 
             if (enabled) {
-                // Check if any lorebook collections have been vectorized
+                // Filter lorebook collections to only those owned by the current persona handle.
+                // superadmin=true (hand-edited into settings.json) bypasses the handle filter.
+                const ownHandle = String(getContext()?.name1 || 'user')
+                    .normalize('NFC')
+                    .toLowerCase()
+                    .replace(/[^\p{L}\p{N}]+/gu, '_')
+                    .replace(/^_|_$/g, '')
+                    .substring(0, 30) || 'user';
+                const isSuperadmin = settings.superadmin === true;
+                const knownBackends = ['standard', 'vectra', 'qdrant'];
+                const extractLorebookHandle = (id) => {
+                    const idLower = String(id || '').toLowerCase();
+                    const prefix = 'vf_lorebook_';
+                    if (!idLower.startsWith(prefix)) return null;
+                    const segs = idLower.slice(prefix.length).split('_');
+                    const handleIdx = knownBackends.includes(segs[0]) ? 1 : 0;
+                    return segs[handleIdx] || null;
+                };
+
                 const registry = getCollectionRegistry();
-                const hasLorebookVectors = Array.isArray(registry) && registry.some(key => parseRegistryKey(key).collectionId.startsWith('vf_lorebook_'));
+                const hasLorebookVectors = Array.isArray(registry) && registry.some(key => {
+                    const id = parseRegistryKey(key).collectionId;
+                    if (!id.startsWith('vf_lorebook_')) return false;
+                    if (isSuperadmin) return true;
+                    return extractLorebookHandle(id) === ownHandle;
+                });
 
                 if (!hasLorebookVectors) {
                     $checkbox.prop('checked', false);
@@ -2816,7 +2861,7 @@ function bindSettingsEvents(settings, callbacks) {
                     return;
                 }
 
-                // Lorebook exists in registry — verify one is locked to this chat
+                // Lorebook exists for this persona — verify one is locked to this chat
                 const chatId = getCurrentChatId();
                 const { getChatLockedCollections } = await import('../core/collection-metadata.js');
                 const lockedLorebooks = getChatLockedCollections(chatId).filter(id => id.startsWith('vf_lorebook_'));

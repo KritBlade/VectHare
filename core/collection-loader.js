@@ -520,18 +520,11 @@ async function discoverViaPlugin(settings) {
             console.debug(`   Current registry has ${currentRegistry.length} entries`);
             console.debug(`   Plugin discovered ${uniqueKeys.length} collections`);
 
-            // Remove entries that no longer exist on disk.
-            // Only remove entries for plugin-managed backends (vectra/standard).
-            // Qdrant collections are stored in a separate service not visible to the
-            // Similharity plugin, so they must NOT be treated as stale here.
+            // The plugin probes every standard (vectra) and qdrant collection that
+            // actually exists. Anything in the registry that was NOT found = stale.
+            // Remove it unconditionally — no backend exemptions.
             const updatedRegistry = getCollectionRegistry();
-            const staleEntries = updatedRegistry.filter(key => {
-                if (pluginKeySet.has(key)) return false;
-                const parsed = parseRegistryKey(key);
-                const kb = parsed.backend;
-                // Preserve qdrant entries (and any future non-plugin backends)
-                return kb !== 'qdrant';
-            });
+            const staleEntries = updatedRegistry.filter(key => !pluginKeySet.has(key));
             if (staleEntries.length > 0) {
                 console.debug(`   🗑️  Removing ${staleEntries.length} stale registry entries:`);
                 for (const staleKey of staleEntries) {
