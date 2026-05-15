@@ -13,7 +13,7 @@
 import { getContentType, getContentTypeDefaults, hasFeature } from './content-types.js';
 import { chunkText } from './chunking.js';
 import { insertVectorItems, purgeVectorIndex, getSavedHashes } from './core-vector-api.js';
-import { setCollectionMeta, getDefaultDecayForType, setCollectionLock } from './collection-metadata.js';
+import { setCollectionMeta, getDefaultDecayForType, setCollectionLock, setCollectionCharacterLock } from './collection-metadata.js';
 import { registerCollection } from './collection-loader.js';
 import { getBackend } from '../backends/backend-manager.js';
 // Import from collection-ids.js - single source of truth for collection ID operations
@@ -98,11 +98,17 @@ export async function vectorizeContent({ contentType, source, settings, abortSig
         progressTracker.updateProgress(3, 'Processing chunks...');
         const collectionId = generateCollectionId(contentType, source, settings);
 
-        // Lock to current chat at start so the index is populated even if vectorization is interrupted.
-        const currentChatId = getCurrentChatId();
-        if (currentChatId) {
-            setCollectionLock(collectionId, currentChatId);
+        // Set the appropriate lock based on scope, registered before embedding starts so the
+        // index entry exists even if vectorization is interrupted partway through.
+        const scope = settings.scope || 'global';
+        if (scope === 'chat') {
+            const currentChatId = getCurrentChatId();
+            if (currentChatId) setCollectionLock(collectionId, currentChatId);
+        } else if (scope === 'character') {
+            const currentCharacterId = getContext()?.characterId;
+            if (currentCharacterId) setCollectionCharacterLock(collectionId, String(currentCharacterId));
         }
+        // 'global' — no lock, collection activates in all chats
 
         // Get full extension settings for keyword extraction (includes custom_stopwords)
         const VectFoxSettings = extension_settings.vectfox;

@@ -925,6 +925,12 @@ export async function shouldCollectionActivate(collectionId, context) {
         return false;
     }
 
+    // Priority 1.5: Global scope — always active in every chat (no lock needed)
+    if (meta.scope === 'global') {
+        if (debug) console.log(`[VECTFOX Activation Filter] Collection ${collectionId}: ✓ GLOBAL_SCOPE`);
+        return true;
+    }
+
     const hasTriggers = meta.triggers && meta.triggers.length > 0;
     const hasConditions = meta.conditions?.enabled && meta.conditions?.rules?.length > 0;
 
