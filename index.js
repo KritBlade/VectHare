@@ -497,7 +497,13 @@ export async function init(router) {
                     },
 
                     purge: async (collectionId, source, model, directories, filters = {}) => {
-                        await qdrantBackend.purgeAll(collectionId, filters);
+                        if (filters && Object.keys(filters).length > 0) {
+                            // Multitenancy mode: delete specific points by filter (e.g. sourceId)
+                            await qdrantBackend.purgeCollection(collectionId, filters);
+                        } else {
+                            // Separate-collection mode: delete the entire qdrant collection container
+                            await qdrantBackend.purgeAll(collectionId);
+                        }
                     },
 
                     stats: async (collectionId, source, model, directories, filters = {}) => {
@@ -586,12 +592,13 @@ export async function init(router) {
     router.get('/collections', async (req, res) => {
         try {
             const vectorsPath = req.user.directories.vectors;
-            const allCollections = await scanAllSourcesForCollections(vectorsPath);
+            const { collections: allCollections, qdrantScanned } = await scanAllSourcesForCollections(vectorsPath);
 
             res.json({
                 success: true,
                 count: allCollections.length,
-                collections: allCollections
+                collections: allCollections,
+                qdrantScanned,
             });
         } catch (error) {
             console.error(`[${pluginName}] collections error:`, error);
@@ -1852,6 +1859,7 @@ function getStringHash(str) {
  */
 async function scanAllSourcesForCollections(vectorsPath) {
     const allCollections = [];
+    let qdrantScanned = false;
 
     try {
         // Scan vectra indexes
@@ -1908,6 +1916,7 @@ async function scanAllSourcesForCollections(vectorsPath) {
             if (qdrantBackend.baseUrl) {
                 const healthy = await qdrantBackend.healthCheck();
                 if (healthy) {
+                    qdrantScanned = true; // qdrant was reachable and scanned
                     const collections = await qdrantBackend.getCollections();
 
                     for (const collectionName of collections) {
@@ -1946,7 +1955,7 @@ async function scanAllSourcesForCollections(vectorsPath) {
         console.error(`[${pluginName}] Error scanning collections:`, error);
     }
 
-    return allCollections;
+    return { collections: allCollections, qdrantScanned };
 }
 
 /**
