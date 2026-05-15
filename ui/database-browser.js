@@ -2433,7 +2433,9 @@ function refreshActivationLockButton() {
     // Keep the "Active for current chat" checkbox in sync with the actual lock state.
     // Without this, saveActivation() reads a stale unchecked checkbox and calls
     // removeCollectionLock(), undoing any lock the user just added via the lock dialog.
-    const shouldBeActive = Boolean(isLockedToCurrentChat || isLockedToCurrentChar);
+    // Global-scope collections are always active — include them so the checkbox stays checked.
+    const isGlobalScope = getCollectionMeta(collId)?.scope === 'global';
+    const shouldBeActive = Boolean(isLockedToCurrentChat || isLockedToCurrentChar || isGlobalScope);
     if (activationEditorState.collectionId) {
       activationEditorState.alwaysActive = shouldBeActive;
       $("#vectfox_always_active").prop("checked", shouldBeActive);
