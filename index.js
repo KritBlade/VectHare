@@ -191,9 +191,9 @@ export async function init(router) {
                         const store = await getIndex(directories, collectionId, source, model);
                         const items = await store.listItems();
 
-                        // Apply pagination
+                        // Apply pagination (limit=0 means no limit)
                         const offset = options.offset || 0;
-                        const limit = options.limit || items.length;
+                        const limit = options.limit > 0 ? options.limit : items.length;
                         const paginatedItems = items.slice(offset, offset + limit);
 
                         return {
@@ -415,10 +415,11 @@ export async function init(router) {
                         // works. Newly inserted items have metadata.messageIndex; older data falls back
                         // to source_window_start (EventBase) or startIndex/messageId (legacy chunks).
                         const offset = options.offset || 0;
-                        const limit = options.limit || items.length;
+                        const limit = options.limit > 0 ? options.limit : items.length; // limit=0 means no limit
                         const paginatedItems = items.slice(offset, offset + limit).map(item => ({
                             ...item,
                             index: item.metadata?.messageIndex
+                                ?? item.metadata?.source_window_end
                                 ?? item.metadata?.source_window_start
                                 ?? item.metadata?.startIndex
                                 ?? item.metadata?.messageId
@@ -1027,7 +1028,7 @@ async function _getLegacySingleEmbedding(source, text, model, directories, req) 
                 source = 'transformers',
                 model = '',
                 offset = 0,
-                limit = 100,
+                limit = 0,
                 includeVectors = false,
                 filters = {}
             } = req.body;
