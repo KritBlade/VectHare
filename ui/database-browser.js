@@ -806,7 +806,11 @@ async function refreshCollections(withScan = false) {
     // Clean up orphaned metadata entries (collections that no longer exist).
     // IMPORTANT: pass the *unfiltered* list so we don't wipe metadata for other
     // personas' collections when this persona opens the browser.
-    const actualIds = allCollections.map((c) => c.id);
+    //
+    // Storage is keyed by `registryKey` (backend:id) for backend-registered
+    // collections, falling back to bare `id` otherwise. Pass the same form the
+    // storage layer uses so strict set membership matches the actual keys.
+    const actualIds = allCollections.map((c) => c.registryKey || c.id);
     const cleanupResult = cleanupOrphanedMeta(actualIds);
     if (cleanupResult.removed > 0 && browserState.settings?.eventbase_debug_logging) {
       console.log(
