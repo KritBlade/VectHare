@@ -229,18 +229,24 @@ export async function runEventBaseIngestion({ messages, chatUUID, settings, abor
                     console.log(`[EventBase] Window ${wIdx}: dropped ${annotated.length - toStore.length} event(s) below minImportance=${minImportanceStore}`);
                 }
 
-                // Insert — pass collectionId so archive uploads go to VectFox_archiveevent_*
-                if (toStore.length > 0) {
-                    await insertEvents(toStore, settings, abortSignal, collectionId);
-                }
-
-                // Mark window as done in the extension_settings fingerprint cache
-                // so future runs (including after page reload) skip it instantly.
-                markWindowExtracted(sourceHashes, uuid);
-
-                return { skipped: false, events: toStore };
+                // Carry sourceHashes for sequential insertion below.
+                return { skipped: false, events: toStore, sourceHashes };
             }),
         );
+
+        // Insert sequentially — Cloudflare/nginx HTTP/2 fan-out can merge concurrent
+        // POST bodies into a single mangled request when many windows finish together.
+        // LLM extraction above stays parallel; only the vectra writes are serialized.
+        for (const r of batchResults) {
+            if (r.status !== 'fulfilled' || r.value?.skipped) continue;
+            const { events: winEvents, sourceHashes: winHashes } = r.value;
+            if (!winHashes) continue; // extraction failed — do not mark
+            if (abortSignal?.aborted) break;
+            if (winEvents?.length > 0) {
+                await insertEvents(winEvents, settings, abortSignal, collectionId);
+            }
+            markWindowExtracted(winHashes, uuid);
+        }
 
         // Tally results, watch for fatal errors
         for (const result of batchResults) {
