@@ -31,6 +31,7 @@ import {
     registerCollection,
     getCollectionRegistry,
 } from './collection-loader.js';
+import { COLLECTION_PREFIXES } from './collection-ids.js';
 import { progressTracker } from '../ui/progress-tracker.js';
 import { getStringHash } from '../../../../utils.js';
 
@@ -46,6 +47,49 @@ export const EXPORT_FILE_EXTENSION = '.vectfox.json';
 
 /** Maximum chunks to export at once (for progress updates) */
 const EXPORT_BATCH_SIZE = 100;
+
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+/** Backend labels that appear in collection IDs (normalized form). */
+const _BACKEND_ID_LABELS = ['standard', 'qdrant'];
+
+/**
+ * Returns the normalized backend label used inside collection IDs.
+ * 'vectra' is the internal storage name but IDs always use 'standard'.
+ * @param {string} backend - Value from settings.vector_backend or embedding.backend
+ * @returns {string}
+ */
+function _normalizeBackendLabel(backend) {
+    const b = String(backend || 'standard').toLowerCase();
+    return b === 'vectra' ? 'standard' : b;
+}
+
+/**
+ * Replaces the backend segment in a collection ID so it matches the target backend.
+ * Only touches IDs that use a known VectFox prefix + known backend label.
+ * Returns the original ID unchanged for legacy / unknown formats.
+ *
+ * @param {string} collectionId - e.g. 'vf_eventbase_standard_rabbit_chat_uuid'
+ * @param {string} targetBackend - normalized label, e.g. 'qdrant' or 'standard'
+ * @returns {string}
+ */
+function _remapCollectionIdToBackend(collectionId, targetBackend) {
+    for (const prefix of Object.values(COLLECTION_PREFIXES)) {
+        if (!collectionId.startsWith(prefix)) continue;
+        const rest = collectionId.slice(prefix.length); // e.g. 'standard_rabbit_chat_uuid'
+        for (const srcBackend of _BACKEND_ID_LABELS) {
+            if (rest.startsWith(srcBackend + '_')) {
+                return srcBackend === targetBackend
+                    ? collectionId
+                    : prefix + targetBackend + rest.slice(srcBackend.length);
+            }
+        }
+        break; // matched prefix but no backend segment — legacy ID
+    }
+    return collectionId; // unknown format — leave unchanged
+}
 
 // ============================================================================
 // EXPORT FUNCTIONS
@@ -501,10 +545,20 @@ async function insertChunksWithVectors(collectionId, chunks, settings) {
  */
 export async function importCollection(exportData, settings, options = {}) {
     const sourceCollection = exportData.collection || {};
-    const collectionId = options.collectionId || sourceCollection.id;
+    const sourceId = options.collectionId || sourceCollection.id;
 
-    if (!collectionId) {
+    if (!sourceId) {
         throw new Error('No collection ID specified');
+    }
+
+    // Remap collection ID when the export's backend differs from the current backend.
+    // e.g. vf_eventbase_standard_rabbit_... → vf_eventbase_qdrant_rabbit_... when importing to qdrant.
+    const targetBackendLabel = _normalizeBackendLabel(settings.vector_backend);
+    const collectionId = _remapCollectionIdToBackend(sourceId, targetBackendLabel);
+    const wasRemapped = collectionId !== sourceId;
+    if (wasRemapped) {
+        const srcLabel = _normalizeBackendLabel(exportData.embedding?.backend || '?');
+        console.log(`VectFox Import: remapped collection ID ${srcLabel} → ${targetBackendLabel}: "${sourceId}" → "${collectionId}"`);
     }
 
     const chunks = exportData.chunks || [];
@@ -581,7 +635,12 @@ export async function importCollection(exportData, settings, options = {}) {
         // Collection-level metadata
         const importedMeta = {
             enabled: true,
-            displayName: sourceCollection.name || collectionId,
+            // If the ID was remapped and the export's display name was just the old ID
+            // (auto-generated, not user-set), clear it so the loader computes a fresh
+            // name from the new collection ID. Keep explicit user-set names as-is.
+            displayName: (wasRemapped && sourceCollection.name === sourceId)
+                ? undefined
+                : (sourceCollection.name || collectionId),
             description: sourceCollection.description || '',
             scope: sourceCollection.scope || 'character',
             tags: sourceCollection.tags || [],
