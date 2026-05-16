@@ -22,8 +22,7 @@
 import { getContext } from '../../../../extensions.js';
 import { retrieveEvents } from './eventbase-retrieval.js';
 import { queryCollection } from './core-vector-api.js';
-import { buildPlannerUserMessage } from './agentic-prompt.js';
-import { getAgenticPlannerPrompt } from './prompts-i18n.js';
+import { buildPlannerUserMessage, getAgenticPlannerPrompt } from './prompts-i18n.js';
 
 // ============================================================================
 // Public API

@@ -423,3 +423,78 @@ const _SUMMARIZE_PROMPTS = {
 export function getDefaultSummarizePrompt(mode) {
     return _SUMMARIZE_PROMPTS[mode] ?? _SUMMARIZE_PROMPTS.intl;
 }
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PLANNER USER MESSAGE BUILDER
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Build the user-message portion of the planner prompt. Combines recent chat,
+ * the current user message, and a summary of pre-search candidates.
+ *
+ * @param {object} params
+ * @param {{speaker: string, text: string}[]} params.recentTurns - Past chat (oldest first)
+ * @param {string} params.userMessage - Current user input verbatim
+ * @param {object[]} params.candidates - Pre-search event candidates (already trimmed)
+ * @returns {string} The user-message text
+ */
+export function buildPlannerUserMessage({ recentTurns, userMessage, candidates }) {
+    const parts = [];
+
+    parts.push('Recent chat (oldest first):');
+    if (!recentTurns || recentTurns.length === 0) {
+        parts.push('  (no recent context — start of conversation)');
+    } else {
+        recentTurns.forEach((turn, idx) => {
+            const idxLabel = `[-${recentTurns.length - idx}]`;
+            const speaker = turn.speaker || (turn.is_user ? '{{user}}' : '{{character}}');
+            // Soft-trim each turn to ~600 chars so very long replies don't blow the budget.
+            const body = (turn.text || '').slice(0, 600);
+            const ellipsis = (turn.text || '').length > 600 ? '...' : '';
+            parts.push(`  ${idxLabel} ${speaker}: ${body}${ellipsis}`);
+        });
+    }
+
+    parts.push('');
+    parts.push('Current user message:');
+    parts.push(`  ${userMessage || '(empty)'}`);
+
+    parts.push('');
+    parts.push('Candidate events from pre-search (top by similarity, may be incomplete):');
+    if (!candidates || candidates.length === 0) {
+        parts.push('  (none — DB returned no semantic matches)');
+    } else {
+        candidates.forEach((ev, i) => {
+            parts.push(_formatCandidateLine(ev, i + 1));
+        });
+    }
+
+    parts.push('');
+    parts.push('Plan retrieval. Return strict JSON only.');
+
+    return parts.join('\n');
+}
+
+/**
+ * One-line summary of a candidate event for the planner prompt.
+ * Format: E<N> [score] type — text (chars: [...], concepts: [...], importance: X)
+ */
+function _formatCandidateLine(ev, idx) {
+    const score = typeof ev.score === 'number' ? ev.score.toFixed(2)
+        : typeof ev.vectorScore === 'number' ? ev.vectorScore.toFixed(2)
+        : '—';
+    const type = ev.event_type || ev.metadata?.event_type || 'event';
+    const text = (ev.text || ev.metadata?.text || '').replace(/\s+/g, ' ').slice(0, 90);
+    const chars = (ev.characters || ev.metadata?.characters || []).slice(0, 4).join(', ');
+    const concepts = (ev.concepts || ev.metadata?.concepts || []).slice(0, 4).join(', ');
+    const importance = ev.importance ?? ev.metadata?.importance ?? '?';
+
+    const meta = [
+        chars ? `chars: [${chars}]` : '',
+        concepts ? `concepts: [${concepts}]` : '',
+        `importance: ${importance}`,
+    ].filter(Boolean).join(' | ');
+
+    return `  E${idx} [${score}] ${type} — ${text}\n      ${meta}`;
+}
