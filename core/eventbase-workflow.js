@@ -24,7 +24,7 @@ import { getSavedHashes } from './core-vector-api.js';
 import { retrieveEvents } from './eventbase-retrieval.js';
 import { retrieveEventsWithAgent } from './agentic-retrieval.js';
 import { formatEventsForInjectionDetailed } from './eventbase-injection.js';
-import { isCollectionEnabled, isCollectionLockedToChat, setCollectionLock } from './collection-metadata.js';
+import { isCollectionEnabled, isCollectionLockedToChat, setCollectionLock, setCollectionMeta } from './collection-metadata.js';
 import { progressTracker } from '../ui/progress-tracker.js';
 
 /** Extension prompt tag for EventBase (distinct from legacy chunks tag) */
@@ -62,9 +62,12 @@ export async function runEventBaseIngestion({ messages, chatUUID, settings, abor
 
     // Lock to current chat at start so the index is populated even if vectorization is interrupted.
     // Archive collections are excluded — they are locked manually by the user.
+    // Stamping scope='chat' is required for isCollectionActiveForContext() to return true:
+    // it gates on scope first, so a lock without scope leaves the collection inert.
     const _startChatId = getCurrentChatId();
     if (_startChatId && !collectionId.startsWith(COLLECTION_PREFIXES.VECTFOX_ARCHIVE_EVENT)) {
         setCollectionLock(collectionId, _startChatId);
+        setCollectionMeta(collectionId, { scope: 'chat' });
     }
 
     const backend = getRegistryBackend(settings?.vector_backend);
