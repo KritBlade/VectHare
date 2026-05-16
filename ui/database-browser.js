@@ -163,8 +163,11 @@ export async function openDatabaseBrowser() {
   // Show/hide plugin warning banner
   updatePluginWarningBanner();
 
-  // Load collections from registry — no backend probe on open; use Refresh Scan button for that
-  await refreshCollections(false);
+  // Force a fresh plugin scan on open so collections created since last scan
+  // (e.g. just-vectorized EventBase collections) land in pluginCollectionData with
+  // their real source/model — otherwise View Chunks sends source: 'unknown' and
+  // the plugin queries the wrong on-disk path.
+  await refreshCollections(true);
 
   // Show modal
   $("#vectfox_database_browser_modal").fadeIn(200);
