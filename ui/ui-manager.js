@@ -1741,8 +1741,10 @@ export async function refreshAutoSyncCheckbox(settings) {
 
     // Collection exists. The checkbox reflects the per-collection autoSync flag.
     // The LED reflects whether the chat is fully synced or has a backlog.
-    const isEnabled = isCollectionAutoSyncEnabled(status.collectionId);
-    const isLocked = chatId && isCollectionLockedToChat(status.collectionId, chatId);
+    // Metadata is keyed by registry-key form ("backend:id").
+    const lookupKey = status.registryKey || status.collectionId;
+    const isEnabled = isCollectionAutoSyncEnabled(lookupKey);
+    const isLocked = chatId && isCollectionLockedToChat(lookupKey, chatId);
     $checkbox.prop('checked', Boolean(isEnabled && isLocked));
     $hint.hide();
 

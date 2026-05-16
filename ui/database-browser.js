@@ -844,10 +844,13 @@ export function renderCollections() {
         // - 'chat' => show collections locked to at least one chat
         // - 'character' => show collections locked to at least one character
         if (scopeFilter !== 'all') {
+            // Lock counts are keyed by registry-key form ("backend:id") — same key
+            // setCollectionLock writes to.
+            const lookupKey = c.registryKey || c.id;
             if (scopeFilter === 'chat') {
-                if (getCollectionLockCount(c.id) <= 0) return false;
+                if (getCollectionLockCount(lookupKey) <= 0) return false;
             } else if (scopeFilter === 'character') {
-                if (getCollectionCharacterLockCount(c.id) <= 0) return false;
+                if (getCollectionCharacterLockCount(lookupKey) <= 0) return false;
             }
         }
 

@@ -198,10 +198,7 @@ export function getCollectionListing(settings) {
         // Idempotent: stamps creatorHandle on legacy entries.
         try { registerCollection(registryKey); } catch (_) {}
 
-        const meta =
-            getCollectionMeta(registryKey) ||
-            getCollectionMeta(collectionId) ||
-            {};
+        const meta = getCollectionMeta(registryKey);
 
         let isOwn;
         if (isSuperadmin) {
@@ -214,7 +211,8 @@ export function getCollectionListing(settings) {
             isOwn = collectionId.toLowerCase().includes(`_${ownHandle}_`);
         }
 
-        const isActive = isCollectionActiveForContext(collectionId, { chatId, characterId });
+        // Lock state lives at the registry-key form — match the writer side.
+        const isActive = isCollectionActiveForContext(registryKey, { chatId, characterId });
 
         return { registryKey, collectionId, backend, meta, isOwn, isActive };
     });
