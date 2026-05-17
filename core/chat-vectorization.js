@@ -326,34 +326,53 @@ async function rerankWithBananaBread(query, chunks, settings) {
  * @returns {Promise<object>} Progress info
  */
 export async function synchronizeChat(settings, batchSize = 5) {
+    const debugLog = settings?.eventbase_debug_logging;
+    if (debugLog) console.log('[AutoSync] synchronizeChat: invoked');
+
     const chatId = getCurrentChatId();
-    if (!chatId) return { remaining: -1, messagesProcessed: 0, chunksCreated: 0 };
+    if (!chatId) {
+        if (debugLog) console.log('[AutoSync] BAIL: no chatId');
+        return { remaining: -1, messagesProcessed: 0, chunksCreated: 0 };
+    }
 
     const uuid = getChatUUID();
-    if (!uuid) return { remaining: -1, messagesProcessed: 0, chunksCreated: 0 };
+    if (!uuid) {
+        if (debugLog) console.log('[AutoSync] BAIL: no chatUUID');
+        return { remaining: -1, messagesProcessed: 0, chunksCreated: 0 };
+    }
 
     // Find EventBase collections registered for this chat and check the per-collection auto-sync flag
     const { findEventBaseCollectionIdsForChat } = await import('./eventbase-store.js');
     const { isCollectionAutoSyncEnabled } = await import('./collection-metadata.js');
     const backend = getRegistryBackend(settings?.vector_backend);
     const eventbaseCollections = findEventBaseCollectionIdsForChat(uuid, backend);
+    if (debugLog) {
+        const flagPerCollection = eventbaseCollections.map(({ collectionId }) => `${collectionId}=${isCollectionAutoSyncEnabled(collectionId)}`);
+        console.log(`[AutoSync] uuid=${uuid}, backend=${backend}, eventbaseCollections=${eventbaseCollections.length}, autoSyncFlags=[${flagPerCollection.join(', ')}]`);
+    }
     const autoSyncEnabled = eventbaseCollections.some(({ collectionId }) => isCollectionAutoSyncEnabled(collectionId));
 
     if (!autoSyncEnabled) {
+        if (debugLog) console.log('[AutoSync] BAIL: no collection has autoSync=true');
         return { remaining: -1, messagesProcessed: 0, chunksCreated: 0 };
     }
 
     const context = getContext();
-    if (!Array.isArray(context.chat)) return { remaining: -1, messagesProcessed: 0, chunksCreated: 0 };
+    if (!Array.isArray(context.chat)) {
+        if (debugLog) console.log('[AutoSync] BAIL: context.chat is not an array');
+        return { remaining: -1, messagesProcessed: 0, chunksCreated: 0 };
+    }
 
     const { runEventBaseIngestion } = await import('./eventbase-workflow.js');
     const messages = context.chat.filter(m => m.mes && m.mes.trim().length > 0);
+    if (debugLog) console.log(`[AutoSync] calling runEventBaseIngestion: messages=${messages.length}`);
     const result = await runEventBaseIngestion({
         messages,
         chatUUID: uuid,
         settings,
         isAutoSync: true,
     });
+    if (debugLog) console.log(`[AutoSync] runEventBaseIngestion result:`, result);
 
     return {
         remaining: 0,
@@ -1229,8 +1248,13 @@ export async function rearrangeChat(chat, settings, type) {
         const canQueryWI = settings.enabled_world_info;
 
         if (!hasCollections && !canQueryWI) {
-            console.warn('⚠️ VectFox: No enabled collections to query and World Info disabled - chunks cannot be injected!');
-            console.log('   💡 Make sure you have enabled at least one collection in VECTFOX settings, or enable World Info');
+            // EventBase-only users always hit this — they have no ChunkBase collections
+            // by design. EventBase injection happens on its own path above, so this is
+            // a normal skip, not an error. Match the gentler log at the activeCollections
+            // check below (it already does the same thing for the post-activation case).
+            if (settings.eventbase_debug_logging) {
+                console.log('[VECTFOX ChunkBase] No enabled ChunkBase collections and World Info disabled — skipping non-chat chunk injection (this is normal if you only use EventBase).');
+            }
             return;
         }
         if (hasCollections) {
