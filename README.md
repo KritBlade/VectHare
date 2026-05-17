@@ -158,7 +158,7 @@ All four merge with the original search and feed the same 4-weight re-ranker. Th
 
 > 💡 Agent Mode works best on **reflective questions** ("why...", "remember when..."), **vague callbacks** ("that thing about my father"), and **cause-chain queries** where the literal user message doesn't contain the search anchors. For direct lookups where your message already contains the right keywords, the standard pre-search already does most of the work; Agent Mode is incremental polish.
 
-### 🧠 Why this beats traditional memory extensions
+### 🧠 Difference between traditional memory extensions
 
 Most existing memory extensions use one of two approaches. Both lose detail as the chat grows. Here's why — and how EventBase avoids it:
 
