@@ -27,6 +27,7 @@
  * ============================================================================
  */
 import { getRequestHeaders } from '../../../../../script.js';
+import { extension_settings } from '../../../../extensions.js';
 import { tokenize } from './bm25-scorer.js';
 import { getModelFromSettings } from './providers.js';
 
@@ -162,21 +163,26 @@ async function _buildStats(collectionId, settings) {
  * Clear the cache. Pass a collectionId to clear just one collection, or omit
  * to clear everything. Call after re-indexing or major collection edits.
  *
- * Logs a confirmation including the cache size before/after so manual
- * console invocations (force-refresh during A/B testing) give visible
- * feedback. Without this, the function returns silently and there's no
- * way to tell from the console whether it actually did anything.
+ * Logs are gated on eventbase_debug_logging — the auto-invalidation path
+ * fires on every insert/delete/purge and would otherwise spam the console.
+ * Enable debug logging when manually force-refreshing in DevTools to confirm
+ * the call did something.
  */
 export function clearCorpusStatsCache(collectionId) {
     const sizeBefore = _cache.size;
+    const hadEntry = collectionId ? _cache.has(collectionId) : false;
     if (collectionId) {
-        const hadEntry = _cache.has(collectionId);
         _cache.delete(collectionId);
         _inflight.delete(collectionId);
-        console.log(`[CorpusStats] Manual clear: ${hadEntry ? 'removed' : 'no entry for'} "${collectionId}" (cache size: ${sizeBefore} → ${_cache.size})`);
     } else {
         _cache.clear();
         _inflight.clear();
-        console.log(`[CorpusStats] Manual clear: removed all ${sizeBefore} cached collection(s)`);
+    }
+    if (extension_settings?.vectfox?.eventbase_debug_logging) {
+        if (collectionId) {
+            console.log(`[CorpusStats] Manual clear: ${hadEntry ? 'removed' : 'no entry for'} "${collectionId}" (cache size: ${sizeBefore} → ${_cache.size})`);
+        } else {
+            console.log(`[CorpusStats] Manual clear: removed all ${sizeBefore} cached collection(s)`);
+        }
     }
 }
