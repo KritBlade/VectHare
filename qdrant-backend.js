@@ -1066,7 +1066,7 @@ class QdrantBackend {
      * List all items in a collection (MULTITENANCY)
      * @param {string} collectionName - Collection name (always "vectfox_main")
      * @param {object} filters - Payload filters {type, sourceId}
-     * @param {object} options - Options { includeVectors }
+     * @param {object} options - Options { includeVectors, scrollLimit }
      * @returns {Promise<Array>} Array of items with {hash, text, metadata, vector?}
      */
     async listItems(collectionName, filters = {}, options = {}) {
@@ -1108,9 +1108,14 @@ class QdrantBackend {
             const items = [];
             let offset = null;
 
+            // Scroll batch size. Default 100 (Qdrant's recommendation for large payloads).
+            // Export uses 500 (vectors + text fits well under the 16-32 MB/request target,
+            // 5x fewer round trips). Pure reads have no indexing overhead so larger is safe.
+            const scrollLimit = options.scrollLimit || 100;
+
             do {
                 const scrollPayload = {
-                    limit: 100,
+                    limit: scrollLimit,
                     with_payload: true,
                     with_vector: options.includeVectors || false,
                 };

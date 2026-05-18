@@ -1037,6 +1037,7 @@ async function _getLegacySingleEmbedding(source, text, model, directories, req) 
                 offset = 0,
                 limit = 0,
                 includeVectors = false,
+                scrollLimit,
                 filters = {}
             } = req.body;
 
@@ -1049,6 +1050,7 @@ async function _getLegacySingleEmbedding(source, text, model, directories, req) 
                 offset,
                 limit,
                 includeVectors,
+                scrollLimit,
                 filters
             });
 
