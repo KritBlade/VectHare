@@ -354,6 +354,9 @@ class QdrantBackend {
             // EventBase event-source window end — used by formula recency decay and
             // dedup-depth range filter when the EventBase native rerank path is on.
             { field: 'source_window_end', schema: 'integer' },
+            // BOOL FIELDS
+            // Required for formula expressions — Qdrant demands an index for bool fields used in formula match.
+            { field: 'should_persist', schema: 'bool' },
             // EventBase planner-filterable fields (Phase 1.5 agentic filters).
             // keyword schema handles both scalar and array-of-string payloads —
             // match: { any: [...] } works on either shape.
@@ -1010,8 +1013,25 @@ class QdrantBackend {
         try {
             resp = await this._request('POST', `/collections/${collectionName}/points/query`, body);
         } catch (err) {
-            console.error('[Qdrant] hybridQueryNativeWithRerank request failed. Body:', JSON.stringify(body).slice(0, 800), 'Error:', err.message);
-            throw err;
+            // Auto-heal: existing collections created before the should_persist bool index was
+            // added will hit "Index required but not found for should_persist". Create the index
+            // now and retry once — subsequent queries on this collection will succeed without retrying.
+            if (err.message?.includes('should_persist')) {
+                console.warn('[Qdrant] Missing should_persist index — creating it now and retrying...');
+                try {
+                    await this._request('PUT', `/collections/${collectionName}/index`, {
+                        field_name: 'should_persist',
+                        field_schema: 'bool',
+                    });
+                    resp = await this._request('POST', `/collections/${collectionName}/points/query`, body);
+                } catch (retryErr) {
+                    console.error('[Qdrant] hybridQueryNativeWithRerank retry failed:', retryErr.message);
+                    throw retryErr;
+                }
+            } else {
+                console.error('[Qdrant] hybridQueryNativeWithRerank request failed. Body:', JSON.stringify(body).slice(0, 800), 'Error:', err.message);
+                throw err;
+            }
         }
         const points = resp.result?.points || [];
 
