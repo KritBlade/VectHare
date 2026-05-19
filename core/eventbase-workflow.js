@@ -38,10 +38,15 @@ const EVENTBASE_PROMPT_TAG = `${EXTENSION_PROMPT_TAG}_eventbase`;
  * Run the EventBase ingestion pipeline over a slice of chat messages.
  *
  * Sliding window approach:
- *   - Window size:    settings.eventbase_window_size   (default 6)
- *   - Overlap:        settings.eventbase_window_overlap (default 1)
+ *   - Window size:    settings.eventbase_window_size    (default 2; may be overridden via windowSizeOverride param)
+ *   - Overlap:        settings.eventbase_window_overlap (default 0; may be overridden via windowOverlapOverride param)
  * Each window is sent to the LLM for structured event extraction.
  * Already-extracted windows are skipped (dedup by source hashes).
+ *
+ * Auto-sync callers pass *Override params (derived from
+ * settings.eventbase_autosync_window_turns) so they don't read the settings
+ * keys at all. One-off Vectorize Content and backfill callers omit the
+ * overrides and read the settings keys directly.
  *
  * @param {object} params
  * @param {object[]} params.messages    - Chat messages to process (array of ST message objects)
@@ -88,7 +93,7 @@ export async function runEventBaseIngestion({ messages, chatUUID, settings, abor
     }
 
     const windowSize = Math.max(2, settings.eventbase_window_size || 6);
-    const windowOverlap = Math.max(0, Math.min(windowSize - 1, settings.eventbase_window_overlap ?? 1));
+    const windowOverlap = Math.max(0, Math.min(windowSize - 1, settings.eventbase_window_overlap ?? 0));
     const step = windowSize - windowOverlap;
     const minImportanceStore = settings.eventbase_min_importance_store || 1;
 
@@ -687,7 +692,7 @@ function _djb2(str) {
  */
 export function isChatFullyVectorized(messages, settings, chatUUID) {
     const windowSize = Math.max(2, settings.eventbase_window_size || 6);
-    const windowOverlap = Math.max(0, Math.min(windowSize - 1, settings.eventbase_window_overlap ?? 1));
+    const windowOverlap = Math.max(0, Math.min(windowSize - 1, settings.eventbase_window_overlap ?? 0));
     const step = windowSize - windowOverlap;
     const msgHash = m => { const t = (m.mes || '').trim(); return m.hash ?? _djb2(`${m.name || ''}:${t}`); };
     return isLastWindowExtracted(messages, windowSize, step, chatUUID, msgHash);
